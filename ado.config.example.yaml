@@ -1,0 +1,142 @@
+# ADO Configuration Example
+# Copy this file to ado.config.yaml and customize for your project
+# Documentation: https://github.com/dxheroes/ado
+
+version: "1.1"
+
+# Project identification
+project:
+  id: "my-project"
+  repository: "github.com/myorg/my-project"
+
+# Provider configuration
+# ADO supports multiple AI coding agents with subscription-first routing
+providers:
+  # Claude Code - Primary provider with Claude MAX subscription
+  claude-code:
+    enabled: true
+    contextFile: "CLAUDE.md"
+    
+    accessModes:
+      # Subscription mode (try first)
+      - mode: subscription
+        priority: 1
+        enabled: true
+        subscription:
+          plan: "max"
+          rateLimits:
+            requestsPerDay: 500
+            tokensPerDay: 5000000
+          resetTime: "00:00 UTC"
+      
+      # API fallback (optional, requires API key)
+      - mode: api
+        priority: 10
+        enabled: false
+        api:
+          apiKey: "${ANTHROPIC_API_KEY}"
+          rateLimits:
+            requestsPerMinute: 50
+            tokensPerMinute: 100000
+          costPerMillion:
+            input: 3.00
+            output: 15.00
+    
+    capabilities:
+      codeGeneration: true
+      codeReview: true
+      refactoring: true
+      testing: true
+      documentation: true
+      debugging: true
+      languages: ["typescript", "python", "go", "rust", "java", "javascript"]
+      maxContextTokens: 200000
+      supportsStreaming: true
+      supportsMCP: true
+      supportsResume: true
+    
+    defaultOptions:
+      model: "claude-sonnet-4-20250514"
+      maxTurns: 50
+      permissionMode: "acceptEdits"
+
+  # Gemini CLI (example - not yet implemented)
+  # gemini-cli:
+  #   enabled: false
+  #   contextFile: "GEMINI.md"
+  #   accessModes:
+  #     - mode: free
+  #       priority: 2
+  #       enabled: true
+
+# Routing configuration
+routing:
+  # Strategy: subscription-first | round-robin | cost-optimized
+  strategy: "subscription-first"
+  
+  # Automatic failover on errors
+  failover:
+    enabled: true
+    onErrors: ["rate_limit", "timeout", "server_error"]
+    maxRetries: 3
+    retryDelay: 1000
+  
+  # API fallback when subscriptions exhausted
+  apiFallback:
+    enabled: false
+    confirmAboveCost: 1.00    # Ask for confirmation above this cost
+    maxCostPerTask: 10.00     # Hard limit per task
+    maxDailyCost: 50.00       # Daily budget
+
+  # Provider selection preferences
+  matching:
+    preferCapabilityMatch: true
+    preferLargerContext: true
+    preferFasterProvider: false
+
+# Orchestration settings
+orchestration:
+  maxParallelAgents: 10
+  worktreeIsolation: true
+  checkpointInterval: 30
+  taskQueue:
+    concurrency: 5
+    retryAttempts: 3
+    retryDelay: 1000
+
+# Human-in-the-Loop configuration
+hitl:
+  # Default policy: autonomous | review-edits | approve-steps | manual
+  defaultPolicy: "review-edits"
+  approvalTimeout: "24h"
+  
+  # Optional notifications
+  notifications:
+    slack:
+      enabled: false
+      # webhookUrl: "${SLACK_WEBHOOK_URL}"
+      # channel: "#dev-agents"
+    email:
+      enabled: false
+      # to: "team@example.com"
+
+# Storage configuration
+storage:
+  driver: "sqlite"
+  path: ".ado/state.db"
+  
+  # Rate limit tracking
+  rateLimitTracking:
+    driver: "memory"  # memory | redis
+    # redisUrl: "${REDIS_URL}"
+
+# Observability
+observability:
+  logging:
+    level: "info"    # debug | info | warn | error
+    format: "pretty" # pretty | json
+  
+  costTracking:
+    enabled: true
+    reportInterval: "daily"
+
