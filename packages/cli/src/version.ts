@@ -1,4 +1,5 @@
 /**
- * CLI version - updated by build process
+ * CLI version - injected at build time from package.json
  */
-export const version = '0.1.0';
+declare const __VERSION__: string;
+export const version = __VERSION__;
