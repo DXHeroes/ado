@@ -1,7 +1,6 @@
 {
 	"name": "@dxheroes/ado-monorepo",
 	"version": "0.1.0",
-	"private": true,
 	"description": "Agentic Development Orchestrator - Multi-agent AI coding orchestration",
 	"author": "DX Heroes",
 	"license": "MIT",

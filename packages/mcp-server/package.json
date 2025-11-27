@@ -2,7 +2,6 @@
 	"name": "@dxheroes/ado-mcp-server",
 	"version": "0.1.0",
 	"description": "Model Context Protocol server for ADO",
-	"private": true,
 	"type": "module",
 	"keywords": ["ado", "mcp", "model-context-protocol", "server"],
 	"main": "./dist/index.js",

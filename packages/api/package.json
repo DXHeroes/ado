@@ -2,7 +2,6 @@
 	"name": "@dxheroes/ado-api",
 	"version": "0.1.0",
 	"description": "REST API server for ADO orchestrator",
-	"private": true,
 	"type": "module",
 	"keywords": ["ado", "api", "rest", "hono", "server"],
 	"main": "./dist/index.js",
