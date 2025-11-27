@@ -3,7 +3,10 @@
     "packages/shared": {},
     "packages/core": {},
     "packages/adapters": {},
-    "packages/cli": {}
+    "packages/cli": {},
+    "packages/api": {},
+    "packages/dashboard": {},
+    "packages/mcp-server": {}
   },
   "release-type": "node",
   "bump-minor-pre-major": true,
