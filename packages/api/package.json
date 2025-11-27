@@ -1,6 +1,7 @@
 {
 	"name": "@dxheroes/ado-api",
 	"version": "0.1.0",
+	"private": true,
 	"description": "REST API server for ADO orchestrator",
 	"type": "module",
 	"keywords": ["ado", "api", "rest", "hono", "server"],
