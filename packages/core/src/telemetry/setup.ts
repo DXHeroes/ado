@@ -7,7 +7,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { Resource } from '@opentelemetry/resources';
 import { ConsoleMetricExporter, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
+import { BatchSpanProcessor, ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import {
 	SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
 	SEMRESATTRS_SERVICE_NAME,
@@ -39,6 +39,13 @@ export function initializeTelemetry(config: TelemetryConfig): NodeSDK {
 			})
 		: new ConsoleSpanExporter();
 
+	// Configure span processor with 1 second export interval for near-realtime traces
+	const spanProcessor = new BatchSpanProcessor(traceExporter, {
+		scheduledDelayMillis: 1000, // Export every 1 second
+		maxExportBatchSize: 512,
+		maxQueueSize: 2048,
+	});
+
 	// Configure metric exporter and reader
 	const metricExporter = config.metrics?.endpoint
 		? new OTLPMetricExporter({
@@ -51,11 +58,12 @@ export function initializeTelemetry(config: TelemetryConfig): NodeSDK {
 		exportIntervalMillis: config.metrics?.interval ?? 60000, // Default 1 minute
 	});
 
-	// Create SDK instance
-	// Cast metricReader due to OpenTelemetry SDK type incompatibilities between versions
+	// Create SDK instance with custom span processor
+	// Cast due to OpenTelemetry SDK type incompatibilities between versions
 	sdkInstance = new NodeSDK({
 		resource,
-		traceExporter,
+		// biome-ignore lint/suspicious/noExplicitAny: Type incompatibility between OTel SDK versions
+		spanProcessor: spanProcessor as any,
 		// biome-ignore lint/suspicious/noExplicitAny: Type incompatibility between OTel SDK versions
 		metricReader: metricReader as any,
 	});
