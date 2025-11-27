@@ -21,6 +21,7 @@ import {
 	createTelemetryServiceFromEnv,
 	loadConfigWithFallback,
 	setupGracefulShutdown,
+	shutdownTelemetry,
 } from '@dxheroes/ado-core';
 import type { HITLController, HITLPolicy, RateLimitTracker } from '@dxheroes/ado-core';
 import type {
@@ -421,6 +422,8 @@ Then authenticate with: ${pc.cyan('codex auth')}`,
 			process.exit(1);
 		} finally {
 			stateStore.close();
+			// Flush telemetry spans before exit
+			await shutdownTelemetry();
 		}
 	});
 

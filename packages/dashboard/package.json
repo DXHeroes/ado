@@ -3,16 +3,8 @@
 	"version": "0.1.1",
 	"description": "Web dashboard for ADO orchestrator",
 	"type": "module",
-	"keywords": [
-		"ado",
-		"dashboard",
-		"ui",
-		"react",
-		"monitoring"
-	],
-	"files": [
-		"dist"
-	],
+	"keywords": ["ado", "dashboard", "ui", "react", "monitoring"],
+	"files": ["dist"],
 	"publishConfig": {
 		"access": "public"
 	},
