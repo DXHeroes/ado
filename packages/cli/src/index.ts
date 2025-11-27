@@ -8,6 +8,7 @@
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { configCommand } from './commands/config.js';
+import { dashboardCommand } from './commands/dashboard.js';
 import { initCommand } from './commands/init.js';
 import { reportCommand } from './commands/report.js';
 import { runCommand } from './commands/run.js';
@@ -37,6 +38,7 @@ program.addCommand(statusCommand);
 program.addCommand(configCommand);
 program.addCommand(reportCommand);
 program.addCommand(workflowCommand);
+program.addCommand(dashboardCommand);
 
 // Add help examples
 program.addHelpText(
@@ -50,6 +52,8 @@ ${pc.bold('Examples:')}
   ${pc.dim('$')} ado config providers                  ${pc.dim('# Configure providers interactively')}
   ${pc.dim('$')} ado report --costs --period today     ${pc.dim('# View cost report')}
   ${pc.dim('$')} ado workflow run task.workflow.yaml   ${pc.dim('# Run a workflow file')}
+  ${pc.dim('$')} ado dashboard                         ${pc.dim('# Start the web dashboard')}
+  ${pc.dim('$')} ado dashboard --dev                   ${pc.dim('# Start dashboard in dev mode')}
 
 ${pc.bold('Documentation:')}
   ${pc.cyan('https://github.com/dxheroes/ado')}

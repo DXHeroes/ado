@@ -3,7 +3,13 @@
  * Stores sessions, tasks, usage records, and checkpoints.
  */
 
-import type { TaskDefinition, TaskResult, TaskState, TaskStatus, UsageRecord } from '@dxheroes/ado-shared';
+import type {
+	TaskDefinition,
+	TaskResult,
+	TaskState,
+	TaskStatus,
+	UsageRecord,
+} from '@dxheroes/ado-shared';
 import Database from 'better-sqlite3';
 
 /**

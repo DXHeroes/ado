@@ -22,6 +22,7 @@
 	},
 	"dependencies": {
 		"@dxheroes/ado-adapters": "workspace:*",
+		"@dxheroes/ado-api": "workspace:*",
 		"@dxheroes/ado-core": "workspace:*",
 		"@dxheroes/ado-shared": "workspace:*",
 		"@clack/prompts": "^0.9.1",

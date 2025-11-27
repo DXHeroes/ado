@@ -3,12 +3,7 @@
  * Sends notifications to arbitrary HTTP endpoints
  */
 
-import type {
-	NotificationPayload,
-	NotificationResult,
-	Notifier,
-	WebhookConfig,
-} from './types.js';
+import type { NotificationPayload, NotificationResult, Notifier, WebhookConfig } from './types.js';
 
 interface WebhookPayload {
 	title: string;
@@ -51,9 +46,7 @@ export class WebhookNotifier implements Notifier {
 
 			if (!response.ok) {
 				const errorText = await response.text();
-				throw new Error(
-					`Webhook request failed: ${response.status} - ${errorText}`,
-				);
+				throw new Error(`Webhook request failed: ${response.status} - ${errorText}`);
 			}
 
 			return {

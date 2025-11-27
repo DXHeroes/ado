@@ -4,9 +4,9 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import * as p from '@clack/prompts';
 import { createClaudeCodeAdapter } from '@dxheroes/ado-adapters';
 import { createStateStore, findConfigFile, loadConfigWithFallback } from '@dxheroes/ado-core';
-import * as p from '@clack/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';
 

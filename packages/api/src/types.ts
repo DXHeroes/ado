@@ -23,6 +23,8 @@ export interface ApiConfig {
 	postgresUrl?: string;
 	/** Optional state store instance */
 	stateStore?: StateStore | AsyncStateStore;
+	/** Path to dashboard static files (enables dashboard serving when set) */
+	dashboardPath?: string;
 }
 
 /**

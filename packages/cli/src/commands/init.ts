@@ -4,8 +4,8 @@
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { findConfigFile } from '@dxheroes/ado-core';
 import * as p from '@clack/prompts';
+import { findConfigFile } from '@dxheroes/ado-core';
 import { Command } from 'commander';
 import pc from 'picocolors';
 

@@ -10,7 +10,9 @@ import type { ApiContext, ProviderResponse } from '../types.js';
  * Load providers from config file
  */
 async function loadProvidersFromConfig(
-	stateStore?: import('@dxheroes/ado-core').StateStore | import('@dxheroes/ado-core').AsyncStateStore,
+	stateStore?:
+		| import('@dxheroes/ado-core').StateStore
+		| import('@dxheroes/ado-core').AsyncStateStore,
 ): Promise<ProviderResponse[]> {
 	const cwd = process.cwd();
 	const config = loadConfigWithFallback(cwd, { validate: false });
@@ -49,7 +51,10 @@ async function loadProvidersFromConfig(
 								id,
 								startOfDay,
 							)
-						: (stateStore as import('@dxheroes/ado-core').StateStore).getUsageByProvider(id, startOfDay);
+						: (stateStore as import('@dxheroes/ado-core').StateStore).getUsageByProvider(
+								id,
+								startOfDay,
+							);
 
 				requestsToday = usageRecords.reduce((sum, record) => sum + record.requestCount, 0);
 			} catch {

@@ -13,12 +13,13 @@ export {
 	shutdownTelemetry,
 	getTelemetrySDK,
 	setupGracefulShutdown,
+	createTelemetryConfigFromEnv,
 } from './setup.js';
 export { Tracer, traceTaskExecution, traceProviderRequest } from './tracer.js';
 export { MetricsCollector, measureDuration } from './metrics.js';
 
 import { MetricsCollector } from './metrics.js';
-import { initializeTelemetry } from './setup.js';
+import { createTelemetryConfigFromEnv, initializeTelemetry } from './setup.js';
 import { Tracer } from './tracer.js';
 import type { TelemetryConfig } from './types.js';
 
@@ -53,4 +54,29 @@ export class TelemetryService {
  */
 export function createTelemetryService(config: TelemetryConfig): TelemetryService {
 	return new TelemetryService(config);
+}
+
+/**
+ * Create a telemetry service with auto-detection from environment variables.
+ * Automatically enables telemetry when OTEL_EXPORTER_OTLP_ENDPOINT is set.
+ *
+ * @param serviceName - Service name to use (overrides OTEL_SERVICE_NAME)
+ * @returns TelemetryService configured from environment or disabled
+ */
+export function createTelemetryServiceFromEnv(serviceName?: string): TelemetryService {
+	const envConfig = createTelemetryConfigFromEnv();
+
+	if (envConfig) {
+		// Override service name if provided
+		if (serviceName) {
+			envConfig.serviceName = serviceName;
+		}
+		return new TelemetryService(envConfig);
+	}
+
+	// Return disabled telemetry service
+	return new TelemetryService({
+		enabled: false,
+		serviceName: serviceName ?? 'ado',
+	});
 }

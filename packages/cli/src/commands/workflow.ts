@@ -4,6 +4,7 @@
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import * as p from '@clack/prompts';
 import {
 	createClaudeCodeAdapter,
 	createCodexCLIAdapter,
@@ -22,7 +23,6 @@ import {
 } from '@dxheroes/ado-core';
 import type { WorkflowDefinition, WorkflowStep } from '@dxheroes/ado-core';
 import type { AgentAdapter, AgentTask } from '@dxheroes/ado-shared';
-import * as p from '@clack/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';
 import YAML from 'yaml';
@@ -129,7 +129,8 @@ function parseWorkflowFile(
 				};
 				if (step.name) result.name = step.name;
 				if (step.maxConcurrency !== undefined)
-					(result as import('@dxheroes/ado-core').ParallelStep).maxConcurrency = step.maxConcurrency;
+					(result as import('@dxheroes/ado-core').ParallelStep).maxConcurrency =
+						step.maxConcurrency;
 				return result;
 			}
 
@@ -144,7 +145,8 @@ function parseWorkflowFile(
 					thenStep: parseStep(step.then),
 				};
 				if (step.name) result.name = step.name;
-				if (step.else) (result as import('@dxheroes/ado-core').BranchStep).elseStep = parseStep(step.else);
+				if (step.else)
+					(result as import('@dxheroes/ado-core').BranchStep).elseStep = parseStep(step.else);
 				return result;
 			}
 

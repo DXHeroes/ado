@@ -3,9 +3,9 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import * as p from '@clack/prompts';
 import { createClaudeCodeAdapter } from '@dxheroes/ado-adapters';
 import { findConfigFile, loadConfigWithFallback } from '@dxheroes/ado-core';
-import * as p from '@clack/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';

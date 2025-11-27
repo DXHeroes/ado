@@ -100,3 +100,43 @@ export function setupGracefulShutdown(): void {
 		});
 	}
 }
+
+/**
+ * Create TelemetryConfig from environment variables.
+ * Automatically enables telemetry when OTEL_EXPORTER_OTLP_ENDPOINT is set.
+ *
+ * Supported environment variables:
+ * - OTEL_EXPORTER_OTLP_ENDPOINT: Base OTLP endpoint (required for auto-enable)
+ * - OTEL_SERVICE_NAME: Service name (default: 'ado')
+ * - OTEL_TRACE_SAMPLER_ARG: Trace sampling rate 0.0-1.0 (default: 1.0)
+ * - NODE_ENV: Environment name (default: 'development')
+ *
+ * @returns TelemetryConfig if OTEL endpoint is configured, null otherwise
+ */
+export function createTelemetryConfigFromEnv(): TelemetryConfig | null {
+	const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+
+	// Auto-enable only when OTEL endpoint is configured
+	if (!endpoint) {
+		return null;
+	}
+
+	// Normalize endpoint (remove trailing slash if present)
+	const normalizedEndpoint = endpoint.replace(/\/$/, '');
+
+	return {
+		enabled: true,
+		serviceName: process.env.OTEL_SERVICE_NAME ?? 'ado',
+		serviceVersion: process.env.npm_package_version ?? '1.0.0',
+		environment: process.env.NODE_ENV ?? 'development',
+		tracing: {
+			enabled: true,
+			endpoint: `${normalizedEndpoint}/v1/traces`,
+			sampleRate: Number.parseFloat(process.env.OTEL_TRACE_SAMPLER_ARG ?? '1.0'),
+		},
+		metrics: {
+			enabled: true,
+			endpoint: `${normalizedEndpoint}/v1/metrics`,
+		},
+	};
+}

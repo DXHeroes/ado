@@ -3,6 +3,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import * as p from '@clack/prompts';
 import {
 	createClaudeCodeAdapter,
 	createCodexCLIAdapter,
@@ -20,8 +21,12 @@ import {
 	loadConfigWithFallback,
 } from '@dxheroes/ado-core';
 import type { HITLController, HITLPolicy, RateLimitTracker } from '@dxheroes/ado-core';
-import type { AgentAdapter, AgentEvent, ProviderSelection, TaskDefinition } from '@dxheroes/ado-shared';
-import * as p from '@clack/prompts';
+import type {
+	AgentAdapter,
+	AgentEvent,
+	ProviderSelection,
+	TaskDefinition,
+} from '@dxheroes/ado-shared';
 import { Command } from 'commander';
 import pc from 'picocolors';
 import { ensureAdoDir } from '../utils/fs.js';

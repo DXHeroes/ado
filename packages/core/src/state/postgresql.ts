@@ -4,7 +4,13 @@
  * Stores sessions, tasks, usage records, and checkpoints.
  */
 
-import type { TaskDefinition, TaskResult, TaskState, TaskStatus, UsageRecord } from '@dxheroes/ado-shared';
+import type {
+	TaskDefinition,
+	TaskResult,
+	TaskState,
+	TaskStatus,
+	UsageRecord,
+} from '@dxheroes/ado-shared';
 import { Pool, type PoolConfig } from 'pg';
 import type { AsyncStateStore, CheckpointRecord, SessionRecord } from './sqlite.js';
 

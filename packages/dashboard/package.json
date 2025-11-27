@@ -11,6 +11,7 @@
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
+		"build:api": "tsc && BUILD_MODE=api vite build",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit",
 		"clean": "rm -rf dist node_modules"

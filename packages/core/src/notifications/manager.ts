@@ -4,7 +4,6 @@
 
 import { EmailNotifier } from './email.js';
 import { SlackNotifier } from './slack.js';
-import { WebhookNotifier } from './webhook.js';
 import type {
 	NotificationChannel,
 	NotificationConfig,
@@ -12,6 +11,7 @@ import type {
 	NotificationResult,
 	Notifier,
 } from './types.js';
+import { WebhookNotifier } from './webhook.js';
 
 export class NotificationManager {
 	private notifiers = new Map<NotificationChannel, Notifier>();

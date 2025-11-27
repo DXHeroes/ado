@@ -4,12 +4,14 @@
  * Provides REST endpoints for the web dashboard and external integrations.
  */
 
+import { existsSync, readFileSync } from 'node:fs';
+import { extname, join } from 'node:path';
 import {
 	type AsyncStateStore,
 	PostgresqlStateStore,
 	SqliteStateStore,
 	type StateStore,
-	TelemetryService,
+	createTelemetryServiceFromEnv,
 	setupGracefulShutdown,
 } from '@dxheroes/ado-core';
 import { serve } from '@hono/node-server';
@@ -41,23 +43,8 @@ export function createApiServer(config: ApiConfig): Hono<ApiContext> {
 		}
 	}
 
-	// Initialize telemetry
-	const telemetryEnabled = process.env.OTEL_ENABLED === 'true';
-	const otelEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
-	const telemetry = new TelemetryService({
-		serviceName: 'ado-api',
-		serviceVersion: process.env.npm_package_version ?? '1.0.0',
-		environment: process.env.NODE_ENV ?? 'development',
-		enabled: telemetryEnabled,
-		tracing: {
-			enabled: telemetryEnabled,
-			...(otelEndpoint && { endpoint: otelEndpoint }),
-		},
-		metrics: {
-			enabled: telemetryEnabled,
-			...(otelEndpoint && { endpoint: otelEndpoint }),
-		},
-	});
+	// Initialize telemetry - auto-enabled when OTEL_EXPORTER_OTLP_ENDPOINT is set
+	const telemetry = createTelemetryServiceFromEnv('ado-api');
 
 	// Middleware
 	app.use('*', logger());
@@ -104,6 +91,64 @@ export function createApiServer(config: ApiConfig): Hono<ApiContext> {
 		return c.text(`${metrics.join('\n')}\n`);
 	});
 
+	// Serve dashboard static files when dashboardPath is configured
+	if (config.dashboardPath && existsSync(config.dashboardPath)) {
+		const dashboardPath = config.dashboardPath;
+
+		// MIME type mapping for common static file types
+		const mimeTypes: Record<string, string> = {
+			'.html': 'text/html',
+			'.css': 'text/css',
+			'.js': 'application/javascript',
+			'.json': 'application/json',
+			'.png': 'image/png',
+			'.jpg': 'image/jpeg',
+			'.jpeg': 'image/jpeg',
+			'.gif': 'image/gif',
+			'.svg': 'image/svg+xml',
+			'.ico': 'image/x-icon',
+			'.woff': 'font/woff',
+			'.woff2': 'font/woff2',
+			'.ttf': 'font/ttf',
+			'.map': 'application/json',
+		};
+
+		// Serve static files from dashboard build
+		app.get('*', async (c) => {
+			const reqPath = c.req.path;
+
+			// Try to serve the requested file
+			let filePath = join(dashboardPath, reqPath);
+
+			// If path ends with / or has no extension, try index.html
+			if (reqPath.endsWith('/') || !extname(reqPath)) {
+				const indexPath = join(dashboardPath, reqPath, 'index.html');
+				if (existsSync(indexPath)) {
+					filePath = indexPath;
+				} else {
+					// SPA fallback - serve root index.html for client-side routing
+					filePath = join(dashboardPath, 'index.html');
+				}
+			}
+
+			if (existsSync(filePath)) {
+				const content = readFileSync(filePath);
+				const ext = extname(filePath);
+				const contentType = mimeTypes[ext] ?? 'application/octet-stream';
+				return c.body(content, 200, { 'Content-Type': contentType });
+			}
+
+			// SPA fallback - serve index.html for any unmatched route
+			const indexPath = join(dashboardPath, 'index.html');
+			if (existsSync(indexPath)) {
+				const content = readFileSync(indexPath);
+				return c.body(content, 200, { 'Content-Type': 'text/html' });
+			}
+
+			return c.notFound();
+		});
+	}
+
 	return app;
 }
 
@@ -142,6 +187,11 @@ if (import.meta.url.endsWith(process.argv[1]?.replace(/^file:\/\//, '') ?? '')) 
 
 	if (corsOrigins) {
 		config.corsOrigins = corsOrigins;
+	}
+
+	// Enable dashboard serving when DASHBOARD_PATH is set
+	if (process.env.DASHBOARD_PATH) {
+		config.dashboardPath = process.env.DASHBOARD_PATH;
 	}
 
 	startApiServer(config);

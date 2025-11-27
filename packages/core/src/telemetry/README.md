@@ -7,10 +7,48 @@ OpenTelemetry integration for the Agentic Development Orchestrator.
 - **Distributed Tracing** - Track task execution across providers
 - **Metrics Collection** - Monitor task duration, token usage, costs
 - **Observability** - Export to Jaeger, Prometheus, or any OTLP endpoint
+- **Auto-Detection** - Automatically enables when OTEL environment variables are set
+
+## Quick Start (Auto-Detection)
+
+Telemetry is **automatically enabled** when `OTEL_EXPORTER_OTLP_ENDPOINT` is set. No code changes required!
+
+```bash
+# Set the OTLP endpoint - telemetry will automatically start
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+
+# Run ADO - telemetry is now active
+ado run "Implement feature X"
+```
+
+### Supported Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Base OTLP endpoint (required to enable) | - |
+| `OTEL_SERVICE_NAME` | Service name for traces/metrics | `ado` |
+| `OTEL_TRACE_SAMPLER_ARG` | Trace sampling rate (0.0 to 1.0) | `1.0` |
+| `NODE_ENV` | Environment name | `development` |
 
 ## Usage
 
-### Basic Setup
+### Auto-Detection (Recommended)
+
+```typescript
+import { createTelemetryServiceFromEnv } from "@dxheroes/ado-core";
+
+// Automatically configures from environment variables
+// Returns disabled service if OTEL_EXPORTER_OTLP_ENDPOINT is not set
+const telemetry = createTelemetryServiceFromEnv("my-service");
+
+if (telemetry.isEnabled()) {
+	console.log("Telemetry is active!");
+}
+```
+
+### Manual Configuration
+
+For advanced use cases, you can manually configure telemetry:
 
 ```typescript
 import { createTelemetryService } from "@dxheroes/ado-core/telemetry";
@@ -74,22 +112,9 @@ telemetry.metrics.recordTokenUsage("claude-code", 1500, 800);
 telemetry.metrics.recordCost("claude-code", 0.05, "api");
 ```
 
-## Configuration
+## Local Development Setup
 
-### Environment Variables
-
-```bash
-# OpenTelemetry endpoint (Jaeger, Tempo, etc.)
-OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-
-# Service name
-OTEL_SERVICE_NAME=ado-orchestrator
-
-# Trace sampling rate (0.0 to 1.0)
-OTEL_TRACE_SAMPLER_ARG=1.0
-```
-
-### Jaeger (Local Development)
+### Jaeger (Recommended)
 
 ```bash
 # Run Jaeger all-in-one
@@ -98,18 +123,46 @@ docker run -d --name jaeger \
   -p 4318:4318 \
   jaegertracing/all-in-one:latest
 
+# Set the endpoint
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+
 # Access UI at http://localhost:16686
 ```
 
-### Prometheus (Production)
+### Using Docker Compose
 
-```bash
-# Configure Prometheus to scrape OTLP metrics
-# Add to prometheus.yml:
+Add to your `docker-compose.yaml`:
+
+```yaml
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"  # UI
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+```
+
+## Production Setup
+
+### Prometheus
+
+```yaml
+# prometheus.yml
 scrape_configs:
   - job_name: 'ado-metrics'
     static_configs:
       - targets: ['localhost:4318']
+```
+
+### Grafana Cloud / Other OTLP Backends
+
+Simply set the endpoint to your OTLP-compatible backend:
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=https://otlp.example.com:4318
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Bearer <token>"
 ```
 
 ## Metrics Reference
@@ -130,8 +183,9 @@ scrape_configs:
 
 ## Best Practices
 
-1. **Sample Traces in Production** - Use `sampleRate: 0.1` to reduce overhead
-2. **Batch Metrics** - Default 60s interval balances freshness and performance
-3. **Add Context** - Include relevant attributes in spans and metrics
-4. **Monitor Costs** - Track API costs with `recordCost()`
-5. **Graceful Shutdown** - Use `setupGracefulShutdown()` to flush data on exit
+1. **Just Set the Endpoint** - Auto-detection handles the rest
+2. **Sample Traces in Production** - Use `OTEL_TRACE_SAMPLER_ARG=0.1` to reduce overhead
+3. **Batch Metrics** - Default 60s interval balances freshness and performance
+4. **Add Context** - Include relevant attributes in spans and metrics
+5. **Monitor Costs** - Track API costs with `recordCost()`
+6. **Graceful Shutdown** - Use `setupGracefulShutdown()` to flush data on exit

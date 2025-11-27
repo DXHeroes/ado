@@ -23,7 +23,10 @@
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"typecheck": "pnpm -r typecheck",
-		"clean": "pnpm -r clean && rm -rf node_modules"
+		"clean": "pnpm -r clean && rm -rf node_modules",
+		"dashboard": "pnpm --filter @dxheroes/ado exec ado dashboard",
+		"dashboard:dev": "pnpm --filter @dxheroes/ado exec ado dashboard --dev",
+		"dashboard:build": "pnpm --filter @dxheroes/ado-dashboard build:api"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
