@@ -18,7 +18,9 @@ import {
 	createProviderRouter,
 	createRateLimitTracker,
 	createStateStore,
+	createTelemetryServiceFromEnv,
 	loadConfigWithFallback,
+	setupGracefulShutdown,
 } from '@dxheroes/ado-core';
 import type { HITLController, HITLPolicy, RateLimitTracker } from '@dxheroes/ado-core';
 import type {
@@ -61,8 +63,12 @@ export const runCommand = new Command('run')
 		// Ensure .ado directory exists
 		const adoDir = ensureAdoDir(cwd);
 
-		// Note: Telemetry is automatically initialized via the OpenTelemetry global tracer
-		// in the adapter's BaseAdapter class. No need to manually initialize here.
+		// Initialize telemetry - auto-enabled when OTEL_EXPORTER_OTLP_ENDPOINT is set
+		const telemetry = createTelemetryServiceFromEnv('ado-cli');
+		if (telemetry.isEnabled()) {
+			setupGracefulShutdown();
+			p.log.info(`Telemetry enabled → ${pc.dim(process.env.OTEL_EXPORTER_OTLP_ENDPOINT)}`);
+		}
 
 		// Initialize rate limit tracker (use Redis if configured, otherwise in-memory)
 		let rateLimitTracker: RateLimitTracker;
