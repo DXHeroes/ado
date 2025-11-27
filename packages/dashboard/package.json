@@ -1,7 +1,6 @@
 {
 	"name": "@dxheroes/ado-dashboard",
 	"version": "0.1.0",
-	"private": true,
 	"description": "Web dashboard for ADO orchestrator",
 	"type": "module",
 	"keywords": ["ado", "dashboard", "ui", "react", "monitoring"],
