@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/DXHeroes/ado/compare/ado-core-v0.1.2...ado-core-v0.1.3) (2025-11-27)
+
+
+### Features
+
+* **telemetry:** export traces every 1 second for near-realtime visibility ([b38dee2](https://github.com/DXHeroes/ado/commit/b38dee2e86332611e9e805e55a6894e837210495))
+
 ## [0.1.2](https://github.com/DXHeroes/ado/compare/ado-core-v0.1.1...ado-core-v0.1.2) (2025-11-27)
 
 
