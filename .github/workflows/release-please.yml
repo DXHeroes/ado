@@ -45,14 +45,11 @@ jobs:
       - run: pnpm build
         if: ${{ steps.release.outputs.releases_created }}
       
-      # Update npm to latest for trusted publishing support (requires npm 11.5.1+)
-      - name: Update npm for trusted publishing
-        if: ${{ steps.release.outputs.releases_created }}
-        run: npm install -g npm@latest
-      
       - name: Publish packages
         if: ${{ steps.release.outputs.releases_created }}
         run: pnpm publish -r --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   # publish-docker:
   #   name: Publish Docker Images (Production)
