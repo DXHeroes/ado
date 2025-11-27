@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/DXHeroes/ado/compare/ado-v0.1.1...ado-v0.1.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* **cli:** read version from package.json at build time ([807b25a](https://github.com/DXHeroes/ado/commit/807b25ac217ce65afd6e23c366cf63e2597262da))
+
 ## [0.1.1](https://github.com/DXHeroes/ado/compare/ado-v0.1.0...ado-v0.1.1) (2025-11-27)
 
 
