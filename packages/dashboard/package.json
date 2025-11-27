@@ -4,6 +4,10 @@
 	"description": "Web dashboard for ADO orchestrator",
 	"type": "module",
 	"keywords": ["ado", "dashboard", "ui", "react", "monitoring"],
+	"files": ["dist"],
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
