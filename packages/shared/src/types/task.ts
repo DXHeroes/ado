@@ -35,6 +35,7 @@ export interface TaskDefinition {
 	excludeProviders?: string[];
 
 	// Access mode preferences
+	preferredAccessMode?: 'subscription' | 'api' | 'free';
 	allowApiFailover?: boolean;
 	maxApiCostUsd?: number;
 

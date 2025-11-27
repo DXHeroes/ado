@@ -3,6 +3,7 @@
 	"version": "0.1.0",
 	"description": "Agentic Development Orchestrator CLI",
 	"type": "module",
+	"keywords": ["ado", "cli", "ai-agents", "orchestrator", "development", "automation"],
 	"bin": {
 		"ado": "./dist/index.js"
 	},
@@ -17,9 +18,9 @@
 		"start": "node dist/index.js"
 	},
 	"dependencies": {
-		"@ado/adapters": "workspace:*",
-		"@ado/core": "workspace:*",
-		"@ado/shared": "workspace:*",
+		"@dxheroes/ado-adapters": "workspace:*",
+		"@dxheroes/ado-core": "workspace:*",
+		"@dxheroes/ado-shared": "workspace:*",
 		"@clack/prompts": "^0.9.1",
 		"commander": "^13.0.0",
 		"picocolors": "^1.1.1",

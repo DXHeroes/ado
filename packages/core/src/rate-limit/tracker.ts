@@ -9,7 +9,7 @@ import type {
 	RateLimitStatus,
 	RemainingCapacity,
 	UsageRecord,
-} from '@ado/shared';
+} from '@dxheroes/ado-shared';
 
 /**
  * Rate limit configuration for a provider/mode combination

@@ -1,8 +1,9 @@
 {
-	"name": "@ado/adapters",
+	"name": "@dxheroes/ado-adapters",
 	"version": "0.1.0",
 	"description": "Agent adapters for ADO",
 	"type": "module",
+	"keywords": ["ado", "adapters", "ai-agents", "claude", "gemini", "cursor", "copilot"],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -19,7 +20,8 @@
 		"clean": "rm -rf dist"
 	},
 	"dependencies": {
-		"@ado/shared": "workspace:*"
+		"@dxheroes/ado-shared": "workspace:*",
+		"@opentelemetry/api": "^1.9.0"
 	},
 	"devDependencies": {
 		"tsup": "^8.3.5",

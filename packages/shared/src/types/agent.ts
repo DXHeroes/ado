@@ -43,7 +43,10 @@ export interface AgentTaskOptions {
 	maxTurns?: number;
 	timeout?: number;
 	model?: string;
-	permissionMode?: 'acceptEdits' | 'askAll' | 'bypassPermissions';
+	/** Permission mode for Claude CLI: acceptEdits, bypassPermissions, default, plan */
+	permissionMode?: 'acceptEdits' | 'bypassPermissions' | 'default' | 'plan';
+	/** Resume from existing session (uses sessionId from AgentTask) */
+	resume?: boolean;
 }
 
 /**

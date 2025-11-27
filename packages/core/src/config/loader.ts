@@ -6,8 +6,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { AdoConfig, ProviderConfig } from '@ado/shared';
+import type { AdoConfig, ProviderConfig } from '@dxheroes/ado-shared';
 import { parse as parseYaml } from 'yaml';
+import { formatValidationErrors, validateConfigSafe } from './schema.js';
 
 /**
  * Default configuration values
@@ -107,16 +108,29 @@ export function findConfigFile(projectPath: string): string | null {
 
 /**
  * Substitute environment variables in string values
+ * Supports: ${VAR_NAME} - required, ${VAR_NAME:-default} - with default
  */
 function substituteEnvVars(obj: unknown): unknown {
 	if (typeof obj === 'string') {
-		// Replace ${VAR_NAME} patterns
-		return obj.replace(/\$\{([^}]+)\}/g, (_, varName: string) => {
-			const value = process.env[varName];
-			if (value === undefined) {
-				throw new Error(`Environment variable ${varName} is not set`);
+		// Replace ${VAR_NAME} or ${VAR_NAME:-default} patterns
+		return obj.replace(/\$\{([^}]+)\}/g, (match, varExpr: string) => {
+			// Check for default value syntax: VAR_NAME:-default
+			const [varName, defaultValue] = varExpr.split(':-');
+			const value = process.env[varName ?? ''];
+
+			if (value !== undefined) {
+				return value;
 			}
-			return value;
+
+			// If there's a default value, use it
+			if (defaultValue !== undefined) {
+				return defaultValue;
+			}
+
+			// Keep the original ${VAR} as-is for contexts that won't be used
+			// This allows Kubernetes context to remain in config without errors
+			// when running locally
+			return match;
 		});
 	}
 
@@ -209,7 +223,7 @@ function parseProviders(providersObj: Record<string, unknown>): Record<string, P
 /**
  * Load configuration from file
  */
-export function loadConfig(configPath: string): AdoConfig {
+export function loadConfig(configPath: string, options: { validate?: boolean } = {}): AdoConfig {
 	const content = readFileSync(configPath, 'utf-8');
 	const parsed = parseYaml(content) as Record<string, unknown>;
 
@@ -227,23 +241,35 @@ export function loadConfig(configPath: string): AdoConfig {
 		providers,
 	}) as unknown as AdoConfig;
 
+	// Validate configuration if requested (default: true)
+	const shouldValidate = options.validate !== false;
+	if (shouldValidate) {
+		const validation = validateConfigSafe(config);
+		if (!validation.success && validation.error) {
+			throw new Error(formatValidationErrors(validation.error));
+		}
+	}
+
 	return config;
 }
 
 /**
  * Load configuration with fallback to defaults
  */
-export function loadConfigWithFallback(projectPath: string): AdoConfig {
+export function loadConfigWithFallback(
+	projectPath: string,
+	options: { validate?: boolean } = {},
+): AdoConfig {
 	// Try project config first
 	const projectConfigPath = findConfigFile(projectPath);
 	if (projectConfigPath) {
-		return loadConfig(projectConfigPath);
+		return loadConfig(projectConfigPath, options);
 	}
 
 	// Try global config
 	const globalConfigPath = getGlobalConfigPath();
 	if (existsSync(globalConfigPath)) {
-		return loadConfig(globalConfigPath);
+		return loadConfig(globalConfigPath, options);
 	}
 
 	// Return defaults

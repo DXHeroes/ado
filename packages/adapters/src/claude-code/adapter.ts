@@ -11,8 +11,6 @@ import type {
 	AgentCompleteEvent,
 	AgentErrorEvent,
 	AgentEvent,
-	AgentOutputEvent,
-	AgentRateLimitEvent,
 	AgentStartEvent,
 	AgentTask,
 	RateLimitDetector,
@@ -20,7 +18,7 @@ import type {
 	RateLimitStatus,
 	RemainingCapacity,
 	UsageRecord,
-} from '@ado/shared';
+} from '@dxheroes/ado-shared';
 import { BaseAdapter } from '../base.js';
 
 /**
@@ -29,7 +27,7 @@ import { BaseAdapter } from '../base.js';
 export interface ClaudeCodeOptions {
 	model?: string;
 	maxTurns?: number;
-	permissionMode?: 'acceptEdits' | 'askAll' | 'bypassPermissions';
+	permissionMode?: 'acceptEdits' | 'bypassPermissions' | 'default' | 'plan';
 	systemPrompt?: string;
 }
 
@@ -86,6 +84,17 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 	 * Execute a task using Claude CLI
 	 */
 	async *execute(task: AgentTask): AsyncIterable<AgentEvent> {
+		// Wrap execution with tracing
+		yield* this.executeWithTracing(task, this.executeInternal.bind(this));
+	}
+
+	/**
+	 * Internal execution method (called by executeWithTracing)
+	 */
+	private async *executeInternal(
+		task: AgentTask,
+		span: import('@opentelemetry/api').Span,
+	): AsyncIterable<AgentEvent> {
 		const workingDir = this.config?.workingDirectory ?? process.cwd();
 		const sessionId = task.sessionId ?? this.generateSessionId();
 
@@ -96,11 +105,22 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 			// Build command arguments
 			const args = this.buildArgs(task, sessionId);
 
-			// Spawn Claude CLI
+			// Debug: log the command being executed
+			const debugMode = process.env.ADO_DEBUG === '1';
+			if (debugMode) {
+				// biome-ignore lint/suspicious/noConsole: Debug logging
+				console.error(
+					`[DEBUG] Executing: claude ${args.map((a) => (a.includes(' ') ? `"${a}"` : a)).join(' ')}`,
+				);
+			}
+
+			// Spawn Claude CLI with inherited stdio for direct terminal output
+			// Using 'inherit' passes output directly to terminal in real-time
+			// shell: false to avoid argument quoting issues with special characters
 			this.process = spawn('claude', args, {
 				cwd: workingDir,
-				stdio: ['pipe', 'pipe', 'pipe'],
-				shell: true,
+				stdio: ['ignore', 'inherit', 'inherit'], // stdin ignored, stdout/stderr inherited
+				shell: false, // Don't use shell to avoid argument quoting issues
 				env: {
 					...process.env,
 					// Ensure non-interactive mode
@@ -108,67 +128,42 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 				},
 			});
 
+			const proc = this.process;
 			const startTime = Date.now();
-			let output = '';
-
-			// Stream stdout
-			if (this.process.stdout) {
-				for await (const chunk of this.process.stdout) {
-					const text = chunk.toString();
-					output += text;
-
-					yield this.createEvent<AgentOutputEvent>('output', task.id, {
-						content: text,
-						isPartial: true,
-					});
-				}
-			}
-
-			// Handle stderr
-			let errorOutput = '';
-			if (this.process.stderr) {
-				for await (const chunk of this.process.stderr) {
-					errorOutput += chunk.toString();
-				}
-			}
 
 			// Wait for process to complete
-			const exitCode = await new Promise<number>((resolve) => {
-				this.process?.on('close', (code) => resolve(code ?? 1));
-			});
+			const exitCode = await new Promise<number>((resolve, reject) => {
+				proc.on('close', (code) => resolve(code ?? 1));
+				proc.on('error', (err) => reject(err));
+			}).catch(() => 1);
 
 			const duration = Date.now() - startTime;
 
-			// Check for rate limit errors
-			if (this.isRateLimitError(errorOutput)) {
-				const rateLimitInfo = this.rateLimitDetector.parseRateLimitError(new Error(errorOutput));
+			// With inherited stdio we can't capture output directly
+			// but the user sees it in real-time in the terminal
 
-				yield this.createEvent<AgentRateLimitEvent>('rate_limit', task.id, {
-					reason: rateLimitInfo?.reason ?? 'Rate limit exceeded',
-					resetsAt: rateLimitInfo?.resetsAt,
-				});
-
-				return;
-			}
-
-			// Handle errors
+			// Handle errors based on exit code
 			if (exitCode !== 0) {
 				yield this.createEvent<AgentErrorEvent>('error', task.id, {
-					error: new Error(errorOutput || `Process exited with code ${exitCode}`),
-					recoverable: true,
+					error: new Error(`Claude exited with code ${exitCode}`),
+					recoverable: exitCode === 130, // SIGINT is recoverable
 				});
 
 				return;
 			}
+
+			// Record execution metrics in span
+			this.recordExecutionMetrics(span, {
+				duration,
+			});
 
 			// Emit completion
 			yield this.createEvent<AgentCompleteEvent>('complete', task.id, {
 				result: {
 					success: true,
-					output,
+					output: '[Output shown in terminal]', // Can't capture with inherited stdio
 					sessionId,
 					duration,
-					// Token counts would need to be parsed from Claude's output
 				},
 			});
 		} catch (error) {
@@ -214,31 +209,31 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 		// Headless/print mode
 		args.push('-p');
 
-		// Add prompt
-		args.push(task.prompt);
-
-		// Resume session if provided
-		if (task.sessionId) {
+		// Resume support - if task has a sessionId and we're resuming
+		// Claude CLI uses --resume to continue an existing session
+		// The task.sessionId should be the Claude CLI's conversation ID from previous execution
+		if (task.sessionId && task.options?.resume) {
 			args.push('--resume', task.sessionId);
 		}
 
-		// Model selection
-		const model = task.options?.model ?? this.config?.provider.defaultOptions?.model;
-		if (model) {
-			args.push('--model', model);
+		// Add prompt
+		args.push(task.prompt);
+
+		// Model selection - ONLY if explicitly specified by user (not from config defaults)
+		// Let Claude use its default model otherwise
+		if (task.options?.model) {
+			args.push('--model', task.options.model);
 		}
 
-		// Max turns
-		const maxTurns = task.options?.maxTurns ?? this.config?.provider.defaultOptions?.maxTurns;
-		if (maxTurns) {
-			args.push('--max-turns', String(maxTurns));
+		// Max turns - only if explicitly set
+		if (task.options?.maxTurns) {
+			args.push('--max-turns', String(task.options.maxTurns));
 		}
 
-		// Permission mode
-		const permissionMode =
-			task.options?.permissionMode ?? this.config?.provider.defaultOptions?.permissionMode;
+		// Permission mode (acceptEdits, bypassPermissions, default, plan)
+		const permissionMode = task.options?.permissionMode;
 		if (permissionMode) {
-			args.push(`--${permissionMode}`);
+			args.push('--permission-mode', permissionMode);
 		}
 
 		// Context file
@@ -249,26 +244,6 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 		}
 
 		return args;
-	}
-
-	/**
-	 * Check if error indicates rate limiting
-	 */
-	private isRateLimitError(output: string): boolean {
-		const lowerOutput = output.toLowerCase();
-		return (
-			lowerOutput.includes('rate limit') ||
-			lowerOutput.includes('too many requests') ||
-			lowerOutput.includes('quota exceeded') ||
-			lowerOutput.includes('usage limit')
-		);
-	}
-
-	/**
-	 * Generate a unique session ID
-	 */
-	private generateSessionId(): string {
-		return `claude-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 	}
 }
 

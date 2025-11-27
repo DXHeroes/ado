@@ -9,8 +9,10 @@ import { Command } from 'commander';
 import pc from 'picocolors';
 import { configCommand } from './commands/config.js';
 import { initCommand } from './commands/init.js';
+import { reportCommand } from './commands/report.js';
 import { runCommand } from './commands/run.js';
 import { statusCommand } from './commands/status.js';
+import { workflowCommand } from './commands/workflow.js';
 import { setupShutdown } from './utils/shutdown.js';
 import { version } from './version.js';
 
@@ -33,6 +35,8 @@ program.addCommand(initCommand);
 program.addCommand(runCommand);
 program.addCommand(statusCommand);
 program.addCommand(configCommand);
+program.addCommand(reportCommand);
+program.addCommand(workflowCommand);
 
 // Add help examples
 program.addHelpText(
@@ -44,6 +48,8 @@ ${pc.bold('Examples:')}
   ${pc.dim('$')} ado run "Fix bug" --provider claude   ${pc.dim('# Use specific provider')}
   ${pc.dim('$')} ado status                            ${pc.dim('# Show current status')}
   ${pc.dim('$')} ado config providers                  ${pc.dim('# Configure providers interactively')}
+  ${pc.dim('$')} ado report --costs --period today     ${pc.dim('# View cost report')}
+  ${pc.dim('$')} ado workflow run task.workflow.yaml   ${pc.dim('# Run a workflow file')}
 
 ${pc.bold('Documentation:')}
   ${pc.cyan('https://github.com/dxheroes/ado')}

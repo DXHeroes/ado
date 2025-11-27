@@ -3,3 +3,4 @@
  */
 
 export * from './tracker.js';
+export * from './redis-tracker.js';

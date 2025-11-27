@@ -10,7 +10,7 @@ import type {
 	ProviderConfig,
 	ProviderSelection,
 	TaskDefinition,
-} from '@ado/shared';
+} from '@dxheroes/ado-shared';
 import type { RateLimitTracker } from '../rate-limit/tracker.js';
 
 /**
@@ -166,6 +166,11 @@ export class DefaultProviderRegistry implements ProviderRegistry {
 		for (const provider of candidates) {
 			for (const accessMode of provider.accessModes) {
 				if (!accessMode.enabled) continue;
+
+				// Skip if preferredAccessMode is specified and doesn't match
+				if (task.preferredAccessMode && accessMode.mode !== task.preferredAccessMode) {
+					continue;
+				}
 
 				// Skip API modes if API fallback is disabled
 				if (accessMode.mode === 'api' && task.allowApiFailover === false) {

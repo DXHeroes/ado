@@ -1,5 +1,5 @@
 /**
- * @ado/shared - Shared types and utilities for ADO
+ * @dxheroes/ado-shared - Shared types and utilities for ADO
  */
 
 export * from './types/index.js';

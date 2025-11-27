@@ -3,7 +3,7 @@
  * Stores sessions, tasks, usage records, and checkpoints.
  */
 
-import type { TaskDefinition, TaskResult, TaskState, TaskStatus, UsageRecord } from '@ado/shared';
+import type { TaskDefinition, TaskResult, TaskState, TaskStatus, UsageRecord } from '@dxheroes/ado-shared';
 import Database from 'better-sqlite3';
 
 /**
@@ -59,6 +59,37 @@ export interface StateStore {
 
 	// Lifecycle
 	close(): void;
+}
+
+/**
+ * Async state store interface for distributed databases
+ */
+export interface AsyncStateStore {
+	// Session management
+	createSession(session: Omit<SessionRecord, 'createdAt' | 'updatedAt'>): Promise<SessionRecord>;
+	getSession(id: string): Promise<SessionRecord | null>;
+	getSessionsByProject(projectId: string, repositoryKey: string): Promise<SessionRecord[]>;
+	updateSession(id: string, updates: Partial<SessionRecord>): Promise<void>;
+
+	// Task management
+	createTask(task: TaskState): Promise<TaskState>;
+	getTask(id: string): Promise<TaskState | null>;
+	updateTask(id: string, updates: Partial<TaskState>): Promise<void>;
+	getTasksBySession(sessionId: string): Promise<TaskState[]>;
+	getTasksByStatus(status: TaskStatus): Promise<TaskState[]>;
+
+	// Usage tracking
+	recordUsage(usage: UsageRecord): Promise<void>;
+	getUsageByProvider(providerId: string, since: Date): Promise<UsageRecord[]>;
+	getTotalUsage(since: Date): Promise<{ requests: number; tokens: number; cost: number }>;
+
+	// Checkpoints
+	createCheckpoint(checkpoint: Omit<CheckpointRecord, 'createdAt'>): Promise<CheckpointRecord>;
+	getCheckpoint(id: string): Promise<CheckpointRecord | null>;
+	getLatestCheckpoint(taskId: string): Promise<CheckpointRecord | null>;
+
+	// Lifecycle
+	close(): Promise<void>;
 }
 
 /**

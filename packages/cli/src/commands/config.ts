@@ -3,8 +3,8 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { createClaudeCodeAdapter } from '@ado/adapters';
-import { findConfigFile, loadConfigWithFallback } from '@ado/core';
+import { createClaudeCodeAdapter } from '@dxheroes/ado-adapters';
+import { findConfigFile, loadConfigWithFallback } from '@dxheroes/ado-core';
 import * as p from '@clack/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';

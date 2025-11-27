@@ -4,8 +4,8 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { createClaudeCodeAdapter } from '@ado/adapters';
-import { createStateStore, findConfigFile, loadConfigWithFallback } from '@ado/core';
+import { createClaudeCodeAdapter } from '@dxheroes/ado-adapters';
+import { createStateStore, findConfigFile, loadConfigWithFallback } from '@dxheroes/ado-core';
 import * as p from '@clack/prompts';
 import { Command } from 'commander';
 import pc from 'picocolors';

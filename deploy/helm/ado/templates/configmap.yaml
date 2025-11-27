@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ado.fullname" . }}
+  labels:
+    {{- include "ado.labels" . | nindent 4 }}
+data:
+  ado.config.yaml: |
+    version: "1.1"
+
+    project:
+      id: {{ .Values.ado.project.id | quote }}
+      repository: {{ .Values.ado.project.repository | quote }}
+
+    storage:
+      driver: {{ .Values.ado.storage.driver | quote }}
+      connectionString: ${DATABASE_URL}
+      rateLimitTracking:
+        driver: {{ .Values.ado.storage.rateLimitTracking.driver | quote }}
+        redisUrl: ${REDIS_URL}
+
+    orchestration:
+      maxParallelAgents: {{ .Values.ado.orchestration.maxParallelAgents }}
+      worktreeIsolation: {{ .Values.ado.orchestration.worktreeIsolation }}
+      checkpointInterval: {{ .Values.ado.orchestration.checkpointInterval }}
+      taskQueue:
+        concurrency: {{ .Values.ado.orchestration.taskQueue.concurrency }}
+        retryAttempts: {{ .Values.ado.orchestration.taskQueue.retryAttempts }}
+        retryDelay: {{ .Values.ado.orchestration.taskQueue.retryDelay }}
+
+    observability:
+      logging:
+        level: {{ .Values.ado.observability.logging.level | quote }}
+        format: {{ .Values.ado.observability.logging.format | quote }}
+      costTracking:
+        enabled: {{ .Values.ado.observability.costTracking.enabled }}
+        reportInterval: {{ .Values.ado.observability.costTracking.reportInterval | quote }}
+
+    deployment:
+      default: "kubernetes"
+      contexts:
+        kubernetes:
+          type: "k8s"
+          namespace: {{ .Release.Namespace | quote }}

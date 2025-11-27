@@ -1,0 +1,18 @@
+apiVersion: v2
+name: ado
+description: Agentic Development Orchestrator - Multi-agent AI coding orchestration
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - ai
+  - agents
+  - development
+  - orchestration
+  - multi-agent
+home: https://github.com/dxheroes/ado
+sources:
+  - https://github.com/dxheroes/ado
+maintainers:
+  - name: DX Heroes
+    email: hello@dxheroes.io

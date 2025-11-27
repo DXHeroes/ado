@@ -1,0 +1,61 @@
+# Cursor Rules for ADO Project
+
+## Project Context
+
+This is the Agentic Development Orchestrator (ADO) - a TypeScript monorepo that orchestrates multiple AI coding agents.
+
+## Tech Stack
+
+- TypeScript 5.x (strict mode)
+- Node.js 22 LTS
+- pnpm 9.x (NOT npm/yarn)
+- tsup for bundling
+- Biome for linting/formatting (NOT ESLint/Prettier)
+- Vitest for testing
+
+## Code Style
+
+- Use strict TypeScript - avoid `any`
+- Prefer functional patterns over classes
+- Use explicit error handling (AdoError class)
+- Add JSDoc comments for public APIs
+- Keep functions small and focused
+
+## File Organization
+
+```
+packages/
+├── core/        - Core orchestration logic
+├── cli/         - CLI commands and interface
+├── adapters/    - Provider adapters (claude, gemini, cursor, copilot, codex)
+├── shared/      - Shared types and utilities
+├── api/         - REST API server
+├── dashboard/   - React web UI
+└── mcp-server/  - MCP protocol server
+```
+
+## Commands
+
+```bash
+pnpm install           # Install dependencies
+pnpm build            # Build all packages
+pnpm test             # Run tests
+pnpm lint             # Run Biome
+pnpm typecheck        # TypeScript check
+```
+
+## Key Principles
+
+1. **Subscription-First Routing** - Prioritize subscription access over API billing
+2. **Fast CLI** - Startup time < 500ms
+3. **Beautiful Output** - Use @clack/prompts for UX
+4. **Type Safety** - Strict TypeScript everywhere
+5. **Error Recovery** - Graceful handling of failures
+
+## Avoid
+
+- Using npm/yarn (use pnpm)
+- Using ESLint/Prettier (use Biome)
+- Adding `any` types
+- Modifying /node_modules
+- Committing to main directly
