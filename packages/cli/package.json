@@ -1,15 +1,24 @@
 {
 	"name": "@dxheroes/ado",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Agentic Development Orchestrator CLI",
 	"type": "module",
-	"keywords": ["ado", "cli", "ai-agents", "orchestrator", "development", "automation"],
+	"keywords": [
+		"ado",
+		"cli",
+		"ai-agents",
+		"orchestrator",
+		"development",
+		"automation"
+	],
 	"bin": {
 		"ado": "./dist/index.js"
 	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},
