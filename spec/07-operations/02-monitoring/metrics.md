@@ -397,34 +397,378 @@ logging:
 
 ### OpenTelemetry Integration
 
+ADO používá OpenTelemetry pro distributed tracing across all components včetně LLM calls pomocí LiteLLM built-in podpory.
+
+#### Setup OpenTelemetry
+
 ```typescript
-import { trace, SpanKind } from '@opentelemetry/api';
+// packages/core/src/telemetry/setup.ts
+import { NodeSDK } from '@opentelemetry/sdk-node';
+import { Resource } from '@opentelemetry/resources';
+import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
+import { JaegerExporter } from '@opentelemetry/exporter-jaeger';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 
-const tracer = trace.getTracer('ado-orchestrator');
-
-async function executeTask(task: Task) {
-  const span = tracer.startSpan('task.execute', {
-    kind: SpanKind.INTERNAL,
-    attributes: {
-      'task.id': task.id,
-      'task.type': task.taskType,
-      'provider.id': task.providerId,
-    },
+export function setupTelemetry() {
+  const sdk = new NodeSDK({
+    resource: new Resource({
+      [SemanticResourceAttributes.SERVICE_NAME]: 'ado-orchestrator',
+      [SemanticResourceAttributes.SERVICE_VERSION]: '2.0.0',
+    }),
+    traceExporter: new JaegerExporter({
+      endpoint: process.env.JAEGER_ENDPOINT || 'http://localhost:14268/api/traces',
+    }),
+    spanProcessor: new BatchSpanProcessor(),
   });
 
-  try {
-    // ... execution
-    span.setStatus({ code: SpanStatusCode.OK });
-  } catch (error) {
-    span.setStatus({
-      code: SpanStatusCode.ERROR,
-      message: error.message,
-    });
-    throw error;
-  } finally {
-    span.end();
+  sdk.start();
+
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    sdk.shutdown()
+      .then(() => console.log('Telemetry shut down successfully'))
+      .catch((error) => console.error('Error shutting down telemetry', error));
+  });
+}
+```
+
+#### Task Execution Tracing
+
+```typescript
+// packages/core/src/telemetry/task-tracer.ts
+import { trace, context, SpanKind, SpanStatusCode } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('ado-orchestrator', '2.0.0');
+
+export class TaskTracer {
+  /**
+   * Trace complete task execution with all phases
+   */
+  async traceTaskExecution<T>(
+    task: Task,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    return await tracer.startActiveSpan(
+      'task.execute',
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          'task.id': task.id,
+          'task.type': task.taskType,
+          'task.priority': task.priority,
+          'task.complexity': task.complexity,
+        },
+      },
+      async (span) => {
+        try {
+          const startTime = Date.now();
+
+          // Execute operation
+          const result = await operation();
+
+          // Add completion metrics
+          span.setAttributes({
+            'task.duration_ms': Date.now() - startTime,
+            'task.status': 'completed',
+          });
+
+          span.setStatus({ code: SpanStatusCode.OK });
+          return result;
+        } catch (error) {
+          span.setAttributes({
+            'task.error': error.message,
+            'task.error.stack': error.stack,
+          });
+
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
+          });
+
+          span.recordException(error);
+          throw error;
+        } finally {
+          span.end();
+        }
+      }
+    );
+  }
+
+  /**
+   * Trace individual task phases
+   */
+  async tracePhase<T>(
+    phase: string,
+    attributes: Record<string, any>,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    return await tracer.startActiveSpan(
+      `task.phase.${phase}`,
+      {
+        kind: SpanKind.INTERNAL,
+        attributes,
+      },
+      async (span) => {
+        try {
+          const result = await operation();
+          span.setStatus({ code: SpanStatusCode.OK });
+          return result;
+        } catch (error) {
+          span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+          throw error;
+        } finally {
+          span.end();
+        }
+      }
+    );
   }
 }
+```
+
+#### LLM Call Tracing via LiteLLM
+
+```typescript
+// packages/core/src/llm/litellm-tracer.ts
+/**
+ * LiteLLM má built-in OpenTelemetry support
+ * Automaticky vytváří spans pro každý LLM call
+ */
+import { LiteLLM } from 'litellm';
+
+const client = new LiteLLM({
+  model: 'claude-sonnet-4-5-20250929',
+
+  // Enable OpenTelemetry tracking
+  callbacks: {
+    success: (response) => {
+      // LiteLLM automatically creates span with attributes:
+      // - llm.model: claude-sonnet-4-5-20250929
+      // - llm.provider: anthropic
+      // - llm.tokens.input: 1500
+      // - llm.tokens.output: 800
+      // - llm.tokens.total: 2300
+      // - llm.cost_usd: 0.0345
+      // - llm.latency_ms: 2500
+    },
+  },
+});
+
+/**
+ * Custom span annotations for LLM calls
+ */
+export class LLMCallTracer {
+  async traceLLMCall<T>(
+    prompt: string,
+    model: string,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    return await tracer.startActiveSpan(
+      'llm.completion',
+      {
+        kind: SpanKind.CLIENT,
+        attributes: {
+          'llm.model': model,
+          'llm.prompt.length': prompt.length,
+          'llm.temperature': 0.7,
+        },
+      },
+      async (span) => {
+        try {
+          const startTime = Date.now();
+
+          const result = await operation();
+
+          // Add metrics from response
+          span.setAttributes({
+            'llm.latency_ms': Date.now() - startTime,
+            'llm.tokens.total': result.usage.totalTokens,
+            'llm.cost_usd': result.cost,
+          });
+
+          span.setStatus({ code: SpanStatusCode.OK });
+          return result;
+        } catch (error) {
+          span.setAttributes({
+            'llm.error': error.message,
+          });
+          span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+          throw error;
+        } finally {
+          span.end();
+        }
+      }
+    );
+  }
+}
+```
+
+#### Distributed Tracing Across Agents
+
+```typescript
+// packages/core/src/telemetry/distributed-tracer.ts
+export class DistributedTracer {
+  /**
+   * Trace parallel agent work
+   */
+  async traceParallelAgents(
+    agents: AgentTask[],
+    operation: (agent: AgentTask) => Promise<AgentResult>
+  ): Promise<AgentResult[]> {
+    return await tracer.startActiveSpan(
+      'agents.parallel_execution',
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {
+          'agents.count': agents.length,
+          'agents.ids': agents.map(a => a.id).join(','),
+        },
+      },
+      async (parentSpan) => {
+        try {
+          // Execute agents in parallel with individual tracing
+          const results = await Promise.all(
+            agents.map(async (agent, index) => {
+              // Create child span for each agent
+              return await tracer.startActiveSpan(
+                `agent.execute`,
+                {
+                  kind: SpanKind.INTERNAL,
+                  attributes: {
+                    'agent.id': agent.id,
+                    'agent.index': index,
+                    'agent.worktree': agent.worktreePath,
+                  },
+                },
+                async (agentSpan) => {
+                  try {
+                    const result = await operation(agent);
+
+                    agentSpan.setAttributes({
+                      'agent.status': result.status,
+                      'agent.files_modified': result.filesModified,
+                      'agent.tests_passed': result.testsPassed,
+                    });
+
+                    agentSpan.setStatus({ code: SpanStatusCode.OK });
+                    return result;
+                  } catch (error) {
+                    agentSpan.setStatus({
+                      code: SpanStatusCode.ERROR,
+                      message: error.message,
+                    });
+                    throw error;
+                  } finally {
+                    agentSpan.end();
+                  }
+                }
+              );
+            })
+          );
+
+          // Aggregate results on parent span
+          parentSpan.setAttributes({
+            'agents.completed': results.filter(r => r.status === 'completed').length,
+            'agents.failed': results.filter(r => r.status === 'failed').length,
+          });
+
+          parentSpan.setStatus({ code: SpanStatusCode.OK });
+          return results;
+        } catch (error) {
+          parentSpan.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+          throw error;
+        } finally {
+          parentSpan.end();
+        }
+      }
+    );
+  }
+}
+```
+
+#### Cost Tracking per Trace
+
+```typescript
+// packages/core/src/telemetry/cost-tracer.ts
+export class CostTracer {
+  private traceIdToCost = new Map<string, number>();
+
+  /**
+   * Track cost per trace
+   */
+  recordCost(traceId: string, cost: number): void {
+    const current = this.traceIdToCost.get(traceId) || 0;
+    this.traceIdToCost.set(traceId, current + cost);
+
+    // Annotate active span with cost
+    const span = trace.getActiveSpan();
+    if (span) {
+      span.setAttribute('cost.usd', current + cost);
+    }
+  }
+
+  /**
+   * Get total cost for trace
+   */
+  getTotalCost(traceId: string): number {
+    return this.traceIdToCost.get(traceId) || 0;
+  }
+
+  /**
+   * Export cost metrics to Prometheus
+   */
+  exportCostMetrics(): void {
+    for (const [traceId, cost] of this.traceIdToCost.entries()) {
+      costMetric.inc({ trace_id: traceId }, cost);
+    }
+  }
+}
+```
+
+### Span Attributes Conventions
+
+```typescript
+// Standardized span attributes for ADO
+export const SpanAttributes = {
+  // Task attributes
+  TASK_ID: 'task.id',
+  TASK_TYPE: 'task.type',
+  TASK_STATUS: 'task.status',
+  TASK_COMPLEXITY: 'task.complexity',
+  TASK_DURATION_MS: 'task.duration_ms',
+
+  // Agent attributes
+  AGENT_ID: 'agent.id',
+  AGENT_TYPE: 'agent.type',
+  AGENT_WORKTREE: 'agent.worktree',
+  AGENT_BRANCH: 'agent.branch',
+
+  // LLM attributes (LiteLLM built-in)
+  LLM_MODEL: 'llm.model',
+  LLM_PROVIDER: 'llm.provider',
+  LLM_TOKENS_INPUT: 'llm.tokens.input',
+  LLM_TOKENS_OUTPUT: 'llm.tokens.output',
+  LLM_TOKENS_TOTAL: 'llm.tokens.total',
+  LLM_COST_USD: 'llm.cost_usd',
+  LLM_LATENCY_MS: 'llm.latency_ms',
+  LLM_TEMPERATURE: 'llm.temperature',
+
+  // Workflow attributes (Temporal)
+  WORKFLOW_ID: 'workflow.id',
+  WORKFLOW_TYPE: 'workflow.type',
+  WORKFLOW_RUN_ID: 'workflow.run_id',
+  WORKFLOW_TASK_QUEUE: 'workflow.task_queue',
+
+  // Quality gates
+  QA_GATE: 'qa.gate',
+  QA_PASSED: 'qa.passed',
+  QA_ERRORS: 'qa.errors',
+  QA_COVERAGE: 'qa.coverage',
+
+  // Cost tracking
+  COST_USD: 'cost.usd',
+  COST_PROVIDER: 'cost.provider',
+  COST_ACCESS_MODE: 'cost.access_mode',
+};
 ```
 
 ### Jaeger Integration
@@ -433,22 +777,176 @@ async function executeTask(task: Task) {
 # docker-compose.yaml
 services:
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/all-in-one:1.52
     ports:
       - "16686:16686"  # UI
-      - "14268:14268"  # Collector
+      - "14268:14268"  # Collector HTTP
+      - "14250:14250"  # Collector gRPC
+      - "6831:6831/udp"  # Agent (legacy)
     environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=9411
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - jaeger_data:/badger
+
+volumes:
+  jaeger_data:
 ```
+
+### Grafana Tempo Integration (Alternative)
+
+```yaml
+# docker-compose.yaml
+services:
+  tempo:
+    image: grafana/tempo:2.3.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
+      - tempo_data:/tmp/tempo
+    ports:
+      - "14268:14268"  # Jaeger ingest
+      - "3200:3200"    # Tempo
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+
+volumes:
+  tempo_data:
+```
+
+```yaml
+# tempo.yaml
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    jaeger:
+      protocols:
+        thrift_http:
+        grpc:
+    otlp:
+      protocols:
+        http:
+        grpc:
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/blocks
+```
+
+### OpenTelemetry Configuration
 
 ```yaml
 # ado.config.yaml
 telemetry:
+  # Tracing configuration
   tracing:
     enabled: true
-    exporter: jaeger
+    exporter: jaeger  # or tempo, zipkin
     endpoint: http://jaeger:14268/api/traces
-    sampleRate: 0.1  # 10% sampling
+
+    # Sampling strategy
+    sampling:
+      type: probabilistic  # or always_on, always_off
+      rate: 0.1  # 10% sampling for production, 1.0 for development
+
+    # Span processors
+    processors:
+      batch:
+        enabled: true
+        maxQueueSize: 2048
+        maxExportBatchSize: 512
+        exportTimeout: 30000  # ms
+
+  # LLM-specific tracing
+  llm:
+    traceCalls: true
+    traceTokens: true
+    traceCost: true
+    traceLatency: true
+
+  # Resource attributes
+  resource:
+    service.name: ado-orchestrator
+    service.version: 2.0.0
+    deployment.environment: production
+```
+
+### Trace Visualization in Jaeger
+
+```
+Example Trace for "Implement Feature" Task:
+─────────────────────────────────────────────────────────────────────
+
+task.execute (15.2s)
+│
+├─ task.phase.specification (2.1s)
+│  └─ llm.completion [claude-sonnet] (2.0s)
+│     ├─ tokens: 1500 input, 800 output
+│     ├─ cost: $0.0345
+│     └─ latency: 2000ms
+│
+├─ task.phase.planning (1.8s)
+│  └─ llm.completion [claude-sonnet] (1.7s)
+│     ├─ tokens: 2000 input, 1200 output
+│     └─ cost: $0.0480
+│
+├─ task.phase.implementation (8.5s)
+│  ├─ agent.execute [agent-1] (4.2s)
+│  │  ├─ llm.completion [claude-sonnet] (3.5s)
+│  │  ├─ qa.typecheck (0.3s)
+│  │  └─ qa.test (0.4s)
+│  │
+│  └─ agent.execute [agent-2] (4.3s)
+│     ├─ llm.completion [claude-sonnet] (3.6s)
+│     ├─ qa.typecheck (0.3s)
+│     └─ qa.test (0.4s)
+│
+└─ task.phase.validation (2.8s)
+   ├─ qa.lint (0.5s)
+   ├─ qa.test (1.8s)
+   └─ qa.coverage (0.5s)
+
+Total Cost: $0.1325
+Success: ✓
+```
+
+### Custom Metrics from Traces
+
+```typescript
+// Export custom metrics derived from traces
+export class TraceMetricsExporter {
+  /**
+   * Calculate metrics from trace data
+   */
+  exportMetrics(trace: Trace): void {
+    // LLM call metrics
+    const llmSpans = trace.spans.filter(s => s.name.startsWith('llm.'));
+
+    const totalLLMCost = llmSpans.reduce(
+      (sum, span) => sum + (span.attributes['llm.cost_usd'] || 0),
+      0
+    );
+
+    const avgLLMLatency = llmSpans.reduce(
+      (sum, span) => sum + (span.attributes['llm.latency_ms'] || 0),
+      0
+    ) / llmSpans.length;
+
+    // Export to Prometheus
+    llmCostMetric.observe(totalLLMCost);
+    llmLatencyMetric.observe(avgLLMLatency);
+
+    // Quality gate metrics
+    const qaSpans = trace.spans.filter(s => s.name.startsWith('qa.'));
+    const qaPassed = qaSpans.every(s => s.attributes['qa.passed']);
+
+    qaPassRateMetric.inc({ passed: qaPassed ? 'true' : 'false' });
+  }
+}
 ```
 
 ## Health Checks

@@ -745,6 +745,914 @@ ado_autofix_duration_seconds histogram
 ado_coverage_percent{type} gauge
 ```
 
+## Language-Specific Quality Gates
+
+### TypeScript
+
+```typescript
+// packages/core/src/validation/languages/typescript-validator.ts
+export class TypeScriptValidator implements LanguageValidator {
+  async validate(context: TaskContext): Promise<LanguageValidationResult> {
+    const gates = [
+      { name: 'typecheck', command: 'npx tsc --noEmit', parallel: true },
+      { name: 'lint', command: 'npx eslint . --ext .ts,.tsx', parallel: true },
+      { name: 'format', command: 'npx prettier --check .', parallel: true },
+      { name: 'test', command: 'npx vitest run || npx jest', parallel: false },
+    ];
+
+    // Run parallel gates first
+    const parallelGates = gates.filter(g => g.parallel);
+    const sequentialGates = gates.filter(g => !g.parallel);
+
+    const parallelResults = await Promise.all(
+      parallelGates.map(g => this.runGate(g, context))
+    );
+
+    // Run sequential gates if parallel passed
+    const allParallelPassed = parallelResults.every(r => r.passed);
+    if (!allParallelPassed) {
+      return { passed: false, results: parallelResults };
+    }
+
+    const sequentialResults = [];
+    for (const gate of sequentialGates) {
+      const result = await this.runGate(gate, context);
+      sequentialResults.push(result);
+      if (!result.passed) break; // Stop on first failure
+    }
+
+    return {
+      passed: [...parallelResults, ...sequentialResults].every(r => r.passed),
+      results: [...parallelResults, ...sequentialResults],
+      coverage: await this.getCoverage(context),
+    };
+  }
+
+  private async getCoverage(context: TaskContext): Promise<number> {
+    // Parse coverage from coverage-summary.json or vitest output
+    const summaryPath = path.join(context.workspacePath, 'coverage/coverage-summary.json');
+    if (await fileExists(summaryPath)) {
+      const summary = JSON.parse(await readFile(summaryPath, 'utf-8'));
+      return summary.total.lines.pct;
+    }
+    return 0;
+  }
+}
+
+// Quality gate thresholds
+export const TypeScriptThresholds = {
+  coverage: {
+    lines: 80,
+    branches: 80,
+    functions: 80,
+    statements: 80,
+  },
+  lint: {
+    maxErrors: 0,
+    maxWarnings: 10, // Warnings allowed, errors not
+  },
+};
+```
+
+### Python
+
+```typescript
+// packages/core/src/validation/languages/python-validator.ts
+export class PythonValidator implements LanguageValidator {
+  async validate(context: TaskContext): Promise<LanguageValidationResult> {
+    const gates = [
+      // Type checking (parallel)
+      {
+        name: 'typecheck',
+        command: 'mypy --strict . || pyright',
+        parallel: true,
+      },
+      // Linting (parallel) - Ruff is all-in-one linter
+      {
+        name: 'lint',
+        command: 'ruff check . --select ALL',
+        parallel: true,
+      },
+      // Formatting (parallel)
+      {
+        name: 'format',
+        command: 'ruff format --check .',
+        parallel: true,
+      },
+      // Tests (sequential, after parallel gates pass)
+      {
+        name: 'test',
+        command: 'pytest --cov --cov-report=json',
+        parallel: false,
+      },
+    ];
+
+    return await this.runGatesStrategy(gates, context);
+  }
+
+  private async getCoverage(context: TaskContext): Promise<number> {
+    // Parse coverage.json from pytest-cov
+    const coveragePath = path.join(context.workspacePath, 'coverage.json');
+    if (await fileExists(coveragePath)) {
+      const coverage = JSON.parse(await readFile(coveragePath, 'utf-8'));
+      return coverage.totals.percent_covered;
+    }
+    return 0;
+  }
+
+  private parseErrors(output: string): StructuredError[] {
+    // Parse mypy/pyright errors
+    // Format: file.py:10: error: Message [error-code]
+    const errors: StructuredError[] = [];
+    const regex = /^(.+):(\d+):(?:(\d+):)?\s+(error|warning):\s+(.+?)(?:\s+\[(.+?)\])?$/gm;
+
+    let match;
+    while ((match = regex.exec(output)) !== null) {
+      errors.push({
+        tool: 'mypy',
+        type: 'typecheck',
+        file: match[1],
+        line: parseInt(match[2]),
+        column: match[3] ? parseInt(match[3]) : undefined,
+        message: match[5],
+        code: match[6],
+        severity: match[4] as 'error' | 'warning',
+        context: this.getLineContext(match[1], parseInt(match[2])),
+      });
+    }
+
+    return errors;
+  }
+}
+
+// Quality gate thresholds
+export const PythonThresholds = {
+  coverage: {
+    lines: 80,
+    branches: 70, // Python branches harder to cover
+  },
+  lint: {
+    maxErrors: 0,
+    maxWarnings: 0, // Ruff --select ALL is strict
+  },
+  typecheck: {
+    strictMode: true, // mypy --strict
+  },
+};
+```
+
+### Go
+
+```typescript
+// packages/core/src/validation/languages/go-validator.ts
+export class GoValidator implements LanguageValidator {
+  async validate(context: TaskContext): Promise<LanguageValidationResult> {
+    const gates = [
+      // Build (parallel)
+      {
+        name: 'build',
+        command: 'go build ./...',
+        parallel: true,
+      },
+      // Lint (parallel)
+      {
+        name: 'lint',
+        command: 'golangci-lint run',
+        parallel: true,
+      },
+      // Format check (parallel)
+      {
+        name: 'format',
+        command: 'gofmt -l .',
+        parallel: true,
+      },
+      // Tests with coverage (sequential)
+      {
+        name: 'test',
+        command: 'go test -v -race -coverprofile=coverage.out ./...',
+        parallel: false,
+      },
+    ];
+
+    return await this.runGatesStrategy(gates, context);
+  }
+
+  private async getCoverage(context: TaskContext): Promise<number> {
+    // Parse coverage.out
+    const result = await exec('go tool cover -func=coverage.out', {
+      cwd: context.workspacePath,
+    });
+
+    // Last line: total:   (statements)   82.5%
+    const match = result.stdout.match(/total:\s+\(statements\)\s+([\d.]+)%/);
+    return match ? parseFloat(match[1]) : 0;
+  }
+
+  private parseErrors(output: string, tool: string): StructuredError[] {
+    const errors: StructuredError[] = [];
+
+    if (tool === 'build') {
+      // Go build errors: file.go:10:5: message
+      const regex = /^(.+\.go):(\d+):(\d+):\s+(.+)$/gm;
+      let match;
+      while ((match = regex.exec(output)) !== null) {
+        errors.push({
+          tool: 'go build',
+          type: 'build',
+          file: match[1],
+          line: parseInt(match[2]),
+          column: parseInt(match[3]),
+          message: match[4],
+          severity: 'error',
+        });
+      }
+    } else if (tool === 'format') {
+      // gofmt outputs file names of incorrectly formatted files
+      const files = output.trim().split('\n').filter(Boolean);
+      for (const file of files) {
+        errors.push({
+          tool: 'gofmt',
+          type: 'format',
+          file,
+          message: 'File not formatted with gofmt',
+          severity: 'error',
+        });
+      }
+    }
+
+    return errors;
+  }
+}
+
+// Quality gate thresholds
+export const GoThresholds = {
+  coverage: {
+    statements: 80,
+  },
+  lint: {
+    maxIssues: 0,
+  },
+  format: {
+    enforceGofmt: true,
+  },
+};
+```
+
+### Rust
+
+```typescript
+// packages/core/src/validation/languages/rust-validator.ts
+export class RustValidator implements LanguageValidator {
+  async validate(context: TaskContext): Promise<LanguageValidationResult> {
+    const gates = [
+      // Type check (parallel)
+      {
+        name: 'check',
+        command: 'cargo check --all-targets',
+        parallel: true,
+      },
+      // Lint (parallel) - clippy with deny warnings
+      {
+        name: 'lint',
+        command: 'cargo clippy --all-targets -- -D warnings',
+        parallel: true,
+      },
+      // Format check (parallel)
+      {
+        name: 'format',
+        command: 'cargo fmt --check',
+        parallel: true,
+      },
+      // Tests with coverage (sequential)
+      {
+        name: 'test',
+        command: 'cargo test',
+        parallel: false,
+      },
+      // Coverage via tarpaulin (sequential, optional)
+      {
+        name: 'coverage',
+        command: 'cargo tarpaulin --out Json',
+        parallel: false,
+        optional: true,
+      },
+    ];
+
+    return await this.runGatesStrategy(gates, context);
+  }
+
+  private async getCoverage(context: TaskContext): Promise<number> {
+    // Parse tarpaulin JSON output
+    const coveragePath = path.join(context.workspacePath, 'tarpaulin-report.json');
+    if (await fileExists(coveragePath)) {
+      const report = JSON.parse(await readFile(coveragePath, 'utf-8'));
+      return report.coverage; // Overall percentage
+    }
+    return 0;
+  }
+
+  private parseErrors(output: string, tool: string): StructuredError[] {
+    const errors: StructuredError[] = [];
+
+    // Rust compiler errors: error[E0308]: message --> file.rs:10:5
+    const regex = /^(error|warning)\[([^\]]+)\]:\s*(.+?)\n\s*-->\s*(.+):(\d+):(\d+)/gm;
+
+    let match;
+    while ((match = regex.exec(output)) !== null) {
+      errors.push({
+        tool: tool === 'check' ? 'rustc' : 'clippy',
+        type: tool,
+        file: match[4],
+        line: parseInt(match[5]),
+        column: parseInt(match[6]),
+        message: match[3],
+        code: match[2],
+        severity: match[1] as 'error' | 'warning',
+      });
+    }
+
+    return errors;
+  }
+}
+
+// Quality gate thresholds
+export const RustThresholds = {
+  coverage: {
+    lines: 80,
+  },
+  lint: {
+    denyWarnings: true, // -D warnings
+  },
+  format: {
+    enforceRustfmt: true,
+  },
+};
+```
+
+### Java
+
+```typescript
+// packages/core/src/validation/languages/java-validator.ts
+export class JavaValidator implements LanguageValidator {
+  async validate(context: TaskContext): Promise<LanguageValidationResult> {
+    // Detect build system
+    const buildSystem = await this.detectBuildSystem(context);
+
+    const gates = buildSystem === 'maven'
+      ? this.getMavenGates()
+      : this.getGradleGates();
+
+    return await this.runGatesStrategy(gates, context);
+  }
+
+  private getMavenGates(): QualityGate[] {
+    return [
+      // Compile (parallel)
+      {
+        name: 'compile',
+        command: 'mvn clean compile',
+        parallel: true,
+      },
+      // Checkstyle (parallel)
+      {
+        name: 'lint',
+        command: 'mvn checkstyle:check',
+        parallel: true,
+      },
+      // SpotBugs (parallel)
+      {
+        name: 'bugs',
+        command: 'mvn spotbugs:check',
+        parallel: true,
+      },
+      // Tests (sequential)
+      {
+        name: 'test',
+        command: 'mvn test',
+        parallel: false,
+      },
+      // Coverage via JaCoCo (sequential)
+      {
+        name: 'coverage',
+        command: 'mvn jacoco:check',
+        parallel: false,
+      },
+    ];
+  }
+
+  private getGradleGates(): QualityGate[] {
+    return [
+      // Compile (parallel)
+      {
+        name: 'compile',
+        command: './gradlew compileJava',
+        parallel: true,
+      },
+      // Checkstyle (parallel)
+      {
+        name: 'lint',
+        command: './gradlew checkstyleMain',
+        parallel: true,
+      },
+      // SpotBugs (parallel)
+      {
+        name: 'bugs',
+        command: './gradlew spotbugsMain',
+        parallel: true,
+      },
+      // Tests (sequential)
+      {
+        name: 'test',
+        command: './gradlew test',
+        parallel: false,
+      },
+      // Coverage (sequential)
+      {
+        name: 'coverage',
+        command: './gradlew jacocoTestCoverageVerification',
+        parallel: false,
+      },
+    ];
+  }
+
+  private async getCoverage(context: TaskContext): Promise<number> {
+    // Parse JaCoCo XML report
+    const reportPath = path.join(
+      context.workspacePath,
+      'target/site/jacoco/jacoco.xml'
+    );
+
+    if (await fileExists(reportPath)) {
+      const xml = await readFile(reportPath, 'utf-8');
+      // Parse XML and extract coverage percentage
+      const match = xml.match(/<counter type="LINE".*?covered="(\d+)".*?missed="(\d+)"/);
+      if (match) {
+        const covered = parseInt(match[1]);
+        const missed = parseInt(match[2]);
+        return Math.round((covered / (covered + missed)) * 100);
+      }
+    }
+
+    return 0;
+  }
+}
+
+// Quality gate thresholds
+export const JavaThresholds = {
+  coverage: {
+    line: 80,
+    branch: 70,
+    instruction: 80,
+  },
+  checkstyle: {
+    maxViolations: 0,
+  },
+  spotbugs: {
+    maxBugs: 0,
+    includeFilterFile: 'spotbugs-include.xml',
+  },
+};
+```
+
+## Structured Error Feedback
+
+```typescript
+// packages/core/src/validation/error-feedback.ts
+export interface StructuredError {
+  // Tool metadata
+  tool: string; // 'tsc', 'eslint', 'mypy', 'cargo clippy', etc.
+  type: 'typecheck' | 'lint' | 'test' | 'build' | 'format' | 'coverage';
+
+  // Location
+  file: string;
+  line?: number;
+  column?: number;
+
+  // Error details
+  message: string;
+  code?: string; // Error code like 'TS2345', 'E0308'
+  severity: 'error' | 'warning';
+
+  // Context for AI
+  context?: string; // Surrounding code lines
+  suggestion?: string; // Auto-fix suggestion if available
+}
+
+export class ErrorFeedbackFormatter {
+  /**
+   * Format errors for AI consumption
+   * CRITICAL: This format helps AI understand and fix issues effectively
+   */
+  format(
+    errors: StructuredError[],
+    iteration: number,
+    maxIterations: number
+  ): string {
+    const grouped = this.groupByFile(errors);
+
+    let feedback = `# Validation Failed (Iteration ${iteration}/${maxIterations})\n\n`;
+
+    // Summary
+    feedback += `## Summary\n\n`;
+    feedback += `- Total errors: ${errors.length}\n`;
+    feedback += `- Files affected: ${Object.keys(grouped).length}\n`;
+    feedback += `- Error types: ${this.countByType(errors)}\n\n`;
+
+    // Detailed errors by file
+    feedback += `## Errors by File\n\n`;
+
+    for (const [file, fileErrors] of Object.entries(grouped)) {
+      feedback += `### ${file}\n\n`;
+
+      for (const error of fileErrors) {
+        feedback += `**[${error.tool}] ${error.type} ${error.severity}**\n`;
+        feedback += `- Location: Line ${error.line}${error.column ? `:${error.column}` : ''}\n`;
+        if (error.code) {
+          feedback += `- Code: ${error.code}\n`;
+        }
+        feedback += `- Message: ${error.message}\n`;
+
+        if (error.context) {
+          feedback += `\n\`\`\`\n${error.context}\n\`\`\`\n`;
+        }
+
+        if (error.suggestion) {
+          feedback += `\n**Suggestion:** ${error.suggestion}\n`;
+        }
+
+        feedback += `\n`;
+      }
+    }
+
+    // Positive signal: which checks passed
+    feedback += `## Passed Checks\n\n`;
+    feedback += this.getPassedChecks();
+    feedback += `\n`;
+
+    // Iteration budget
+    const remaining = maxIterations - iteration;
+    feedback += `## Budget\n\n`;
+    feedback += `- Iterations remaining: ${remaining}\n`;
+    feedback += `- Escalation at: ${maxIterations} iterations or 3 identical errors\n\n`;
+
+    return feedback;
+  }
+
+  private groupByFile(errors: StructuredError[]): Record<string, StructuredError[]> {
+    const grouped: Record<string, StructuredError[]> = {};
+
+    for (const error of errors) {
+      if (!grouped[error.file]) {
+        grouped[error.file] = [];
+      }
+      grouped[error.file].push(error);
+    }
+
+    return grouped;
+  }
+
+  private countByType(errors: StructuredError[]): string {
+    const counts = errors.reduce((acc, e) => {
+      acc[e.type] = (acc[e.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(counts)
+      .map(([type, count]) => `${type}: ${count}`)
+      .join(', ');
+  }
+}
+```
+
+## Stuck Detection
+
+```typescript
+// packages/core/src/validation/stuck-detector.ts
+export class StuckDetector {
+  private errorHistory: string[][] = []; // Per iteration
+
+  /**
+   * Detect if agent is stuck (same error 3+ times)
+   * Threshold from OpenHands research
+   */
+  detectStuck(currentErrors: StructuredError[]): boolean {
+    const errorSignature = this.computeErrorSignature(currentErrors);
+    this.errorHistory.push(errorSignature);
+
+    if (this.errorHistory.length < 3) {
+      return false;
+    }
+
+    // Check last 3 iterations
+    const lastThree = this.errorHistory.slice(-3);
+
+    // Exact match: same errors 3 times
+    const exactMatch = lastThree.every(
+      (signature, i) =>
+        i === 0 || this.areSignaturesEqual(signature, lastThree[i - 1])
+    );
+
+    if (exactMatch) {
+      return true;
+    }
+
+    // Semantic similarity: ~90% same errors
+    const similarity = this.computeSimilarity(lastThree[0], lastThree[2]);
+    return similarity > 0.9;
+  }
+
+  private computeErrorSignature(errors: StructuredError[]): string[] {
+    return errors.map(e => {
+      // Create signature: file:line:type:message
+      return `${e.file}:${e.line}:${e.type}:${e.message}`;
+    });
+  }
+
+  private areSignaturesEqual(sig1: string[], sig2: string[]): boolean {
+    if (sig1.length !== sig2.length) return false;
+
+    const sorted1 = [...sig1].sort();
+    const sorted2 = [...sig2].sort();
+
+    return sorted1.every((s, i) => s === sorted2[i]);
+  }
+
+  private computeSimilarity(sig1: string[], sig2: string[]): number {
+    const set1 = new Set(sig1);
+    const set2 = new Set(sig2);
+
+    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const union = new Set([...set1, ...set2]);
+
+    return intersection.size / union.size;
+  }
+
+  /**
+   * Get escalation recommendation
+   */
+  getEscalationStrategy(iteration: number): EscalationStrategy {
+    if (iteration < 3) {
+      return {
+        action: 'retry',
+        reason: 'Early iteration, retry with prompt variation',
+      };
+    }
+
+    if (iteration < 5) {
+      return {
+        action: 'different_approach',
+        reason: 'Multiple failures, try different implementation approach',
+      };
+    }
+
+    if (iteration < 7) {
+      return {
+        action: 'partial_completion',
+        reason: 'Extended failures, accept partial completion with TODOs',
+      };
+    }
+
+    return {
+      action: 'human_escalation',
+      reason: 'Stuck state detected, escalate to human with detailed context',
+    };
+  }
+}
+```
+
+## Parallel Execution Strategy
+
+```typescript
+// packages/core/src/validation/parallel-executor.ts
+export class ParallelGateExecutor {
+  /**
+   * Execute quality gates with optimal parallelization
+   *
+   * Strategy:
+   * - Run independent gates in parallel (typecheck, lint, format)
+   * - Run dependent gates sequentially (test after build)
+   * - Stop early if critical gates fail
+   */
+  async executeGates(
+    gates: QualityGate[],
+    context: TaskContext
+  ): Promise<GateExecutionResult> {
+    const parallelGates = gates.filter(g => g.parallel);
+    const sequentialGates = gates.filter(g => !g.parallel);
+
+    console.log(`Executing ${parallelGates.length} gates in parallel...`);
+
+    const startTime = Date.now();
+
+    // Phase 1: Parallel execution
+    const parallelResults = await Promise.allSettled(
+      parallelGates.map(gate => this.executeGate(gate, context))
+    );
+
+    const parallelPassed = parallelResults.every(
+      r => r.status === 'fulfilled' && r.value.passed
+    );
+
+    if (!parallelPassed) {
+      return {
+        passed: false,
+        results: this.extractResults(parallelResults),
+        duration: Date.now() - startTime,
+        phase: 'parallel',
+      };
+    }
+
+    // Phase 2: Sequential execution
+    console.log(`Parallel gates passed, executing ${sequentialGates.length} sequential gates...`);
+
+    const sequentialResults = [];
+
+    for (const gate of sequentialGates) {
+      const result = await this.executeGate(gate, context);
+      sequentialResults.push(result);
+
+      if (!result.passed && !gate.optional) {
+        // Stop on first critical failure
+        break;
+      }
+    }
+
+    const allResults = [
+      ...this.extractResults(parallelResults),
+      ...sequentialResults,
+    ];
+
+    return {
+      passed: allResults.every(r => r.passed || r.optional),
+      results: allResults,
+      duration: Date.now() - startTime,
+      phase: 'complete',
+    };
+  }
+
+  private async executeGate(
+    gate: QualityGate,
+    context: TaskContext
+  ): Promise<GateResult> {
+    const startTime = Date.now();
+
+    try {
+      const result = await exec(gate.command, {
+        cwd: context.workspacePath,
+        timeout: gate.timeout || 300000,
+      });
+
+      const passed = result.exitCode === 0;
+
+      return {
+        name: gate.name,
+        passed,
+        duration: Date.now() - startTime,
+        errors: passed ? [] : this.parseErrors(result.stderr, gate.name),
+        optional: gate.optional || false,
+      };
+    } catch (error) {
+      return {
+        name: gate.name,
+        passed: false,
+        duration: Date.now() - startTime,
+        errors: [{ message: error.message, severity: 'error' }],
+        optional: gate.optional || false,
+      };
+    }
+  }
+}
+```
+
+## Configuration per Language
+
+```yaml
+# ado.config.yaml
+validation:
+  # Language detection (auto-detect from files)
+  languageDetection:
+    enabled: true
+    primaryLanguage: auto  # or typescript, python, go, rust, java
+
+  # TypeScript quality gates
+  typescript:
+    typecheck:
+      enabled: true
+      command: npx tsc --noEmit
+      parallel: true
+    lint:
+      enabled: true
+      command: npx eslint . --ext .ts,.tsx
+      parallel: true
+    format:
+      enabled: true
+      command: npx prettier --check .
+      parallel: true
+    test:
+      enabled: true
+      command: npx vitest run || npx jest
+      parallel: false
+    coverage:
+      enabled: true
+      threshold: 80
+
+  # Python quality gates
+  python:
+    typecheck:
+      enabled: true
+      command: mypy --strict . || pyright
+      parallel: true
+    lint:
+      enabled: true
+      command: ruff check . --select ALL
+      parallel: true
+    format:
+      enabled: true
+      command: ruff format --check .
+      parallel: true
+    test:
+      enabled: true
+      command: pytest --cov --cov-report=json
+      parallel: false
+    coverage:
+      enabled: true
+      threshold: 80
+
+  # Go quality gates
+  go:
+    build:
+      enabled: true
+      command: go build ./...
+      parallel: true
+    lint:
+      enabled: true
+      command: golangci-lint run
+      parallel: true
+    format:
+      enabled: true
+      command: gofmt -l .
+      parallel: true
+    test:
+      enabled: true
+      command: go test -v -race -coverprofile=coverage.out ./...
+      parallel: false
+    coverage:
+      enabled: true
+      threshold: 80
+
+  # Rust quality gates
+  rust:
+    check:
+      enabled: true
+      command: cargo check --all-targets
+      parallel: true
+    lint:
+      enabled: true
+      command: cargo clippy --all-targets -- -D warnings
+      parallel: true
+    format:
+      enabled: true
+      command: cargo fmt --check
+      parallel: true
+    test:
+      enabled: true
+      command: cargo test
+      parallel: false
+    coverage:
+      enabled: true
+      command: cargo tarpaulin --out Json
+      threshold: 80
+      optional: true  # tarpaulin not always installed
+
+  # Java quality gates
+  java:
+    buildSystem: auto  # maven or gradle
+    compile:
+      enabled: true
+      parallel: true
+    checkstyle:
+      enabled: true
+      parallel: true
+    spotbugs:
+      enabled: true
+      parallel: true
+    test:
+      enabled: true
+      parallel: false
+    coverage:
+      enabled: true
+      threshold: 80
+      tool: jacoco
+
+  # Iteration settings
+  iteration:
+    maxAttempts: 10
+    stuckDetection:
+      enabled: true
+      threshold: 3  # Same error 3 times → stuck
+      similarity: 0.9  # 90% similar errors → stuck
+```
+
 ---
 
 ## Souvislosti
@@ -752,4 +1660,5 @@ ado_coverage_percent{type} gauge
 - [FR-005: Quality Assurance](../../02-requirements/01-functional/FR-005-quality-assurance.md)
 - [Doc-First Pipeline](./doc-first-pipeline.md)
 - [Task Decomposition](./task-decomposition.md)
+- [Temporal Workflows](./temporal-workflows.md)
 - [M8: Autonomous Workflow](../../08-implementation/milestones/M8-autonomous-workflow.md)

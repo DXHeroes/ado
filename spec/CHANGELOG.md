@@ -14,6 +14,26 @@ a tento projekt dodržuje [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [2.1.0] - 2025-12-12
+
+### Přidáno
+
+#### Design dokumenty (podle DEF.md research)
+- `04-design/04-security/sandboxing-strategy.md` - Firecracker MicroVMs a bezpečnostní izolace
+- `04-design/01-distributed-system/litellm-routing.md` - LiteLLM unified API pro 100+ LLM providers
+- `04-design/02-autonomous-workflow/temporal-workflows.md` - Temporal.io durable workflows
+- `04-design/02-autonomous-workflow/git-worktree-manager.md` - Git worktrees pro paralelní izolaci agentů
+- `04-design/02-autonomous-workflow/spec-kit-integration.md` - GitHub Spec-Kit 4-phase workflow
+- `04-design/02-autonomous-workflow/merge-conflict-resolution.md` - AI-powered conflict resolution
+- `04-design/03-cloud-infrastructure/pr-agent-integration.md` - Qodo Merge PR-Agent integrace
+
+### Změněno
+- `04-design/02-autonomous-workflow/test-build-validation.md` - Doplněny language-specific quality gates (TypeScript, Python, Go, Rust, Java) s parallel execution strategy
+- `06-user-guide/02-core-concepts/checkpoints-hitl.md` - Doplněny escalation thresholds (stuck detection, iteration limits, time-based escalation)
+- `07-operations/02-monitoring/metrics.md` - Rozšířena OpenTelemetry integrace (distributed tracing, LLM call spans, cost tracking)
+
+---
+
 ## [2.0.1] - 2025-01-15
 
 ### Přidáno

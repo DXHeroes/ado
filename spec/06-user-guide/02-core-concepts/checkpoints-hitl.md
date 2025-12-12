@@ -386,11 +386,396 @@ hitl:
 ado hitl pending
 ```
 
+## Escalation Thresholds
+
+ADO automatically escalates to human review when certain thresholds are reached. This prevents wasted compute and cost on tasks that AI cannot complete autonomously.
+
+### Automatic Escalation Triggers
+
+```typescript
+// Escalation thresholds based on OpenHands research
+interface EscalationThresholds {
+  // Iteration-based escalation
+  maxIterations: 10;              // Max attempts before escalation
+  stuckDetection: {
+    sameErrorCount: 3;             // Same error 3 times → stuck
+    similarityThreshold: 0.9;      // 90% similar errors → stuck
+  };
+
+  // Time-based escalation
+  maxTaskDuration: {
+    simple: 15 * 60 * 1000;        // 15 minutes
+    medium: 30 * 60 * 1000;        // 30 minutes
+    complex: 60 * 60 * 1000;       // 60 minutes
+  };
+
+  // Progress-based escalation
+  noProgressIterations: 5;         // 5 iterations without progress
+
+  // Cost-based escalation
+  costThreshold: {
+    warningAt: 0.8;                // Warn at 80% of budget
+    escalateAt: 1.0;               // Escalate at 100%
+  };
+}
+```
+
+### Iteration Escalation Hierarchy
+
+ADO follows a graduated escalation strategy based on iteration count:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      Escalation Hierarchy                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Iterations 1-3:  RETRY
+                 ├─ Same approach, prompt variation
+                 ├─ Add more context to AI
+                 └─ Structured error feedback
+
+Iterations 4-5:  STUCK DETECTION
+                 ├─ Check for repeating errors
+                 ├─ Semantic similarity analysis
+                 └─ Trigger if same error 3+ times
+
+Iterations 6-7:  DIFFERENT APPROACH
+                 ├─ Try alternative implementation
+                 ├─ Use different AI model
+                 └─ Break task into smaller subtasks
+
+Iterations 8-9:  PARTIAL COMPLETION
+                 ├─ Accept current progress
+                 ├─ Add TODO comments for remaining work
+                 └─ Document what's incomplete
+
+Iteration 10:    HUMAN ESCALATION
+                 ├─ Pause task execution
+                 ├─ Notify team
+                 └─ Provide detailed context for human intervention
+```
+
+### Example: Stuck Detection
+
+```
+═══════════════════════════════════════════════════════════════
+⚠️ STUCK STATE DETECTED
+
+ADO has been stuck on the same error for 3 iterations:
+
+Iteration 7:
+  ✗ src/payment.ts:42: Type 'string | undefined' is not assignable to type 'string'
+
+Iteration 8:
+  ✗ src/payment.ts:42: Type 'string | undefined' is not assignable to type 'string'
+
+Iteration 9:
+  ✗ src/payment.ts:42: Type 'string | undefined' is not assignable to type 'string'
+
+Similarity: 100% (same error repeated)
+
+═══════════════════════════════════════════════════════════════
+
+What would you like to do?
+
+  [1] 🔄 Try different approach
+  [2] ✎ Provide guidance
+  [3] ⏭ Accept partial completion
+  [4] ✗ Cancel task
+
+Choice [1]:
+```
+
+### Time-Based Escalation
+
+Complex tasks that exceed expected duration automatically trigger HITL:
+
+```
+═══════════════════════════════════════════════════════════════
+⏱️ TASK DURATION WARNING
+
+Task: Implement OAuth2 integration
+Complexity: High
+Duration: 32 minutes
+Expected: 30 minutes
+
+The task is taking longer than expected.
+
+Progress:
+  ✓ Specification complete
+  ✓ Implementation in progress (75%)
+  ⏳ Validation pending
+  ⏸ Finalization pending
+
+═══════════════════════════════════════════════════════════════
+
+Options:
+
+  [1] ⏭ Continue - extend timeout to 60 minutes
+  [2] 👁 Review progress - see what's been done
+  [3] ⏸ Pause - save state for later
+  [4] ✗ Cancel - stop execution
+
+Choice [1]:
+```
+
+### No Progress Detection
+
+If 5 consecutive iterations show no progress (no new files, no tests passing, same errors):
+
+```typescript
+// Progress tracking
+interface ProgressMetrics {
+  iteration: number;
+  timestamp: Date;
+
+  // File changes
+  filesModified: number;
+  linesAdded: number;
+  linesRemoved: number;
+
+  // Quality improvements
+  testsAdded: number;
+  testsPassing: number;
+  coverageChange: number;
+
+  // Error reduction
+  errorCount: number;
+  errorsFixed: number;
+  newErrors: number;
+}
+
+// No progress if:
+// - 0 files modified in last 3 iterations
+// - 0 tests added or fixed
+// - Same or more errors
+// - No coverage improvement
+function detectNoProgress(metrics: ProgressMetrics[]): boolean {
+  const lastFive = metrics.slice(-5);
+
+  return lastFive.every(m =>
+    m.filesModified === 0 &&
+    m.testsAdded === 0 &&
+    m.testsPassing === metrics[0].testsPassing &&
+    m.errorCount >= metrics[0].errorCount
+  );
+}
+```
+
+### Escalation Example
+
+```
+═══════════════════════════════════════════════════════════════
+🚨 ESCALATION TO HUMAN
+
+Task: Implement payment webhook handler
+Reason: No progress for 5 iterations
+
+Timeline:
+  Iteration 1-3: Setup webhook endpoint (✓)
+  Iteration 4-8: Stuck on signature verification (✗)
+
+Error history:
+  Iteration 4: InvalidSignatureError: Verification failed
+  Iteration 5: InvalidSignatureError: Verification failed
+  Iteration 6: InvalidSignatureError: Verification failed
+  Iteration 7: InvalidSignatureError: Verification failed
+  Iteration 8: InvalidSignatureError: Verification failed
+
+AI attempts:
+  ✗ Tried different signature algorithm
+  ✗ Tried raw payload verification
+  ✗ Tried timestamp validation
+  ✗ Tried header parsing variation
+  ✗ Tried webhook library
+
+What's been completed:
+  ✓ Webhook endpoint created (/api/webhooks/stripe)
+  ✓ Request parsing logic
+  ✓ Event type routing
+  ✓ Tests for happy path (85% coverage)
+
+What's incomplete:
+  ✗ Signature verification
+  ✗ Replay attack prevention
+  ✗ Error handling for invalid signatures
+
+Cost so far: $3.50
+Estimated to complete: Unknown
+
+═══════════════════════════════════════════════════════════════
+
+Recommended actions:
+
+  [1] 🔍 Review Stripe documentation
+  [2] 👤 Assign to developer with Stripe experience
+  [3] ⏭ Skip signature verification (add TODO)
+  [4] ✗ Cancel and replan
+
+Choice [1]:
+```
+
+## Configuration
+
+### Escalation Threshold Configuration
+
+```yaml
+# ado.config.yaml
+hitl:
+  escalation:
+    # Iteration-based thresholds
+    maxIterations: 10
+    stuckDetection:
+      enabled: true
+      sameErrorCount: 3
+      similarityThreshold: 0.9
+
+    # Time-based thresholds
+    maxDuration:
+      simple: 15   # minutes
+      medium: 30
+      complex: 60
+
+    # Progress-based thresholds
+    noProgressIterations: 5
+    progressMetrics:
+      requireFileChanges: true
+      requireTestProgress: true
+      requireErrorReduction: true
+
+    # Cost-based thresholds
+    cost:
+      warningAt: 0.8      # 80% of budget
+      pauseAt: 0.95       # 95% of budget
+      escalateAt: 1.0     # 100% of budget
+
+    # Notification settings
+    notifications:
+      onStuck: true
+      onTimeout: true
+      onNoProgress: true
+      channels:
+        - slack
+        - email
+
+    # Auto-escalation actions
+    autoActions:
+      onStuck: "pause_and_notify"        # or "continue", "cancel"
+      onTimeout: "pause_and_notify"
+      onNoProgress: "retry_different_approach"
+```
+
+### Per-Task Escalation Override
+
+```bash
+# Run task with custom escalation thresholds
+ado run "Implement feature" \
+  --max-iterations 15 \
+  --max-duration 45 \
+  --stuck-threshold 4
+
+# Run task with escalation disabled (use cautiously!)
+ado run "Simple fix" \
+  --no-escalation \
+  --max-iterations 3
+```
+
+### Escalation Metrics
+
+Track escalation patterns over time:
+
+```prometheus
+# Escalation metrics
+ado_escalation_total{reason,task_type} counter
+ado_escalation_duration_seconds{reason} histogram
+ado_escalation_iteration_when_triggered{reason} histogram
+
+# Resolution metrics
+ado_escalation_resolution{action} counter
+ado_escalation_resolution_duration_seconds histogram
+
+# Example queries:
+# - Escalation rate by reason
+# - Average iterations before escalation
+# - Most common stuck points
+# - Human intervention effectiveness
+```
+
+### Slack Integration for Escalation
+
+```typescript
+// Automatic Slack notification on escalation
+async function notifyEscalation(
+  task: Task,
+  reason: EscalationReason,
+  context: EscalationContext
+): Promise<void> {
+  await slackClient.chat.postMessage({
+    channel: '#ado-escalations',
+    text: `🚨 Task escalated: ${task.title}`,
+    blocks: [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: `🚨 Task Escalation: ${task.id}`,
+        },
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Task:* ${task.title}\n*Reason:* ${reason}\n*Iteration:* ${context.iteration}/${context.maxIterations}`,
+        },
+      },
+      {
+        type: 'section',
+        fields: [
+          {
+            type: 'mrkdwn',
+            text: `*Duration:*\n${formatDuration(context.duration)}`,
+          },
+          {
+            type: 'mrkdwn',
+            text: `*Cost:*\n$${context.cost.toFixed(2)}`,
+          },
+        ],
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Error:*\n\`\`\`\n${context.lastError}\n\`\`\``,
+        },
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: 'Review Task' },
+            url: `https://ado.example.com/tasks/${task.id}`,
+            style: 'primary',
+          },
+          {
+            type: 'button',
+            text: { type: 'plain_text', text: 'View Logs' },
+            url: `https://ado.example.com/tasks/${task.id}/logs`,
+          },
+        ],
+      },
+    ],
+  });
+}
+```
+
 ---
 
 ## Souvislosti
 
 - [Autonomous Mode](./autonomous-mode.md)
 - [Doc-First Workflow](./doc-first-workflow.md)
+- [Test & Build Validation](../../04-design/02-autonomous-workflow/test-build-validation.md)
+- [Temporal Workflows](../../04-design/02-autonomous-workflow/temporal-workflows.md)
 - [FR-006: HITL Checkpoints](../../02-requirements/01-functional/FR-006-hitl-checkpoints.md)
 - [tRPC: Checkpoints](../../05-api/01-trpc-procedures/checkpoints.md)
