@@ -14,6 +14,30 @@ a tento projekt dodržuje [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [2.0.1] - 2025-01-15
+
+### Přidáno
+
+#### Design dokumenty
+- `04-design/02-autonomous-workflow/test-build-validation.md` - Quality gates design
+- `04-design/03-cloud-infrastructure/docker-compose.md` - Docker Compose architektura
+- `04-design/03-cloud-infrastructure/coolify-integration.md` - Coolify integrace
+
+#### Architektura
+- `03-architecture/03-component-diagrams/distributed-controller.md` - Distributed controller komponenty
+- `03-architecture/06-decisions/ADR-003-websocket-subscriptions.md` - ADR pro WebSocket
+
+#### API
+- `05-api/01-trpc-procedures/agents.md` - Agent CRUD procedures
+
+#### Design
+- `04-design/01-distributed-system/remote-execution.md` - Remote execution design
+
+### Opraveno
+- Doplněny chybějící cross-reference odkazy
+
+---
+
 ## [2.0.0] - 2025-01-15
 
 ### Přidáno
