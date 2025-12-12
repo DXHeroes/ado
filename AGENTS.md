@@ -1,5 +1,9 @@
 # AGENTS.md - ADO Project Context
 
+## General instructions
+- use subagents
+- use context7 to get documentation
+
 ## Project Overview
 
 **Agentic Development Orchestrator (ADO)** is a TypeScript CLI tool that orchestrates multiple AI coding agents (Claude Code, Gemini CLI, Cursor CLI, GitHub Copilot, Codex) behind a unified interface.
