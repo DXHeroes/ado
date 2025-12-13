@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/DXHeroes/ado/compare/ado-v0.1.5...ado-v0.1.6) (2025-12-13)
+
+
+### Bug Fixes
+
+* update configuration and improve test coverage ([45ceb10](https://github.com/DXHeroes/ado/commit/45ceb1055c13804f9cfc1cb1940e0626208aa549))
+
 ## [0.1.5](https://github.com/DXHeroes/ado/compare/ado-v0.1.4...ado-v0.1.5) (2025-12-13)
 
 
