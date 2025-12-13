@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/DXHeroes/ado/compare/ado-v0.1.6...ado-v0.1.7) (2025-12-13)
+
+
+### Bug Fixes
+
+* update default model version in CLI init command ([3aa0402](https://github.com/DXHeroes/ado/commit/3aa0402c887046c214f6673a4140d481446ee85e))
+
 ## [0.1.6](https://github.com/DXHeroes/ado/compare/ado-v0.1.5...ado-v0.1.6) (2025-12-13)
 
 
