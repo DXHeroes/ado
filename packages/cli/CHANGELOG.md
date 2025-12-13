@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/DXHeroes/ado/compare/ado-v0.1.4...ado-v0.1.5) (2025-12-13)
+
+
+### Features
+
+* **docs:** enhance AGENTS.md and add new README files for core, api, adapters, and cli packages ([17db138](https://github.com/DXHeroes/ado/commit/17db138ac38296e09c93c4275eaaa570848083f9))
+
 ## [0.1.4](https://github.com/DXHeroes/ado/compare/ado-v0.1.3...ado-v0.1.4) (2025-11-27)
 
 
