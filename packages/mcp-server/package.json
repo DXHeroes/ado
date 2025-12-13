@@ -1,9 +1,14 @@
 {
 	"name": "@dxheroes/ado-mcp-server",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Model Context Protocol server for ADO",
 	"type": "module",
-	"keywords": ["ado", "mcp", "model-context-protocol", "server"],
+	"keywords": [
+		"ado",
+		"mcp",
+		"model-context-protocol",
+		"server"
+	],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -15,7 +20,9 @@
 	"bin": {
 		"ado-mcp": "./dist/index.js"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},

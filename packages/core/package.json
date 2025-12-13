@@ -1,9 +1,16 @@
 {
 	"name": "@dxheroes/ado-core",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "Core orchestration engine for ADO",
 	"type": "module",
-	"keywords": ["ado", "orchestrator", "workflow", "ai-agents", "routing", "rate-limiting"],
+	"keywords": [
+		"ado",
+		"orchestrator",
+		"workflow",
+		"ai-agents",
+		"routing",
+		"rate-limiting"
+	],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -12,7 +19,9 @@
 			"import": "./dist/index.js"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},

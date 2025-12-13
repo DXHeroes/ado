@@ -1,9 +1,17 @@
 {
 	"name": "@dxheroes/ado-adapters",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Agent adapters for ADO",
 	"type": "module",
-	"keywords": ["ado", "adapters", "ai-agents", "claude", "gemini", "cursor", "copilot"],
+	"keywords": [
+		"ado",
+		"adapters",
+		"ai-agents",
+		"claude",
+		"gemini",
+		"cursor",
+		"copilot"
+	],
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"exports": {
@@ -12,7 +20,9 @@
 			"import": "./dist/index.js"
 		}
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"publishConfig": {
 		"access": "public"
 	},
