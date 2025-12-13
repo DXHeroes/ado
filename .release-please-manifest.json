@@ -2,7 +2,7 @@
 	"packages/shared": "0.1.2",
 	"packages/core": "0.1.5",
 	"packages/adapters": "0.1.2",
-	"packages/cli": "0.1.6",
+	"packages/cli": "0.1.7",
 	"packages/api": "0.1.4",
 	"packages/dashboard": "0.1.4",
 	"packages/mcp-server": "0.1.1"
