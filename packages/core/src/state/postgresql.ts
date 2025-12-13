@@ -91,6 +91,21 @@ export class PostgresqlStateStore implements AsyncStateStore {
 				CREATE INDEX IF NOT EXISTS idx_usage_provider_timestamp
 					ON usage_records(provider_id, timestamp DESC);
 
+				-- Workers table
+				CREATE TABLE IF NOT EXISTS workers (
+					worker_id TEXT PRIMARY KEY,
+					status TEXT NOT NULL,
+					registered_at TIMESTAMPTZ NOT NULL,
+					last_heartbeat TIMESTAMPTZ NOT NULL,
+					current_task TEXT,
+					capabilities JSONB NOT NULL,
+					resources JSONB NOT NULL,
+					metrics JSONB NOT NULL
+				);
+
+				CREATE INDEX IF NOT EXISTS idx_workers_status ON workers(status);
+				CREATE INDEX IF NOT EXISTS idx_workers_heartbeat ON workers(last_heartbeat DESC);
+
 				-- Checkpoints table
 				CREATE TABLE IF NOT EXISTS checkpoints (
 					id TEXT PRIMARY KEY,

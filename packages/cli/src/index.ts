@@ -7,6 +7,12 @@
 
 import { Command } from 'commander';
 import pc from 'picocolors';
+import {
+	autonomousCommand,
+	checkpointsCommand,
+	decomposeCommand,
+	specifyCommand,
+} from './commands/autonomous.js';
 import { configCommand } from './commands/config.js';
 import { dashboardCommand } from './commands/dashboard.js';
 import { initCommand } from './commands/init.js';
@@ -40,6 +46,12 @@ program.addCommand(reportCommand);
 program.addCommand(workflowCommand);
 program.addCommand(dashboardCommand);
 
+// Autonomous workflow commands
+program.addCommand(autonomousCommand);
+program.addCommand(specifyCommand);
+program.addCommand(decomposeCommand);
+program.addCommand(checkpointsCommand);
+
 // Add help examples
 program.addHelpText(
 	'after',
@@ -54,6 +66,12 @@ ${pc.bold('Examples:')}
   ${pc.dim('$')} ado workflow run task.workflow.yaml   ${pc.dim('# Run a workflow file')}
   ${pc.dim('$')} ado dashboard                         ${pc.dim('# Start the web dashboard')}
   ${pc.dim('$')} ado dashboard --dev                   ${pc.dim('# Start dashboard in dev mode')}
+
+${pc.bold('Autonomous Workflow:')}
+  ${pc.dim('$')} ado auto "Implement feature X"        ${pc.dim('# Run full autonomous workflow')}
+  ${pc.dim('$')} ado specify "Add user auth"           ${pc.dim('# Generate specification only')}
+  ${pc.dim('$')} ado decompose "Fix bug #123"          ${pc.dim('# Show task decomposition')}
+  ${pc.dim('$')} ado checkpoints --list                ${pc.dim('# List all checkpoints')}
 
 ${pc.bold('Documentation:')}
   ${pc.cyan('https://github.com/dxheroes/ado')}

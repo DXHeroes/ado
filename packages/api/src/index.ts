@@ -24,11 +24,19 @@ import { createHealthRoutes } from './routes/health.js';
 import { createProvidersRoutes } from './routes/providers.js';
 import { createTasksRoutes } from './routes/tasks.js';
 import type { ApiConfig, ApiContext } from './types.js';
+import { startTrpcServer } from './trpc-server.js';
 
 export type { ApiConfig, ApiContext } from './types.js';
 
+// Re-export tRPC server
+export { startTrpcServer, type AppRouter } from './trpc-server.js';
+export { appRouter } from './trpc/router.js';
+
 /**
- * Create the ADO API server
+ * Create the ADO API server (Legacy Hono REST API)
+ *
+ * Note: This is kept for backwards compatibility and dashboard serving.
+ * New integrations should use tRPC via startTrpcServer().
  */
 export function createApiServer(config: ApiConfig): Hono<ApiContext> {
 	const app = new Hono<ApiContext>();
@@ -179,6 +187,7 @@ export function startApiServer(config: ApiConfig): void {
 // CLI entry point
 if (import.meta.url.endsWith(process.argv[1]?.replace(/^file:\/\//, '') ?? '')) {
 	const corsOrigins = process.env.CORS_ORIGINS?.split(',');
+	const useTrpc = process.env.USE_TRPC === 'true';
 	const config: ApiConfig = {
 		port: Number.parseInt(process.env.PORT ?? '8080', 10),
 		host: process.env.HOST ?? '0.0.0.0',
@@ -194,5 +203,10 @@ if (import.meta.url.endsWith(process.argv[1]?.replace(/^file:\/\//, '') ?? '')) 
 		config.dashboardPath = process.env.DASHBOARD_PATH;
 	}
 
-	startApiServer(config);
+	// Start tRPC server if enabled, otherwise use Hono REST API
+	if (useTrpc) {
+		startTrpcServer(config);
+	} else {
+		startApiServer(config);
+	}
 }

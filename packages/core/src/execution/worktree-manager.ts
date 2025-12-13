@@ -37,6 +37,15 @@ export interface WorktreeInfo {
 
 	/** Creation timestamp */
 	createdAt: Date;
+
+	/** Agent ID assigned to this worktree */
+	agentId?: string | undefined;
+
+	/** Task type (feature, bug, refactor, etc.) */
+	taskType?: string | undefined;
+
+	/** Task description */
+	taskDescription?: string | undefined;
 }
 
 /**
@@ -181,6 +190,92 @@ export class WorktreeManager {
 		);
 
 		await Promise.allSettled(oldWorktrees.map((info) => this.removeWorktree(info.id)));
+	}
+
+	/**
+	 * Assign worktree to agent
+	 */
+	assignToAgent(worktreeId: string, agentId: string): void {
+		const worktree = this.worktrees.get(worktreeId);
+		if (!worktree) {
+			throw new Error(`Worktree not found: ${worktreeId}`);
+		}
+
+		worktree.agentId = agentId;
+	}
+
+	/**
+	 * Release worktree from agent
+	 */
+	releaseFromAgent(worktreeId: string): void {
+		const worktree = this.worktrees.get(worktreeId);
+		if (!worktree) {
+			throw new Error(`Worktree not found: ${worktreeId}`);
+		}
+
+		worktree.agentId = undefined;
+	}
+
+	/**
+	 * Get worktree by agent ID
+	 */
+	getWorktreeByAgent(agentId: string): WorktreeInfo | undefined {
+		return Array.from(this.worktrees.values()).find(
+			(w) => w.agentId === agentId,
+		);
+	}
+
+	/**
+	 * Get available worktree (not assigned to agent)
+	 */
+	getAvailableWorktree(): WorktreeInfo | undefined {
+		return Array.from(this.worktrees.values()).find(
+			(w) => w.agentId === undefined,
+		);
+	}
+
+	/**
+	 * Merge worktree back to base branch
+	 */
+	async mergeWorktree(
+		worktreeId: string,
+		options?: {
+			squash?: boolean | undefined;
+			message?: string | undefined;
+		},
+	): Promise<void> {
+		const worktree = this.worktrees.get(worktreeId);
+		if (!worktree) {
+			throw new Error(`Worktree not found: ${worktreeId}`);
+		}
+
+		const baseBranch = this.config.baseBranch ?? 'main';
+
+		try {
+			// Switch to base branch in main repository
+			await this.execGit(this.config.repositoryPath, ['checkout', baseBranch]);
+
+			// Build merge command
+			const mergeArgs = ['merge'];
+			if (options?.squash) {
+				mergeArgs.push('--squash');
+			}
+			if (options?.message) {
+				mergeArgs.push('-m', options.message);
+			}
+			mergeArgs.push(worktree.branch);
+
+			// Merge branch
+			await this.execGit(this.config.repositoryPath, mergeArgs);
+		} catch (error) {
+			throw new AdoError({
+				code: 'WORKTREE_MERGE_FAILED',
+				message: `Failed to merge worktree ${worktreeId}`,
+				recoverable: true,
+				remediation: 'Resolve merge conflicts manually and try again',
+				cause: error instanceof Error ? error : undefined,
+			});
+		}
 	}
 
 	/**

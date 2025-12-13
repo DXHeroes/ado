@@ -18,3 +18,7 @@ export * from './orchestrator/index.js';
 export * from './deployment/index.js';
 export * from './telemetry/index.js';
 export * from './notifications/index.js';
+export * from './worker/index.js';
+export * from './autonomous/index.js';
+export * from './parallel/index.js';
+export * from './llm/index.js';

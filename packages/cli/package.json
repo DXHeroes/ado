@@ -35,8 +35,11 @@
 		"@dxheroes/ado-core": "workspace:*",
 		"@dxheroes/ado-shared": "workspace:*",
 		"@clack/prompts": "^0.9.1",
+		"@trpc/client": "^11.0.0",
 		"commander": "^13.0.0",
 		"picocolors": "^1.1.1",
+		"superjson": "^2.2.1",
+		"ws": "^8.18.0",
 		"yaml": "^2.6.1"
 	},
 	"devDependencies": {

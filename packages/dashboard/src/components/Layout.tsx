@@ -1,4 +1,4 @@
-import { Activity, Boxes, LayoutDashboard, ListTodo, Settings } from 'lucide-react';
+import { Activity, Boxes, LayoutDashboard, ListTodo, Network, Settings } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 export function Layout() {
@@ -13,6 +13,9 @@ export function Layout() {
 					<nav className="flex-1 space-y-1 px-3 py-4">
 						<NavItem to="/dashboard" icon={LayoutDashboard}>
 							Dashboard
+						</NavItem>
+						<NavItem to="/parallel" icon={Network}>
+							Parallel Execution
 						</NavItem>
 						<NavItem to="/tasks" icon={ListTodo}>
 							Tasks

@@ -53,12 +53,22 @@ export const runCommand = new Command('run')
 		'HITL policy (autonomous, review-edits, approve-steps, manual)',
 		'review-edits',
 	)
+	.option('--remote', 'Execute task on remote infrastructure (requires tRPC API server)')
+	.option('--remote-url <url>', 'Remote API URL (default: http://localhost:8080)')
+	.option('--workers <count>', 'Number of remote workers (for --remote)', Number.parseInt)
 	.action(async (prompt: string, options) => {
 		const cwd = process.cwd();
 
 		p.intro(pc.bgCyan(pc.black(' ADO Run ')));
 
-		// Load configuration
+		// Handle remote execution
+		if (options.remote) {
+			const { executeRemoteTask } = await import('../remote/remote-execution.js');
+			await executeRemoteTask(prompt, options);
+			return;
+		}
+
+		// Load configuration for local execution
 		const config = loadConfigWithFallback(cwd);
 
 		// Ensure .ado directory exists
