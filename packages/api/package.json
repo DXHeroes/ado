@@ -1,6 +1,6 @@
 {
 	"name": "@dxheroes/ado-api",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "REST API server for ADO orchestrator",
 	"type": "module",
 	"keywords": [

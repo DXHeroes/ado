@@ -1,6 +1,6 @@
 {
 	"name": "@dxheroes/ado-core",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "Core orchestration engine for ADO",
 	"type": "module",
 	"keywords": [
