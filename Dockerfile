@@ -7,7 +7,7 @@
 FROM node:22-alpine AS deps
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.22.0 --activate
 
 # Set working directory
 WORKDIR /app
@@ -29,7 +29,7 @@ RUN pnpm install --frozen-lockfile --prod
 FROM node:22-alpine AS builder
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.22.0 --activate
 
 # Set working directory
 WORKDIR /app
@@ -57,7 +57,7 @@ RUN pnpm build
 FROM node:22-alpine AS runtime
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.22.0 --activate
 
 # Install system dependencies for agent execution
 RUN apk add --no-cache \
