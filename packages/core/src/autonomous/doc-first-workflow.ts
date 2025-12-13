@@ -9,7 +9,7 @@
  */
 
 import type { AutoFixEngine } from './auto-fix-engine.js';
-import type { DecompositionResult, TaskDecomposer } from './task-decomposer.js';
+import type { TaskNode } from './dependency-graph.js';
 import type { EscalationEngine } from './escalation-engine.js';
 import type {
 	HITLCheckpointCoordinator,
@@ -19,9 +19,9 @@ import type {
 	QualityValidationCoordinator,
 	ValidationReport,
 } from './quality-validation-coordinator.js';
-import type { SpecGenerator, SpecGenerationResult } from './spec-generator.js';
+import type { SpecGenerationResult, SpecGenerator } from './spec-generator.js';
 import type { StuckDetector } from './stuck-detector.js';
-import type { TaskNode } from './dependency-graph.js';
+import type { DecompositionResult, TaskDecomposer } from './task-decomposer.js';
 
 export type WorkflowPhase = 'specify' | 'plan' | 'tasks' | 'implement' | 'validate' | 'complete';
 
@@ -200,12 +200,17 @@ export class DocFirstWorkflow {
 					checkpoint,
 					{
 						task: {
-							taskId: context.taskId,
+							id: context.taskId,
 							prompt: context.prompt,
+							projectContext: {
+								projectId: context.taskId,
+								repositoryPath: context.workingDirectory,
+								repositoryKey: context.taskId,
+							},
 						},
-						status: 'running',
+						status: 'running' as const,
 						progress: (state.completedTasks.length / executionPlan.tasks.length) * 100,
-					} as any,
+					},
 				);
 
 				if (!checkpointResult.shouldProceed) {
@@ -262,7 +267,7 @@ export class DocFirstWorkflow {
 			}
 
 			if (!fixResult.success && fixResult.fixesApplied === 0) {
-				throw new Error(`Quality gates failed and no auto-fixes available`);
+				throw new Error('Quality gates failed and no auto-fixes available');
 			}
 
 			// Re-validate after applying fixes
@@ -298,12 +303,10 @@ export class DocFirstWorkflow {
 		return {
 			tasksCompleted: state.completedTasks.length,
 			tasksFailed: state.failedTasks.length,
-			checkpointsReached: state.checkpointEvents.filter(
-				(e) => e.type === 'checkpoint_reached',
-			).length,
-			escalationsTriggered: state.checkpointEvents.filter(
-				(e) => e.type === 'escalation_triggered',
-			).length,
+			checkpointsReached: state.checkpointEvents.filter((e) => e.type === 'checkpoint_reached')
+				.length,
+			escalationsTriggered: state.checkpointEvents.filter((e) => e.type === 'escalation_triggered')
+				.length,
 			fixesApplied,
 		};
 	}

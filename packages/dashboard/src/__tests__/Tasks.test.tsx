@@ -231,7 +231,8 @@ describe('Tasks Page', () => {
 	it('truncates long prompts', async () => {
 		const longPromptTask: Task = {
 			id: 'long-task',
-			prompt: 'This is a very long prompt that should be truncated to fit in the table cell without breaking the layout',
+			prompt:
+				'This is a very long prompt that should be truncated to fit in the table cell without breaking the layout',
 			provider: 'claude',
 			status: 'running',
 			startedAt: '2024-01-15T10:30:00Z',

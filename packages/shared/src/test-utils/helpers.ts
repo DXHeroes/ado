@@ -2,10 +2,10 @@
  * Test helper utilities
  */
 
+import { exec } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
@@ -21,7 +21,11 @@ export const waitForCondition = async (
 		errorMessage?: string;
 	} = {},
 ): Promise<void> => {
-	const { timeout = 5000, interval = 100, errorMessage = 'Timeout waiting for condition' } = options;
+	const {
+		timeout = 5000,
+		interval = 100,
+		errorMessage = 'Timeout waiting for condition',
+	} = options;
 
 	const start = Date.now();
 	while (!(await condition())) {
@@ -43,11 +47,13 @@ export const createTempDir = async (prefix = 'ado-test-'): Promise<string> => {
 /**
  * Create a temporary test project with git initialized
  */
-export const createTempProject = async (options: {
-	prefix?: string;
-	initGit?: boolean;
-	files?: Record<string, string>;
-} = {}): Promise<string> => {
+export const createTempProject = async (
+	options: {
+		prefix?: string;
+		initGit?: boolean;
+		files?: Record<string, string>;
+	} = {},
+): Promise<string> => {
 	const { prefix = 'ado-test-project-', initGit = true, files = {} } = options;
 
 	const projectDir = await createTempDir(prefix);
@@ -65,10 +71,7 @@ export const createTempProject = async (options: {
 		version: '1.0.0',
 		type: 'module',
 	};
-	await fs.writeFile(
-		path.join(projectDir, 'package.json'),
-		JSON.stringify(packageJson, null, 2),
-	);
+	await fs.writeFile(path.join(projectDir, 'package.json'), JSON.stringify(packageJson, null, 2));
 
 	// Create additional files
 	for (const [filePath, content] of Object.entries(files)) {
@@ -86,10 +89,7 @@ export const createTempProject = async (options: {
 export const cleanupTempDir = async (dirPath: string): Promise<void> => {
 	try {
 		await fs.rm(dirPath, { recursive: true, force: true });
-	} catch (error) {
-		// Ignore errors during cleanup
-		console.warn(`Failed to cleanup temp dir ${dirPath}:`, error);
-	}
+	} catch (_error) {}
 };
 
 /**
@@ -175,10 +175,7 @@ export const assertFileNotExists = async (filePath: string): Promise<void> => {
 /**
  * Assert that a file contains specific content
  */
-export const assertFileContains = async (
-	filePath: string,
-	content: string,
-): Promise<void> => {
+export const assertFileContains = async (filePath: string, content: string): Promise<void> => {
 	const fileContent = await fs.readFile(filePath, 'utf-8');
 	if (!fileContent.includes(content)) {
 		throw new Error(

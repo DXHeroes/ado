@@ -41,9 +41,7 @@ import type {
 /**
  * Create a mock ProjectContext
  */
-export const createMockProjectContext = (
-	overrides?: Partial<ProjectContext>,
-): ProjectContext => ({
+export const createMockProjectContext = (overrides?: Partial<ProjectContext>): ProjectContext => ({
 	projectId: 'test-project',
 	repositoryPath: '/tmp/test-repo',
 	repositoryKey: 'test-repo-key',
@@ -63,9 +61,7 @@ export const createMockTask = (overrides?: Partial<AgentTask>): AgentTask => ({
 /**
  * Create mock AgentTaskOptions
  */
-export const createMockTaskOptions = (
-	overrides?: Partial<AgentTaskOptions>,
-): AgentTaskOptions => ({
+export const createMockTaskOptions = (overrides?: Partial<AgentTaskOptions>): AgentTaskOptions => ({
 	maxTurns: 10,
 	timeout: 300000,
 	permissionMode: 'default',
@@ -108,9 +104,7 @@ export const createMockSubscriptionRateLimits = (
 /**
  * Create mock ApiRateLimits
  */
-export const createMockApiRateLimits = (
-	overrides?: Partial<ApiRateLimits>,
-): ApiRateLimits => ({
+export const createMockApiRateLimits = (overrides?: Partial<ApiRateLimits>): ApiRateLimits => ({
 	requestsPerMinute: 50,
 	tokensPerMinute: 100000,
 	...overrides,
@@ -177,9 +171,7 @@ export const createMockApiAccessMode = (
 /**
  * Create mock ProviderConfig
  */
-export const createMockProvider = (
-	overrides?: Partial<ProviderConfig>,
-): ProviderConfig => ({
+export const createMockProvider = (overrides?: Partial<ProviderConfig>): ProviderConfig => ({
 	id: 'test-provider',
 	enabled: true,
 	accessModes: [createMockSubscriptionAccessMode(), createMockApiAccessMode()],
@@ -214,9 +206,7 @@ export const createMockTaskConstraints = (
 /**
  * Create mock TaskDefinition
  */
-export const createMockTaskDefinition = (
-	overrides?: Partial<TaskDefinition>,
-): TaskDefinition => ({
+export const createMockTaskDefinition = (overrides?: Partial<TaskDefinition>): TaskDefinition => ({
 	prompt: 'Test task',
 	projectKey: 'test-project',
 	repositoryPath: '/tmp/test-repo',
@@ -265,9 +255,7 @@ export const createMockTaskHandle = (overrides?: Partial<TaskHandle>): TaskHandl
 /**
  * Create mock AgentConfig
  */
-export const createMockAgentConfig = (
-	overrides?: Partial<AgentConfig>,
-): AgentConfig => ({
+export const createMockAgentConfig = (overrides?: Partial<AgentConfig>): AgentConfig => ({
 	provider: createMockProvider(),
 	workingDirectory: '/tmp/test-work',
 	projectContext: createMockProjectContext(),
@@ -277,9 +265,7 @@ export const createMockAgentConfig = (
 /**
  * Create mock AgentResult
  */
-export const createMockAgentResult = (
-	overrides?: Partial<AgentResult>,
-): AgentResult => ({
+export const createMockAgentResult = (overrides?: Partial<AgentResult>): AgentResult => ({
 	success: true,
 	output: 'Test agent output',
 	sessionId: 'session-123',

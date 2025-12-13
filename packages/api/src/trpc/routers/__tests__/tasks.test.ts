@@ -2,11 +2,11 @@
  * Tasks tRPC Router Tests
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { StateStore, TelemetryService } from '@dxheroes/ado-core';
-import { tasksRouter } from '../tasks.js';
-import type { Context } from '../../context.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from '../../../types.js';
+import type { Context } from '../../context.js';
+import { tasksRouter } from '../tasks.js';
 
 describe('Tasks tRPC Router', () => {
 	let mockStateStore: StateStore;
@@ -441,9 +441,7 @@ describe('Tasks tRPC Router', () => {
 		it('should validate enum values', async () => {
 			const caller = tasksRouter.createCaller(mockContext);
 
-			await expect(
-				caller.list({ status: 'invalid' as any }),
-			).rejects.toThrow();
+			await expect(caller.list({ status: 'invalid' as any })).rejects.toThrow();
 		});
 
 		it('should validate numeric ranges', async () => {

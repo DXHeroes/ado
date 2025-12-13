@@ -6,7 +6,6 @@
  */
 
 import type { TaskNode } from './dependency-graph.js';
-import type { ClassificationResult } from './task-classifier.js';
 import {
 	type ADR,
 	type Constitution,
@@ -17,6 +16,7 @@ import {
 	createFeatureSpec,
 	createRefactoringSpec,
 } from './spec-templates.js';
+import type { ClassificationResult } from './task-classifier.js';
 
 export interface SpecGenerationContext {
 	brief: string;
@@ -46,22 +46,18 @@ export class SpecGenerator {
 	/**
 	 * Generate specification from brief
 	 */
-	async generate(
-		context: SpecGenerationContext,
-	): Promise<SpecGenerationResult> {
+	async generate(context: SpecGenerationContext): Promise<SpecGenerationResult> {
 		// Select appropriate template based on task type
 		const specification = this.createSpecification(context);
 
 		// Use existing or create default constitution
-		const constitution =
-			context.existingConstitution ?? createDefaultConstitution();
+		const constitution = context.existingConstitution ?? createDefaultConstitution();
 
 		// Generate ADRs for significant decisions
 		const adrs = this.generateADRs(context, specification);
 
 		// Estimate implementation time
-		const estimatedImplementationTime =
-			context.classification.estimatedDuration;
+		const estimatedImplementationTime = context.classification.estimatedDuration;
 
 		// Determine required reviews
 		const requiredReviews = this.determineReviewers(context);
@@ -78,25 +74,14 @@ export class SpecGenerator {
 	/**
 	 * Create specification based on task type
 	 */
-	private createSpecification(
-		context: SpecGenerationContext,
-	): Specification {
+	private createSpecification(context: SpecGenerationContext): Specification {
 		switch (context.taskType) {
 			case 'feature':
-				return this.enrichFeatureSpec(
-					createFeatureSpec(context.brief),
-					context,
-				);
+				return this.enrichFeatureSpec(createFeatureSpec(context.brief), context);
 			case 'bug':
-				return this.enrichBugFixSpec(
-					createBugFixSpec(context.brief),
-					context,
-				);
+				return this.enrichBugFixSpec(createBugFixSpec(context.brief), context);
 			case 'refactor':
-				return this.enrichRefactoringSpec(
-					createRefactoringSpec(context.brief),
-					context,
-				);
+				return this.enrichRefactoringSpec(createRefactoringSpec(context.brief), context);
 			default:
 				return createFeatureSpec(context.brief);
 		}
@@ -105,15 +90,10 @@ export class SpecGenerator {
 	/**
 	 * Enrich feature specification with context
 	 */
-	private enrichFeatureSpec(
-		spec: Specification,
-		context: SpecGenerationContext,
-	): Specification {
+	private enrichFeatureSpec(spec: Specification, context: SpecGenerationContext): Specification {
 		// Add project context to design section
 		if (context.projectContext) {
-			const designSection = spec.sections.find(
-				(s) => s.title === 'Design',
-			);
+			const designSection = spec.sections.find((s) => s.title === 'Design');
 			if (designSection) {
 				let contextInfo = '\n## Project Context\n\n';
 
@@ -139,7 +119,10 @@ export class SpecGenerator {
 		}
 
 		// Set status based on complexity
-		if (context.classification.complexity === 'epic' || context.classification.complexity === 'complex') {
+		if (
+			context.classification.complexity === 'epic' ||
+			context.classification.complexity === 'complex'
+		) {
 			spec.status = 'review'; // Requires review before implementation
 		}
 
@@ -149,10 +132,7 @@ export class SpecGenerator {
 	/**
 	 * Enrich bug fix specification
 	 */
-	private enrichBugFixSpec(
-		spec: Specification,
-		_context: SpecGenerationContext,
-	): Specification {
+	private enrichBugFixSpec(spec: Specification, _context: SpecGenerationContext): Specification {
 		// Bug fixes can proceed directly to implementation after review
 		spec.status = 'review';
 		return spec;
@@ -169,9 +149,7 @@ export class SpecGenerator {
 		spec.status = 'review';
 
 		// Add emphasis on test coverage
-		const testingSection = spec.sections.find(
-			(s) => s.title === 'Verification',
-		);
+		const testingSection = spec.sections.find((s) => s.title === 'Verification');
 		if (testingSection && context.classification.complexity !== 'simple') {
 			testingSection.content +=
 				'\n- [ ] Baseline test coverage documented\n- [ ] All tests pass after refactoring\n- [ ] Performance benchmarks show no regression\n';
@@ -183,20 +161,16 @@ export class SpecGenerator {
 	/**
 	 * Generate ADRs for architectural decisions
 	 */
-	private generateADRs(
-		context: SpecGenerationContext,
-		specification: Specification,
-	): ADR[] {
+	private generateADRs(context: SpecGenerationContext, specification: Specification): ADR[] {
 		const adrs: ADR[] = [];
 
 		// Generate ADR for complex features that introduce new patterns
 		if (
 			context.taskType === 'feature' &&
-			(context.classification.complexity === 'complex' || context.classification.complexity === 'epic')
+			(context.classification.complexity === 'complex' ||
+				context.classification.complexity === 'epic')
 		) {
-			const adr = createADRTemplate(
-				`Implement ${specification.title}`,
-			);
+			const adr = createADRTemplate(`Implement ${specification.title}`);
 			adr.context = `## Context\n\n${context.brief}\n\nThis feature requires architectural decisions about implementation approach.`;
 			adr.status = 'proposed';
 			adrs.push(adr);
@@ -216,9 +190,7 @@ export class SpecGenerator {
 	/**
 	 * Determine required reviewers based on context
 	 */
-	private determineReviewers(
-		context: SpecGenerationContext,
-	): string[] {
+	private determineReviewers(context: SpecGenerationContext): string[] {
 		const reviewers: string[] = [];
 
 		// Always require tech lead for complex tasks
@@ -230,9 +202,11 @@ export class SpecGenerator {
 		}
 
 		// Require security review for security-related changes
-		if (context.brief.toLowerCase().includes('auth') ||
+		if (
+			context.brief.toLowerCase().includes('auth') ||
 			context.brief.toLowerCase().includes('security') ||
-			context.brief.toLowerCase().includes('permission')) {
+			context.brief.toLowerCase().includes('permission')
+		) {
 			reviewers.push('security-team');
 		}
 
@@ -246,10 +220,7 @@ export class SpecGenerator {
 		}
 
 		// Require product review for critical features
-		if (
-			context.classification.priority === 'critical' &&
-			context.taskType === 'feature'
-		) {
+		if (context.classification.priority === 'critical' && context.taskType === 'feature') {
 			reviewers.push('product-manager');
 		}
 
@@ -279,10 +250,7 @@ export class SpecGenerator {
 		if (spec.metadata.tags && spec.metadata.tags.length > 0) {
 			markdown += `**Tags**: ${spec.metadata.tags.join(', ')}  \n`;
 		}
-		if (
-			spec.metadata.relatedSpecs &&
-			spec.metadata.relatedSpecs.length > 0
-		) {
+		if (spec.metadata.relatedSpecs && spec.metadata.relatedSpecs.length > 0) {
 			markdown += `**Related Specs**: ${spec.metadata.relatedSpecs.join(', ')}  \n`;
 		}
 
@@ -379,17 +347,11 @@ export class SpecGenerator {
 			specContent.includes('access');
 
 		if (hasSecurityImplications) {
-			const securityPrinciples = constitution.principles.filter(
-				(p) => p.category === 'security',
-			);
+			const securityPrinciples = constitution.principles.filter((p) => p.category === 'security');
 			for (const principle of securityPrinciples) {
-				const addressed = specContent.includes(
-					principle.principle.toLowerCase(),
-				);
+				const addressed = specContent.includes(principle.principle.toLowerCase());
 				if (!addressed) {
-					violations.push(
-						`Security principle not addressed: ${principle.principle}`,
-					);
+					violations.push(`Security principle not addressed: ${principle.principle}`);
 				}
 			}
 		}
@@ -398,13 +360,9 @@ export class SpecGenerator {
 		for (const constraint of constitution.constraints) {
 			if (constraint.impact === 'blocker') {
 				// Ensure blocker constraints are mentioned
-				const mentioned = specContent.includes(
-					constraint.description.toLowerCase(),
-				);
+				const mentioned = specContent.includes(constraint.description.toLowerCase());
 				if (!mentioned) {
-					violations.push(
-						`blocker constraint not addressed: ${constraint.description}`,
-					);
+					violations.push(`blocker constraint not addressed: ${constraint.description}`);
 				}
 			}
 		}

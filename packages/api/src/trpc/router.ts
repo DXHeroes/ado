@@ -4,9 +4,9 @@
  * Combines all sub-routers into a single app router.
  */
 
-import { router } from './trpc.js';
 import { tasksRouter } from './routers/tasks.js';
 import { workersRouter } from './routers/workers.js';
+import { router } from './trpc.js';
 
 /**
  * App Router - combines all sub-routers

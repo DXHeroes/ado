@@ -42,11 +42,9 @@ export async function executeRemoteTask(
 			wsUrl: `${wsUrl.replace(':8080', ':8081')}`, // WebSocket on port+1
 		});
 		spinner.stop('Connected to remote API ✓');
-	} catch (error) {
+	} catch (_error) {
 		spinner.stop('Failed to connect to remote API');
-		p.log.error(
-			`Could not connect to ${apiUrl}. Make sure the tRPC server is running.`,
-		);
+		p.log.error(`Could not connect to ${apiUrl}. Make sure the tRPC server is running.`);
 		p.log.info('Start server with: USE_TRPC=true pnpm --filter @dxheroes/ado-api start');
 		process.exit(1);
 	}
@@ -62,7 +60,12 @@ export async function executeRemoteTask(
 			providers: options.providers?.split(','),
 			excludeProviders: options.exclude?.split(','),
 			maxCost: options.maxCost,
-			hitlPolicy: options.hitl as 'autonomous' | 'spec-review' | 'review-major' | 'review-all' | undefined,
+			hitlPolicy: options.hitl as
+				| 'autonomous'
+				| 'spec-review'
+				| 'review-major'
+				| 'review-all'
+				| undefined,
 		});
 
 		spinner.stop(`Task created: ${pc.cyan(task.id)}`);
@@ -102,7 +105,9 @@ export async function executeRemoteTask(
 		p.outro(pc.green('Task completed successfully'));
 	} catch (error) {
 		remote.disconnect();
-		p.log.error(`Remote execution failed: ${error instanceof Error ? error.message : String(error)}`);
+		p.log.error(
+			`Remote execution failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
 		process.exit(1);
 	}
 }

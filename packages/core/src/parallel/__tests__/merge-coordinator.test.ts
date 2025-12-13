@@ -2,13 +2,12 @@
  * Tests for MergeCoordinator
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	MergeCoordinator,
-	createMergeCoordinator,
-	type WorkerChanges,
-	type ConflictInfo,
 	type MergeCoordinatorConfig,
+	type WorkerChanges,
+	createMergeCoordinator,
 } from '../merge-coordinator.js';
 
 describe('MergeCoordinator', () => {
@@ -153,7 +152,7 @@ describe('MergeCoordinator', () => {
 			const result = await coordinator.mergeWorkerChanges(base, workers);
 
 			expect(result.conflicts.length).toBeGreaterThan(0);
-			const strategy = result.strategies.get(result.conflicts[0]!.id);
+			const strategy = result.strategies.get(result.conflicts[0]?.id);
 			expect(strategy).toBeDefined();
 		});
 

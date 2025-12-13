@@ -4,10 +4,15 @@
  * Connects to remote tRPC API server for distributed task execution.
  */
 
-import { createTRPCClient, type CreateTRPCClientOptions, httpBatchLink, wsLink } from '@trpc/client';
+import type { AppRouter } from '@dxheroes/ado-api';
+import {
+	type CreateTRPCClientOptions,
+	createTRPCClient,
+	httpBatchLink,
+	wsLink,
+} from '@trpc/client';
 import { createWSClient } from '@trpc/client/links/wsLink';
 import superjson from 'superjson';
-import type { AppRouter } from '@dxheroes/ado-api';
 
 export interface RemoteClientConfig {
 	apiUrl: string;
@@ -29,7 +34,7 @@ export function createRemoteClient(config: RemoteClientConfig): RemoteClientInst
 	const wsClient = config.wsUrl
 		? createWSClient({
 				url: config.wsUrl,
-		  })
+			})
 		: undefined;
 
 	// tRPC client configuration
@@ -45,14 +50,14 @@ export function createRemoteClient(config: RemoteClientConfig): RemoteClientInst
 						url: config.apiUrl,
 						headers: config.headers ?? {},
 					}),
-			  ]
+				]
 			: [
 					// HTTP only
 					httpBatchLink({
 						url: config.apiUrl,
 						headers: config.headers ?? {},
 					}),
-			  ],
+				],
 		transformer: superjson,
 	};
 

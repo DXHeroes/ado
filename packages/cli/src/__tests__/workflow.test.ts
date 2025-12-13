@@ -4,10 +4,10 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { WorkflowDefinition } from '@dxheroes/ado-core';
+import { cleanupTempDir, createTempProject } from '@dxheroes/ado-shared/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
-import { createTempProject, cleanupTempDir } from '@dxheroes/ado-shared/test-utils';
-import type { WorkflowDefinition } from '@dxheroes/ado-core';
 
 // Mock @clack/prompts
 vi.mock('@clack/prompts', async (importOriginal) => {
@@ -330,9 +330,9 @@ routing:
 			);
 
 			const fs = require('node:fs');
-			const files = fs.readdirSync(projectDir).filter((f: string) =>
-				f.endsWith('.workflow.yaml') || f.endsWith('.workflow.yml')
-			);
+			const files = fs
+				.readdirSync(projectDir)
+				.filter((f: string) => f.endsWith('.workflow.yaml') || f.endsWith('.workflow.yml'));
 
 			expect(files).toHaveLength(2);
 		});

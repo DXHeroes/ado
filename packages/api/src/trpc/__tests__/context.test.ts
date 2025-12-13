@@ -2,12 +2,12 @@
  * tRPC Context Tests
  */
 
-import { describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AsyncStateStore, StateStore, TelemetryService } from '@dxheroes/ado-core';
+import { describe, expect, it, vi } from 'vitest';
+import type { ApiConfig } from '../../types.js';
 import { createContext, createWSSContext } from '../context.js';
 import type { CreateHTTPContextOptions, CreateWSSContextFnOptions } from '../context.js';
-import type { ApiConfig } from '../../types.js';
 
 describe('tRPC Context', () => {
 	const mockConfig: ApiConfig = {
@@ -100,11 +100,11 @@ describe('tRPC Context', () => {
 
 		it('should create context with async state store', async () => {
 			const mockAsyncStateStore: AsyncStateStore = {
-				createSession: vi.fn(async () => ({} as any)),
+				createSession: vi.fn(async () => ({}) as any),
 				getSession: vi.fn(async () => null),
 				getSessionsByProject: vi.fn(async () => []),
 				updateSession: vi.fn(async () => {}),
-				createTask: vi.fn(async () => ({} as any)),
+				createTask: vi.fn(async () => ({}) as any),
 				getTask: vi.fn(async () => null),
 				updateTask: vi.fn(async () => {}),
 				getTasksBySession: vi.fn(async () => []),
@@ -112,7 +112,7 @@ describe('tRPC Context', () => {
 				recordUsage: vi.fn(async () => {}),
 				getUsageByProvider: vi.fn(async () => []),
 				getTotalUsage: vi.fn(async () => ({ requests: 0, tokens: 0, cost: 0 })),
-				createCheckpoint: vi.fn(async () => ({} as any)),
+				createCheckpoint: vi.fn(async () => ({}) as any),
 				getCheckpoint: vi.fn(async () => null),
 				getLatestCheckpoint: vi.fn(async () => null),
 				close: vi.fn(async () => {}),

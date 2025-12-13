@@ -3,9 +3,9 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
+import { cleanupTempDir, createTempProject } from '@dxheroes/ado-shared/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { createTempProject, cleanupTempDir } from '@dxheroes/ado-shared/test-utils';
 
 // Mock @clack/prompts
 vi.mock('@clack/prompts', async (importOriginal) => {
@@ -210,14 +210,8 @@ routing:
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
 			// Read back
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
-			const updatedProviders = updatedConfig.providers as Record<
-				string,
-				{ enabled: boolean }
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
+			const updatedProviders = updatedConfig.providers as Record<string, { enabled: boolean }>;
 
 			expect(updatedProviders['claude-code']?.enabled).toBe(false);
 		});
@@ -241,10 +235,7 @@ routing:
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
 			// Read back
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			const updatedProviders = updatedConfig.providers as Record<
 				string,
 				{ accessModes: Array<{ mode: string; enabled: boolean }> }
@@ -285,10 +276,7 @@ routing:
 
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			expect((updatedConfig.project as Record<string, unknown>).id).toBe('new-project-id');
 		});
 
@@ -302,10 +290,7 @@ routing:
 
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			const updatedRouting = updatedConfig.routing as Record<string, unknown>;
 			const updatedApiFallback = updatedRouting.apiFallback as Record<string, unknown>;
 
@@ -322,10 +307,7 @@ routing:
 
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			const updatedRouting = updatedConfig.routing as Record<string, unknown>;
 			const updatedApiFallback = updatedRouting.apiFallback as Record<string, unknown>;
 
@@ -348,10 +330,7 @@ routing:
 
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			const newObj = updatedConfig.new as Record<string, unknown>;
 			const nestedObj = newObj.nested as Record<string, unknown>;
 
@@ -417,10 +396,7 @@ routing:
 			writeFileSync(configPath, stringifyYaml(rawConfig));
 
 			// Read back
-			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<
-				string,
-				unknown
-			>;
+			const updatedConfig = parseYaml(readFileSync(configPath, 'utf-8')) as Record<string, unknown>;
 			const updatedProviders = updatedConfig.providers as Record<
 				string,
 				{ accessModes: Array<{ mode: string; enabled: boolean }> }
@@ -524,9 +500,7 @@ routing:
 			const { loadConfigWithFallback } = await import('@dxheroes/ado-core');
 			const config = loadConfigWithFallback(projectDir);
 
-			const enabledProviders = Object.entries(config.providers).filter(
-				([_id, c]) => c.enabled,
-			);
+			const enabledProviders = Object.entries(config.providers).filter(([_id, c]) => c.enabled);
 
 			expect(enabledProviders).toHaveLength(1);
 			expect(enabledProviders[0]?.[0]).toBe('claude-code');

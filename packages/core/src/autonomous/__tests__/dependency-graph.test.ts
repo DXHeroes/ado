@@ -2,7 +2,7 @@
  * Tests for DependencyGraph
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { DependencyGraph, type TaskNode } from '../dependency-graph.js';
 
 describe('DependencyGraph', () => {

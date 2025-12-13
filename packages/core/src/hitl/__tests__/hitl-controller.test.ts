@@ -5,17 +5,17 @@
 import { AdoError } from '@dxheroes/ado-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-	HITLController,
-	createHITLController,
 	type ApprovalDecision,
 	type ApprovalFilter,
 	type ApprovalRequest,
 	type ApprovalType,
 	type EscalationChannel,
+	HITLController,
 	type HITLControllerConfig,
 	type HITLPolicy,
 	type HumanInput,
 	type InterruptReason,
+	createHITLController,
 } from '../hitl-controller.js';
 
 describe('HITLController', () => {
@@ -368,9 +368,9 @@ describe('HITLController', () => {
 			if (pending[0]) {
 				await controller.submitDecision(pending[0].id, { approved: true });
 
-				await expect(
-					controller.submitDecision(pending[0].id, { approved: false }),
-				).rejects.toThrow('already been decided');
+				await expect(controller.submitDecision(pending[0].id, { approved: false })).rejects.toThrow(
+					'already been decided',
+				);
 
 				await expect(
 					controller.submitDecision(pending[0].id, { approved: false }),
@@ -520,9 +520,7 @@ describe('HITLController', () => {
 
 				await controller.interrupt(`session-${reason}`, reason);
 
-				expect(eventSpy).toHaveBeenCalledWith(
-					expect.objectContaining({ reason }),
-				);
+				expect(eventSpy).toHaveBeenCalledWith(expect.objectContaining({ reason }));
 			}
 		});
 
@@ -663,9 +661,7 @@ describe('HITLController', () => {
 
 				await controller.escalate(`session-${channel}`, channel, `Escalate to ${channel}`);
 
-				expect(eventSpy).toHaveBeenCalledWith(
-					expect.objectContaining({ channel }),
-				);
+				expect(eventSpy).toHaveBeenCalledWith(expect.objectContaining({ channel }));
 			}
 		});
 
@@ -683,9 +679,7 @@ describe('HITLController', () => {
 					urgency,
 				);
 
-				expect(eventSpy).toHaveBeenCalledWith(
-					expect.objectContaining({ urgency }),
-				);
+				expect(eventSpy).toHaveBeenCalledWith(expect.objectContaining({ urgency }));
 			}
 		});
 
@@ -695,9 +689,7 @@ describe('HITLController', () => {
 
 			await controller.escalate('session-1', 'email', 'Test escalation');
 
-			expect(eventSpy).toHaveBeenCalledWith(
-				expect.objectContaining({ urgency: 'medium' }),
-			);
+			expect(eventSpy).toHaveBeenCalledWith(expect.objectContaining({ urgency: 'medium' }));
 		});
 
 		it('should emit escalation_created event', async () => {
@@ -855,11 +847,7 @@ describe('HITLController', () => {
 	describe('Cleanup', () => {
 		it('should remove old requests', async () => {
 			// Create an approval request
-			const approvalPromise = controller.requestApproval(
-				'task-1',
-				'file_edit',
-				'Old approval',
-			);
+			const approvalPromise = controller.requestApproval('task-1', 'file_edit', 'Old approval');
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -878,11 +866,7 @@ describe('HITLController', () => {
 
 		it('should keep recent requests', async () => {
 			// Create an approval request
-			const approvalPromise = controller.requestApproval(
-				'task-1',
-				'file_edit',
-				'Recent approval',
-			);
+			const approvalPromise = controller.requestApproval('task-1', 'file_edit', 'Recent approval');
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -982,11 +966,7 @@ describe('HITLController', () => {
 			const eventSpy = vi.fn();
 			controller.on('approval_decided', eventSpy);
 
-			const approvalPromise = controller.requestApproval(
-				'task-1',
-				'file_edit',
-				'Edit file?',
-			);
+			const approvalPromise = controller.requestApproval('task-1', 'file_edit', 'Edit file?');
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -1089,11 +1069,7 @@ describe('HITLController', () => {
 			controller.on('approval_requested', listener2);
 			controller.on('approval_requested', listener3);
 
-			const approvalPromise = controller.requestApproval(
-				'task-1',
-				'file_edit',
-				'Edit file?',
-			);
+			const approvalPromise = controller.requestApproval('task-1', 'file_edit', 'Edit file?');
 
 			await new Promise((resolve) => setTimeout(resolve, 10));
 
@@ -1194,19 +1170,9 @@ describe('HITLController', () => {
 			controller.on('escalation_created', escalationSpy);
 
 			// Escalate to multiple channels
-			await controller.escalate(
-				'session-1',
-				'slack',
-				'Task stuck for 30 minutes',
-				'medium',
-			);
+			await controller.escalate('session-1', 'slack', 'Task stuck for 30 minutes', 'medium');
 
-			await controller.escalate(
-				'session-1',
-				'email',
-				'Critical approval needed',
-				'high',
-			);
+			await controller.escalate('session-1', 'email', 'Critical approval needed', 'high');
 
 			expect(escalationSpy).toHaveBeenCalledTimes(2);
 

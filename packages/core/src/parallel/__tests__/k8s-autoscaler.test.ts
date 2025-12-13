@@ -2,14 +2,14 @@
  * Tests for K8sAutoscaler
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import * as k8s from '@kubernetes/client-node';
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	type CustomMetric,
+	type HPAConfig,
 	K8sAutoscaler,
 	createK8sAutoscaler,
-	type HPAConfig,
-	type CustomMetric,
 } from '../k8s-autoscaler.js';
-import * as k8s from '@kubernetes/client-node';
 
 // Mock Kubernetes client
 vi.mock('@kubernetes/client-node', () => {
@@ -176,9 +176,9 @@ describe('K8sAutoscaler', () => {
 			const metrics = call?.[0]?.body?.spec?.metrics;
 
 			expect(metrics).toHaveLength(2);
-			expect(metrics?.some((m: { resource?: { name?: string } }) => m.resource?.name === 'cpu')).toBe(
-				true,
-			);
+			expect(
+				metrics?.some((m: { resource?: { name?: string } }) => m.resource?.name === 'cpu'),
+			).toBe(true);
 			expect(
 				metrics?.some((m: { resource?: { name?: string } }) => m.resource?.name === 'memory'),
 			).toBe(true);

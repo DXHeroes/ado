@@ -86,10 +86,12 @@ export interface SandboxInstance {
 	/**
 	 * Resource usage
 	 */
-	resources?: {
-		cpuUsage: number;
-		memoryUsage: number;
-	} | undefined;
+	resources?:
+		| {
+				cpuUsage: number;
+				memoryUsage: number;
+		  }
+		| undefined;
 }
 
 export interface ExecutionRequest {
@@ -256,7 +258,9 @@ export class FirecrackerSandbox {
 		} catch (error) {
 			instance.status = 'failed';
 			this.metrics.active--;
-			throw new Error(`Failed to create sandbox: ${error instanceof Error ? error.message : 'Unknown error'}`);
+			throw new Error(
+				`Failed to create sandbox: ${error instanceof Error ? error.message : 'Unknown error'}`,
+			);
 		}
 	}
 
@@ -336,9 +340,7 @@ export class FirecrackerSandbox {
 
 			this.instances.delete(sandboxId);
 			this.metrics.active--;
-		} catch (error) {
-			console.error(`Failed to destroy sandbox ${sandboxId}:`, error);
-		}
+		} catch (_error) {}
 	}
 
 	/**

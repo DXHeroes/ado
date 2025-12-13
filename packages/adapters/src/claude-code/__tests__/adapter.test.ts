@@ -4,12 +4,7 @@
 
 import type { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
-import type {
-	AgentConfig,
-	AgentEvent,
-	AgentTask,
-	ProjectContext,
-} from '@dxheroes/ado-shared';
+import type { AgentConfig, AgentEvent, AgentTask, ProjectContext } from '@dxheroes/ado-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClaudeCodeAdapter } from '../adapter.js';
 
@@ -66,16 +61,7 @@ describe('ClaudeCodeAdapter', () => {
 				testing: true,
 				documentation: true,
 				debugging: true,
-				languages: [
-					'typescript',
-					'python',
-					'go',
-					'rust',
-					'java',
-					'javascript',
-					'c',
-					'cpp',
-				],
+				languages: ['typescript', 'python', 'go', 'rust', 'java', 'javascript', 'c', 'cpp'],
 				maxContextTokens: 200000,
 				supportsStreaming: true,
 				supportsMCP: true,

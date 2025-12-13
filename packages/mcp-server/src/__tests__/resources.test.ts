@@ -3,9 +3,9 @@
  * Tests for the MCP resources implementation
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
 import type { OrchestratorCore } from '@dxheroes/ado-core';
 import type { AdoConfig } from '@dxheroes/ado-shared';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createResources, handleResourceRead, initializeResources } from '../resources.js';
 
 describe('MCP Resources', () => {
@@ -450,10 +450,7 @@ describe('MCP Resources', () => {
 					getProgressStream: () => streamWithMultipleTasks,
 				};
 
-				initializeResources(
-					mockConfig,
-					orchestratorWithMultiple as unknown as OrchestratorCore,
-				);
+				initializeResources(mockConfig, orchestratorWithMultiple as unknown as OrchestratorCore);
 
 				const result = await handleResourceRead('ado://usage');
 				const response = JSON.parse(result.contents[0].text);

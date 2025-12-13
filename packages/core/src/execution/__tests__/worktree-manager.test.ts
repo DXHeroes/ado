@@ -2,12 +2,12 @@
  * Tests for WorktreeManager
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { WorktreeManager, type WorktreeConfig } from '../worktree-manager.js';
-import { AdoError } from '@dxheroes/ado-shared';
 import * as childProcess from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
+import { AdoError } from '@dxheroes/ado-shared';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type WorktreeConfig, WorktreeManager } from '../worktree-manager.js';
 
 // Mock child_process spawn
 vi.mock('node:child_process', () => ({
@@ -147,22 +147,19 @@ describe('WorktreeManager', () => {
 			expect(info.agentId).toBeUndefined();
 
 			// Verify mkdir was called to create worktree root
-			expect(mockMkdir).toHaveBeenCalledWith(
-				config.worktreeRoot,
-				{ recursive: true }
-			);
+			expect(mockMkdir).toHaveBeenCalledWith(config.worktreeRoot, { recursive: true });
 
 			// Verify git commands were called
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['rev-parse', '--git-dir']),
-				expect.objectContaining({ cwd: config.repositoryPath })
+				expect.objectContaining({ cwd: config.repositoryPath }),
 			);
 
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['worktree', 'add', '-b']),
-				expect.objectContaining({ cwd: config.repositoryPath })
+				expect.objectContaining({ cwd: config.repositoryPath }),
 			);
 		});
 
@@ -209,9 +206,7 @@ describe('WorktreeManager', () => {
 			});
 
 			await expect(manager.createWorktree('task-1')).rejects.toThrow(AdoError);
-			await expect(manager.createWorktree('task-1')).rejects.toThrow(
-				'Failed to create worktree'
-			);
+			await expect(manager.createWorktree('task-1')).rejects.toThrow('Failed to create worktree');
 		});
 
 		it('should clean up worktree directory on failure', async () => {
@@ -246,10 +241,10 @@ describe('WorktreeManager', () => {
 			await expect(manager.createWorktree('task-1')).rejects.toThrow();
 
 			// Verify cleanup was attempted
-			expect(mockRm).toHaveBeenCalledWith(
-				expect.stringContaining('.ado/worktrees'),
-				{ recursive: true, force: true }
-			);
+			expect(mockRm).toHaveBeenCalledWith(expect.stringContaining('.ado/worktrees'), {
+				recursive: true,
+				force: true,
+			});
 		});
 
 		it('should track created worktrees', async () => {
@@ -279,13 +274,13 @@ describe('WorktreeManager', () => {
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['worktree', 'remove', '--force', info.path]),
-				expect.anything()
+				expect.anything(),
 			);
 
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['branch', '-D', info.branch]),
-				expect.anything()
+				expect.anything(),
 			);
 		});
 
@@ -301,9 +296,7 @@ describe('WorktreeManager', () => {
 			mockGitFailure('Failed to remove worktree');
 
 			await expect(manager.removeWorktree(info.id)).rejects.toThrow(AdoError);
-			await expect(manager.removeWorktree(info.id)).rejects.toThrow(
-				'Failed to remove worktree'
-			);
+			await expect(manager.removeWorktree(info.id)).rejects.toThrow('Failed to remove worktree');
 		});
 
 		it('should ignore errors when deleting branch', async () => {
@@ -311,9 +304,9 @@ describe('WorktreeManager', () => {
 			const info = await manager.createWorktree('task-1');
 
 			// First call succeeds (remove worktree), second fails (delete branch)
-			let callCount = 0;
-			mockSpawn.mockImplementation((cmd, args) => {
-				callCount++;
+			let _callCount = 0;
+			mockSpawn.mockImplementation((_cmd, args) => {
+				_callCount++;
 				// worktree remove succeeds
 				if (args?.includes('remove')) {
 					return {
@@ -433,8 +426,8 @@ describe('WorktreeManager', () => {
 		it('should not remove recent worktrees', async () => {
 			mockGitSuccess();
 
-			const info1 = await manager.createWorktree('task-1');
-			const info2 = await manager.createWorktree('task-2');
+			const _info1 = await manager.createWorktree('task-1');
+			const _info2 = await manager.createWorktree('task-2');
 
 			const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -458,9 +451,7 @@ describe('WorktreeManager', () => {
 		});
 
 		it('should throw error if worktree does not exist', () => {
-			expect(() => manager.assignToAgent('non-existent', 'agent-1')).toThrow(
-				'Worktree not found'
-			);
+			expect(() => manager.assignToAgent('non-existent', 'agent-1')).toThrow('Worktree not found');
 		});
 	});
 
@@ -479,9 +470,7 @@ describe('WorktreeManager', () => {
 		});
 
 		it('should throw error if worktree does not exist', () => {
-			expect(() => manager.releaseFromAgent('non-existent')).toThrow(
-				'Worktree not found'
-			);
+			expect(() => manager.releaseFromAgent('non-existent')).toThrow('Worktree not found');
 		});
 	});
 
@@ -546,13 +535,13 @@ describe('WorktreeManager', () => {
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['checkout', 'main']),
-				expect.anything()
+				expect.anything(),
 			);
 
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['merge', info.branch]),
-				expect.anything()
+				expect.anything(),
 			);
 		});
 
@@ -566,7 +555,7 @@ describe('WorktreeManager', () => {
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['merge', '--squash', info.branch]),
-				expect.anything()
+				expect.anything(),
 			);
 		});
 
@@ -580,14 +569,12 @@ describe('WorktreeManager', () => {
 			expect(mockSpawn).toHaveBeenCalledWith(
 				'git',
 				expect.arrayContaining(['merge', '-m', 'Merge task-1', info.branch]),
-				expect.anything()
+				expect.anything(),
 			);
 		});
 
 		it('should throw error if worktree does not exist', async () => {
-			await expect(manager.mergeWorktree('non-existent')).rejects.toThrow(
-				'Worktree not found'
-			);
+			await expect(manager.mergeWorktree('non-existent')).rejects.toThrow('Worktree not found');
 		});
 
 		it('should throw AdoError if merge fails', async () => {
@@ -596,9 +583,9 @@ describe('WorktreeManager', () => {
 			const info = await manager.createWorktree('task-1');
 
 			// Mock merge failure
-			let callCount = 0;
-			mockSpawn.mockImplementation((cmd, args) => {
-				callCount++;
+			let _callCount = 0;
+			mockSpawn.mockImplementation((_cmd, args) => {
+				_callCount++;
 				// checkout succeeds
 				if (args?.includes('checkout')) {
 					return {
@@ -624,9 +611,7 @@ describe('WorktreeManager', () => {
 			});
 
 			await expect(manager.mergeWorktree(info.id)).rejects.toThrow(AdoError);
-			await expect(manager.mergeWorktree(info.id)).rejects.toThrow(
-				'Failed to merge worktree'
-			);
+			await expect(manager.mergeWorktree(info.id)).rejects.toThrow('Failed to merge worktree');
 		});
 	});
 

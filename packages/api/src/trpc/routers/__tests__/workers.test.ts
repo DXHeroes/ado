@@ -2,11 +2,11 @@
  * Workers tRPC Router Tests
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import type { StateStore, TelemetryService } from '@dxheroes/ado-core';
-import { workersRouter } from '../workers.js';
-import type { Context } from '../../context.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from '../../../types.js';
+import type { Context } from '../../context.js';
+import { workersRouter } from '../workers.js';
 
 describe('Workers tRPC Router', () => {
 	let mockStateStore: StateStore;
@@ -83,7 +83,10 @@ describe('Workers tRPC Router', () => {
 			expect(result.success).toBe(true);
 			expect(result.workerId).toBe(input.workerId);
 			expect(result.registeredAt).toBeDefined();
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.register', expect.any(Function));
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
+				'workers.register',
+				expect.any(Function),
+			);
 		});
 
 		it.skip('should register a worker with metadata', async () => {
@@ -159,7 +162,10 @@ describe('Workers tRPC Router', () => {
 			expect(result).toBeDefined();
 			expect(result.success).toBe(true);
 			expect(result.timestamp).toBeDefined();
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.heartbeat', expect.any(Function));
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
+				'workers.heartbeat',
+				expect.any(Function),
+			);
 		});
 
 		it('should return current timestamp', async () => {
@@ -231,9 +237,7 @@ describe('Workers tRPC Router', () => {
 		it('should validate status enum', async () => {
 			const caller = workersRouter.createCaller(mockContext);
 
-			await expect(
-				caller.list({ status: 'invalid' as any }),
-			).rejects.toThrow();
+			await expect(caller.list({ status: 'invalid' as any })).rejects.toThrow();
 		});
 	});
 
@@ -253,7 +257,10 @@ describe('Workers tRPC Router', () => {
 			expect(result.lastHeartbeat).toBeDefined();
 			expect(result.resources).toBeDefined();
 			expect(result.capabilities).toEqual([]);
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.getStatus', expect.any(Function));
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
+				'workers.getStatus',
+				expect.any(Function),
+			);
 		});
 
 		it('should return resources information', async () => {
@@ -290,7 +297,10 @@ describe('Workers tRPC Router', () => {
 			expect(result.workerId).toBe(input.workerId);
 			expect(result.taskId).toBe(input.taskId);
 			expect(result.assignedAt).toBeDefined();
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.assignTask', expect.any(Function));
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
+				'workers.assignTask',
+				expect.any(Function),
+			);
 		});
 
 		it('should return assignment timestamp', async () => {
@@ -310,13 +320,9 @@ describe('Workers tRPC Router', () => {
 		it('should validate workerId and taskId', async () => {
 			const caller = workersRouter.createCaller(mockContextWithState);
 
-			await expect(
-				caller.assignTask({ workerId: '', taskId: 'task-123' }),
-			).rejects.toThrow();
+			await expect(caller.assignTask({ workerId: '', taskId: 'task-123' })).rejects.toThrow();
 
-			await expect(
-				caller.assignTask({ workerId: 'worker-123', taskId: '' }),
-			).rejects.toThrow();
+			await expect(caller.assignTask({ workerId: 'worker-123', taskId: '' })).rejects.toThrow();
 		});
 	});
 
@@ -331,7 +337,10 @@ describe('Workers tRPC Router', () => {
 			expect(result.success).toBe(true);
 			expect(result.workerId).toBe(workerId);
 			expect(result.unregisteredAt).toBeDefined();
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.unregister', expect.any(Function));
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
+				'workers.unregister',
+				expect.any(Function),
+			);
 		});
 
 		it('should return unregistration timestamp', async () => {
@@ -409,9 +418,7 @@ describe('Workers tRPC Router', () => {
 		it('should validate enum values', async () => {
 			const caller = workersRouter.createCaller(mockContext);
 
-			await expect(
-				caller.list({ status: 'unknown' as any }),
-			).rejects.toThrow();
+			await expect(caller.list({ status: 'unknown' as any })).rejects.toThrow();
 		});
 
 		it('should validate numeric ranges', async () => {
@@ -473,10 +480,7 @@ describe('Workers tRPC Router', () => {
 			const caller = workersRouter.createCaller(mockContext);
 			await caller.list({});
 
-			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith(
-				'workers.list',
-				expect.any(Function),
-			);
+			expect(mockTelemetry.traceAsync).toHaveBeenCalledWith('workers.list', expect.any(Function));
 		});
 
 		it('should trace getStatus calls', async () => {

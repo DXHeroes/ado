@@ -338,7 +338,8 @@ export class CostAwareLoadBalancer {
 		}
 
 		// Otherwise calculate from hourly rate
-		const durationHours = (taskEstimate.estimatedDuration ?? worker.avgCompletionTime) / (1000 * 60 * 60);
+		const durationHours =
+			(taskEstimate.estimatedDuration ?? worker.avgCompletionTime) / (1000 * 60 * 60);
 		return worker.costPerHour * durationHours;
 	}
 
@@ -395,10 +396,12 @@ export class CostAwareLoadBalancer {
 			...Array.from(this.workerProfiles.values()).map((w) => w.costPerHour),
 		);
 		const potentialMaxCost = totalTasks * maxCostPerTask;
-		const costSavings = potentialMaxCost > 0 ? ((potentialMaxCost - totalCost) / potentialMaxCost) * 100 : 0;
+		const costSavings =
+			potentialMaxCost > 0 ? ((potentialMaxCost - totalCost) / potentialMaxCost) * 100 : 0;
 
 		const avgCompletionTime =
-			this.routingHistory.reduce((sum, d) => sum + d.estimatedCompletionTime, 0) / (totalTasks || 1);
+			this.routingHistory.reduce((sum, d) => sum + d.estimatedCompletionTime, 0) /
+			(totalTasks || 1);
 
 		let budgetUtilization: number | undefined;
 		if (this.config.dailyBudgetLimit) {

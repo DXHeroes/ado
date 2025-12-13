@@ -2,14 +2,14 @@
  * Tests for CostAwareLoadBalancer
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CostTracker } from '../../cost/tracker.js';
 import {
 	CostAwareLoadBalancer,
-	createCostAwareLoadBalancer,
-	type WorkerCostProfile,
 	type LoadBalancerConfig,
+	type WorkerCostProfile,
+	createCostAwareLoadBalancer,
 } from '../cost-aware-load-balancer.js';
-import type { CostTracker } from '../../cost/tracker.js';
 
 describe('CostAwareLoadBalancer', () => {
 	let mockCostTracker: CostTracker;
@@ -307,9 +307,7 @@ describe('CostAwareLoadBalancer', () => {
 
 			constrainedBalancer.registerWorker(profile);
 
-			await expect(constrainedBalancer.routeTask({})).rejects.toThrow(
-				'Task cost',
-			);
+			await expect(constrainedBalancer.routeTask({})).rejects.toThrow('Task cost');
 		});
 
 		it('should enforce daily budget limit', async () => {
@@ -330,9 +328,7 @@ describe('CostAwareLoadBalancer', () => {
 
 			budgetBalancer.registerWorker(profile);
 
-			await expect(budgetBalancer.routeTask({})).rejects.toThrow(
-				'Daily budget limit reached',
-			);
+			await expect(budgetBalancer.routeTask({})).rejects.toThrow('Daily budget limit reached');
 		});
 
 		it('should use per-task cost if available', async () => {

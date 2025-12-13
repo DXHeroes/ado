@@ -4,16 +4,8 @@
  * Decomposes complex tasks into smaller subtasks with dependencies.
  */
 
-import {
-	DependencyGraph,
-	type ExecutionPlan,
-	type TaskNode,
-} from './dependency-graph.js';
-import {
-	TaskClassifier,
-	type ClassificationResult,
-	type TaskContext,
-} from './task-classifier.js';
+import { DependencyGraph, type ExecutionPlan, type TaskNode } from './dependency-graph.js';
+import { type ClassificationResult, TaskClassifier, type TaskContext } from './task-classifier.js';
 
 export interface DecompositionResult {
 	originalTask: string;
@@ -69,10 +61,7 @@ export class TaskDecomposer {
 			classification.priority === 'critical';
 
 		// Generate checkpoints
-		const checkpoints = this.generateCheckpoints(
-			executionPlan,
-			classification,
-		);
+		const checkpoints = this.generateCheckpoints(executionPlan, classification);
 
 		return {
 			originalTask: context.prompt,
@@ -87,10 +76,7 @@ export class TaskDecomposer {
 	/**
 	 * Generate subtasks based on task type and complexity
 	 */
-	private generateSubtasks(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private generateSubtasks(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		const { type, complexity } = classification;
 
 		// Simple tasks don't need decomposition (except bugs, tests, docs which have structured workflows)
@@ -132,10 +118,7 @@ export class TaskDecomposer {
 	/**
 	 * Decompose feature task
 	 */
-	private decomposeFeature(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private decomposeFeature(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		const tasks: TaskNode[] = [];
 		const baseTime = classification.estimatedDuration / 6; // 6 phases
 
@@ -225,13 +208,10 @@ export class TaskDecomposer {
 	/**
 	 * Decompose bug fix task
 	 */
-	private decomposeBug(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private decomposeBug(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		// For truly simple bugs (typos, cosmetic fixes), don't decompose
 		const trivialBugKeywords = ['typo', 'spelling', 'cosmetic', 'whitespace', 'formatting'];
-		const isTrivial = trivialBugKeywords.some(kw => context.prompt.toLowerCase().includes(kw));
+		const isTrivial = trivialBugKeywords.some((kw) => context.prompt.toLowerCase().includes(kw));
 
 		if (classification.complexity === 'simple' && isTrivial) {
 			return [
@@ -376,10 +356,7 @@ export class TaskDecomposer {
 	/**
 	 * Decompose test task
 	 */
-	private decomposeTest(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private decomposeTest(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		// For simple test tasks, don't decompose
 		if (classification.complexity === 'simple') {
 			return [
@@ -438,13 +415,10 @@ export class TaskDecomposer {
 	/**
 	 * Decompose documentation task
 	 */
-	private decomposeDocs(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private decomposeDocs(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		// For simple docs (typos, small updates), don't decompose
 		const simpleDocsKeywords = ['typo', 'readme', 'comment', 'jsdoc'];
-		const isSimple = simpleDocsKeywords.some(kw => context.prompt.toLowerCase().includes(kw));
+		const isSimple = simpleDocsKeywords.some((kw) => context.prompt.toLowerCase().includes(kw));
 
 		if (classification.complexity === 'simple' && isSimple) {
 			return [
@@ -503,10 +477,7 @@ export class TaskDecomposer {
 	/**
 	 * Decompose generic task
 	 */
-	private decomposeGeneric(
-		context: TaskContext,
-		classification: ClassificationResult,
-	): TaskNode[] {
+	private decomposeGeneric(context: TaskContext, classification: ClassificationResult): TaskNode[] {
 		return [
 			{
 				id: 'task-1',
@@ -542,8 +513,7 @@ export class TaskDecomposer {
 				id: 'checkpoint-design',
 				stage: designStage.stage,
 				name: 'Design Review',
-				description:
-					'Review design specification before implementation',
+				description: 'Review design specification before implementation',
 				reviewCriteria: [
 					'Design is clear and complete',
 					'Edge cases are identified',
@@ -587,9 +557,7 @@ export class TaskDecomposer {
 						'Breaking changes documented',
 						'Rollback plan prepared',
 					],
-					blockingIssues: [
-						'Cannot proceed without explicit approval',
-					],
+					blockingIssues: ['Cannot proceed without explicit approval'],
 				});
 			}
 		}

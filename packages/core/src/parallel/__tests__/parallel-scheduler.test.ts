@@ -2,15 +2,10 @@
  * Tests for ParallelScheduler
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	ParallelScheduler,
-	LocalWorkerPool,
-	type WorkerPool,
-	type SchedulerConfig,
-} from '../parallel-scheduler.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExecutionPlan, TaskNode } from '../../autonomous/dependency-graph.js';
 import type { RecoveryManager } from '../../autonomous/recovery-manager.js';
+import { LocalWorkerPool, ParallelScheduler, type WorkerPool } from '../parallel-scheduler.js';
 
 describe('ParallelScheduler', () => {
 	let workerPool: WorkerPool;
@@ -163,7 +158,7 @@ describe('ParallelScheduler', () => {
 
 			const startTime = Date.now();
 			const result = await scheduler.execute(plan, taskDefinitions);
-			const duration = Date.now() - startTime;
+			const _duration = Date.now() - startTime;
 
 			expect(result.success).toBe(true);
 			expect(result.completedTasks).toBe(2);

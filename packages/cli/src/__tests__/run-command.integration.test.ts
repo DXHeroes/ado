@@ -2,10 +2,10 @@
  * Integration test for run command
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createTempProject, cleanupTempDir } from '@dxheroes/ado-shared/test-utils';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { cleanupTempDir, createTempProject } from '@dxheroes/ado-shared/test-utils';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 describe('Run Command Integration', () => {
 	let projectDir: string;
@@ -116,7 +116,10 @@ preferences:
 
 			await fs.writeFile(configPath, configContent);
 
-			const fileExists = await fs.access(configPath).then(() => true).catch(() => false);
+			const fileExists = await fs
+				.access(configPath)
+				.then(() => true)
+				.catch(() => false);
 			expect(fileExists).toBe(true);
 		});
 	});

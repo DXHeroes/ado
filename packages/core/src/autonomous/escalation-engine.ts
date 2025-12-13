@@ -94,9 +94,7 @@ export class EscalationEngine {
 		// Count previous escalations from context
 		const previousEscalations = context.previousEscalations;
 		const retryCount = previousEscalations.filter((e) => e === 'retry').length;
-		const approachCount = previousEscalations.filter(
-			(e) => e === 'different_approach',
-		).length;
+		const approachCount = previousEscalations.filter((e) => e === 'different_approach').length;
 
 		// Determine escalation level based on history and stuck detection
 		if (!context.stuckDetection.isStuck) {
@@ -136,20 +134,14 @@ export class EscalationEngine {
 				if (context.taskComplexity === 'epic') {
 					return this.createPartialCompletionDecision(context);
 				}
-				return this.createHumanInterventionDecision(
-					context,
-					'Task timeout exceeded',
-				);
+				return this.createHumanInterventionDecision(context, 'Task timeout exceeded');
 
 			case 'oscillating':
 				// Oscillating - needs fundamentally different approach or human
 				if (approachCount === 0) {
 					return this.createDifferentApproachDecision(context);
 				}
-				return this.createHumanInterventionDecision(
-					context,
-					'Agent oscillating between states',
-				);
+				return this.createHumanInterventionDecision(context, 'Agent oscillating between states');
 
 			case 'test_failure_loop':
 				// Test failures - may need requirement clarification
@@ -190,20 +182,14 @@ export class EscalationEngine {
 			],
 			requiresHuman: false,
 			canAutoResolve: true,
-			suggestedNextSteps: [
-				'Re-read error output',
-				'Apply targeted fix',
-				'Run tests',
-			],
+			suggestedNextSteps: ['Re-read error output', 'Apply targeted fix', 'Run tests'],
 		};
 	}
 
 	/**
 	 * Create different approach decision
 	 */
-	private createDifferentApproachDecision(
-		context: EscalationContext,
-	): EscalationDecision {
+	private createDifferentApproachDecision(context: EscalationContext): EscalationDecision {
 		const strategies = this.suggestAlternativeStrategies(context);
 
 		return {
@@ -225,9 +211,7 @@ export class EscalationEngine {
 	/**
 	 * Create partial completion decision
 	 */
-	private createPartialCompletionDecision(
-		_context: EscalationContext,
-	): EscalationDecision {
+	private createPartialCompletionDecision(_context: EscalationContext): EscalationDecision {
 		return {
 			level: 'partial_completion',
 			reason: 'Multiple approaches failed - attempting partial completion',
@@ -276,9 +260,7 @@ export class EscalationEngine {
 	/**
 	 * Suggest alternative strategies based on stuck reason
 	 */
-	private suggestAlternativeStrategies(
-		context: EscalationContext,
-	): string[] {
+	private suggestAlternativeStrategies(context: EscalationContext): string[] {
 		const { stuckDetection } = context;
 
 		if (!stuckDetection.reason) {
@@ -341,8 +323,6 @@ export class EscalationEngine {
 /**
  * Create escalation engine
  */
-export function createEscalationEngine(
-	config?: Partial<EscalationConfig>,
-): EscalationEngine {
+export function createEscalationEngine(config?: Partial<EscalationConfig>): EscalationEngine {
 	return new EscalationEngine(config);
 }

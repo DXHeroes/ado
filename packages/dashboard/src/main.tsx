@@ -13,7 +13,6 @@ const queryClient = new QueryClient({
 	},
 });
 
-// biome-ignore lint/style/noNonNullAssertion: root element always exists
 ReactDOM.createRoot(document.getElementById('root')!).render(
 	<React.StrictMode>
 		<QueryClientProvider client={queryClient}>

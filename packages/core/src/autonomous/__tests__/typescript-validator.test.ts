@@ -2,18 +2,15 @@
  * Tests for TypeScriptValidator
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	TypeScriptValidator,
-	createTypeScriptValidator,
-} from '../typescript-validator.js';
-import type {
-	ValidatorContext,
-	QualityGateConfig,
-	ValidationResult,
-} from '../quality-validator.js';
 import { exec } from 'node:child_process';
 import { promises as fs } from 'node:fs';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type {
+	QualityGateConfig,
+	ValidationResult,
+	ValidatorContext,
+} from '../quality-validator.js';
+import { TypeScriptValidator, createTypeScriptValidator } from '../typescript-validator.js';
 
 vi.mock('node:child_process');
 vi.mock('node:fs');
@@ -118,7 +115,7 @@ describe('TypeScriptValidator', () => {
 			};
 
 			// Mock successful validation
-			const mockExec = vi.fn().mockImplementation((cmd, opts, callback) => {
+			const mockExec = vi.fn().mockImplementation((_cmd, _opts, callback) => {
 				if (typeof callback === 'function') {
 					callback(null, { stdout: '', stderr: '' });
 				}
@@ -144,7 +141,7 @@ describe('TypeScriptValidator', () => {
 				parallel: false,
 			};
 
-			const mockExec = vi.fn().mockImplementation((cmd, opts, callback) => {
+			const mockExec = vi.fn().mockImplementation((_cmd, _opts, callback) => {
 				if (typeof callback === 'function') {
 					callback(null, { stdout: '', stderr: '' });
 				}
@@ -344,9 +341,7 @@ describe('TypeScriptValidator', () => {
 			const gates = validator.checkQualityGates(results, config);
 
 			expect(gates.passed).toBe(false);
-			expect(
-				gates.blockers.some((b) => b.includes('exceeds maximum')),
-			).toBe(true);
+			expect(gates.blockers.some((b) => b.includes('exceeds maximum'))).toBe(true);
 		});
 
 		it('should warn about warnings when not allowed', () => {
@@ -493,7 +488,7 @@ describe('TypeScriptValidator', () => {
 			};
 
 			// Mock exec to work with promisify
-			const mockExec = vi.fn().mockImplementation((cmd, opts, callback) => {
+			const mockExec = vi.fn().mockImplementation((_cmd, _opts, callback) => {
 				// Simulate async behavior
 				setImmediate(() => {
 					if (typeof callback === 'function') {
@@ -526,7 +521,7 @@ describe('TypeScriptValidator', () => {
 			};
 
 			// Mock exec to work with promisify
-			const mockExec = vi.fn().mockImplementation((cmd, opts, callback) => {
+			const mockExec = vi.fn().mockImplementation((_cmd, _opts, callback) => {
 				// Simulate async behavior
 				setImmediate(() => {
 					if (typeof callback === 'function') {

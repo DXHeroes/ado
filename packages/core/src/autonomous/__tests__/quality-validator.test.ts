@@ -2,14 +2,13 @@
  * Tests for QualityValidator
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
+	DEFAULT_QUALITY_GATES,
+	type ValidationIssue,
+	type ValidationResult,
 	aggregateValidationResults,
 	formatErrorFeedback,
-	DEFAULT_QUALITY_GATES,
-	type ValidationResult,
-	type ValidationIssue,
-	type QualityGateConfig,
 } from '../quality-validator.js';
 
 describe('QualityValidator', () => {
@@ -345,9 +344,7 @@ describe('QualityValidator', () => {
 			const aggregated = aggregateValidationResults(results);
 
 			expect(aggregated.success).toBe(true);
-			expect(aggregated.coverage?.lines).toBeGreaterThanOrEqual(
-				DEFAULT_QUALITY_GATES.minCoverage,
-			);
+			expect(aggregated.coverage?.lines).toBeGreaterThanOrEqual(DEFAULT_QUALITY_GATES.minCoverage);
 		});
 
 		it('should identify coverage below threshold', () => {

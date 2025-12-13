@@ -103,27 +103,31 @@ export function createFeatureSpec(brief: string): Specification {
 			},
 			{
 				title: 'Requirements',
-				content: `# Requirements\n\n## Functional Requirements\n\n1. \n\n## Non-Functional Requirements\n\n1. \n`,
+				content:
+					'# Requirements\n\n## Functional Requirements\n\n1. \n\n## Non-Functional Requirements\n\n1. \n',
 				required: true,
 			},
 			{
 				title: 'Design',
-				content: `# Design\n\n## Architecture\n\n## Data Models\n\n## API Contracts\n\n## User Interface\n`,
+				content:
+					'# Design\n\n## Architecture\n\n## Data Models\n\n## API Contracts\n\n## User Interface\n',
 				required: true,
 			},
 			{
 				title: 'Implementation Plan',
-				content: `# Implementation Plan\n\n## Phases\n\n### Phase 1: Foundation\n\n### Phase 2: Core Features\n\n### Phase 3: Polish & Testing\n\n## Dependencies\n\n## Risks & Mitigations\n`,
+				content:
+					'# Implementation Plan\n\n## Phases\n\n### Phase 1: Foundation\n\n### Phase 2: Core Features\n\n### Phase 3: Polish & Testing\n\n## Dependencies\n\n## Risks & Mitigations\n',
 				required: true,
 			},
 			{
 				title: 'Testing Strategy',
-				content: `# Testing Strategy\n\n## Unit Tests\n\n## Integration Tests\n\n## E2E Tests\n\n## Performance Tests\n\n## Security Tests\n`,
+				content:
+					'# Testing Strategy\n\n## Unit Tests\n\n## Integration Tests\n\n## E2E Tests\n\n## Performance Tests\n\n## Security Tests\n',
 				required: true,
 			},
 			{
 				title: 'Acceptance Criteria',
-				content: `# Acceptance Criteria\n\n- [ ] \n`,
+				content: '# Acceptance Criteria\n\n- [ ] \n',
 				required: true,
 			},
 		],
@@ -151,22 +155,24 @@ export function createBugFixSpec(brief: string): Specification {
 			},
 			{
 				title: 'Root Cause Analysis',
-				content: `# Root Cause Analysis\n\n## Investigation\n\n## Root Cause\n\n## Why It Happened\n`,
+				content:
+					'# Root Cause Analysis\n\n## Investigation\n\n## Root Cause\n\n## Why It Happened\n',
 				required: true,
 			},
 			{
 				title: 'Proposed Fix',
-				content: `# Proposed Fix\n\n## Solution\n\n## Files to Modify\n\n## Breaking Changes\n`,
+				content: '# Proposed Fix\n\n## Solution\n\n## Files to Modify\n\n## Breaking Changes\n',
 				required: true,
 			},
 			{
 				title: 'Testing Plan',
-				content: `# Testing Plan\n\n## Regression Tests\n\n## Validation Steps\n\n## Edge Cases\n`,
+				content: '# Testing Plan\n\n## Regression Tests\n\n## Validation Steps\n\n## Edge Cases\n',
 				required: true,
 			},
 			{
 				title: 'Verification',
-				content: `# Verification\n\n- [ ] Bug is fixed\n- [ ] No regressions introduced\n- [ ] Tests added to prevent recurrence\n`,
+				content:
+					'# Verification\n\n- [ ] Bug is fixed\n- [ ] No regressions introduced\n- [ ] Tests added to prevent recurrence\n',
 				required: true,
 			},
 		],
@@ -194,22 +200,24 @@ export function createRefactoringSpec(brief: string): Specification {
 			},
 			{
 				title: 'Desired State',
-				content: `# Desired State\n\n## Goals\n\n- \n\n## Success Metrics\n\n- \n`,
+				content: '# Desired State\n\n## Goals\n\n- \n\n## Success Metrics\n\n- \n',
 				required: true,
 			},
 			{
 				title: 'Refactoring Strategy',
-				content: `# Refactoring Strategy\n\n## Approach\n\n## Phases\n\n## Backward Compatibility\n`,
+				content:
+					'# Refactoring Strategy\n\n## Approach\n\n## Phases\n\n## Backward Compatibility\n',
 				required: true,
 			},
 			{
 				title: 'Risk Assessment',
-				content: `# Risk Assessment\n\n## Risks\n\n1. \n\n## Mitigation Strategies\n\n1. \n`,
+				content: '# Risk Assessment\n\n## Risks\n\n1. \n\n## Mitigation Strategies\n\n1. \n',
 				required: true,
 			},
 			{
 				title: 'Verification',
-				content: `# Verification\n\n- [ ] All tests pass\n- [ ] Performance metrics unchanged or improved\n- [ ] No behavioral changes\n- [ ] Code complexity reduced\n`,
+				content:
+					'# Verification\n\n- [ ] All tests pass\n- [ ] Performance metrics unchanged or improved\n- [ ] No behavioral changes\n- [ ] Code complexity reduced\n',
 				required: true,
 			},
 		],
@@ -229,8 +237,7 @@ export function createDefaultConstitution(): Constitution {
 				id: 'arch-001',
 				category: 'architecture',
 				principle: 'Separation of Concerns',
-				rationale:
-					'Each module should have a single, well-defined responsibility',
+				rationale: 'Each module should have a single, well-defined responsibility',
 				examples: [
 					'Business logic separate from presentation',
 					'Data access separate from business rules',
@@ -257,12 +264,8 @@ export function createDefaultConstitution(): Constitution {
 				id: 'sec-002',
 				category: 'security',
 				principle: 'Least Privilege',
-				rationale:
-					'Grant minimum permissions necessary for functionality',
-				examples: [
-					'Service accounts with limited scope',
-					'Role-based access control',
-				],
+				rationale: 'Grant minimum permissions necessary for functionality',
+				examples: ['Service accounts with limited scope', 'Role-based access control'],
 			},
 			{
 				id: 'perf-001',
@@ -276,20 +279,14 @@ export function createDefaultConstitution(): Constitution {
 				category: 'usability',
 				principle: 'Fail Fast with Clear Errors',
 				rationale: 'Detect errors early and provide actionable messages',
-				examples: [
-					'Validate input at API boundary',
-					'Structured error responses',
-				],
+				examples: ['Validate input at API boundary', 'Structured error responses'],
 			},
 			{
 				id: 'maint-001',
 				category: 'maintainability',
 				principle: 'Code for Readability',
 				rationale: 'Code is read more often than written',
-				examples: [
-					'Self-documenting variable names',
-					'Small, focused functions',
-				],
+				examples: ['Self-documenting variable names', 'Small, focused functions'],
 			},
 		],
 		constraints: [
@@ -345,11 +342,7 @@ export function createDefaultConstitution(): Constitution {
 			{
 				id: 'qg-003',
 				name: 'Documentation',
-				criteria: [
-					'API changes documented',
-					'Breaking changes in CHANGELOG',
-					'Examples updated',
-				],
+				criteria: ['API changes documented', 'Breaking changes in CHANGELOG', 'Examples updated'],
 				automated: false,
 				blocksMerge: true,
 			},

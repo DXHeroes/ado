@@ -12,11 +12,7 @@
 	},
 	"packageManager": "pnpm@10.22.0",
 	"pnpm": {
-		"onlyBuiltDependencies": [
-			"@biomejs/biome",
-			"better-sqlite3",
-			"esbuild"
-		]
+		"onlyBuiltDependencies": ["@biomejs/biome", "better-sqlite3", "esbuild"]
 	},
 	"scripts": {
 		"build": "pnpm -r build",

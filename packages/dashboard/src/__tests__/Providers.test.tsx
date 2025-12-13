@@ -98,7 +98,9 @@ describe('Providers Page', () => {
 		render(<Providers />, { wrapper: createWrapper() });
 
 		expect(screen.getByText('Providers')).toBeInTheDocument();
-		expect(screen.getByText('Manage AI coding agents and their configurations')).toBeInTheDocument();
+		expect(
+			screen.getByText('Manage AI coding agents and their configurations'),
+		).toBeInTheDocument();
 	});
 
 	it('displays all providers', async () => {

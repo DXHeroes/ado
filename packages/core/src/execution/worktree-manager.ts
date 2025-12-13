@@ -220,18 +220,14 @@ export class WorktreeManager {
 	 * Get worktree by agent ID
 	 */
 	getWorktreeByAgent(agentId: string): WorktreeInfo | undefined {
-		return Array.from(this.worktrees.values()).find(
-			(w) => w.agentId === agentId,
-		);
+		return Array.from(this.worktrees.values()).find((w) => w.agentId === agentId);
 	}
 
 	/**
 	 * Get available worktree (not assigned to agent)
 	 */
 	getAvailableWorktree(): WorktreeInfo | undefined {
-		return Array.from(this.worktrees.values()).find(
-			(w) => w.agentId === undefined,
-		);
+		return Array.from(this.worktrees.values()).find((w) => w.agentId === undefined);
 	}
 
 	/**

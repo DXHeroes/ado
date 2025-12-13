@@ -2,13 +2,13 @@
  * OpenTelemetry Setup Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-	initializeTelemetry,
-	shutdownTelemetry,
-	getTelemetrySDK,
-	setupGracefulShutdown,
 	createTelemetryConfigFromEnv,
+	getTelemetrySDK,
+	initializeTelemetry,
+	setupGracefulShutdown,
+	shutdownTelemetry,
 } from '../setup.js';
 import type { TelemetryConfig } from '../types.js';
 
@@ -227,7 +227,7 @@ describe('OpenTelemetry Setup', () => {
 
 	describe('createTelemetryConfigFromEnv', () => {
 		it('should return null when OTEL endpoint not set', () => {
-			delete process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+			process.env.OTEL_EXPORTER_OTLP_ENDPOINT = undefined;
 
 			const config = createTelemetryConfigFromEnv();
 
@@ -260,7 +260,7 @@ describe('OpenTelemetry Setup', () => {
 
 		it('should use default service name when not provided', () => {
 			process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-			delete process.env.OTEL_SERVICE_NAME;
+			process.env.OTEL_SERVICE_NAME = undefined;
 
 			const config = createTelemetryConfigFromEnv();
 
@@ -269,7 +269,7 @@ describe('OpenTelemetry Setup', () => {
 
 		it('should use default environment when not provided', () => {
 			process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-			delete process.env.NODE_ENV;
+			process.env.NODE_ENV = undefined;
 
 			const config = createTelemetryConfigFromEnv();
 
@@ -296,7 +296,7 @@ describe('OpenTelemetry Setup', () => {
 
 		it('should use default sample rate when not provided', () => {
 			process.env.OTEL_EXPORTER_OTLP_ENDPOINT = 'http://localhost:4318';
-			delete process.env.OTEL_TRACE_SAMPLER_ARG;
+			process.env.OTEL_TRACE_SAMPLER_ARG = undefined;
 
 			const config = createTelemetryConfigFromEnv();
 

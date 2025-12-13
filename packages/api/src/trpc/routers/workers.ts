@@ -4,8 +4,8 @@
  * Procedures for remote worker management (registration, health, status).
  */
 
-import { z } from 'zod';
 import { observable } from '@trpc/server/observable';
+import { z } from 'zod';
 import { protectedProcedure, publicProcedure, router } from '../trpc.js';
 
 // Input schemas
@@ -36,12 +36,11 @@ export const workersRouter = router({
 	/**
 	 * Register a new worker
 	 */
-	register: protectedProcedure
-		.input(registerWorkerSchema)
-		.mutation(async ({ ctx, input }) => {
-			const telemetry = ctx.telemetry;
+	register: protectedProcedure.input(registerWorkerSchema).mutation(async ({ ctx, input }) => {
+		const telemetry = ctx.telemetry;
 
-			return telemetry?.traceAsync('workers.register', async () => {
+		return (
+			telemetry?.traceAsync('workers.register', async () => {
 				// TODO: Register worker in state store
 				// Store capabilities, resources, last heartbeat
 
@@ -54,49 +53,54 @@ export const workersRouter = router({
 				success: true,
 				workerId: input.workerId,
 				registeredAt: new Date().toISOString(),
-			};
-		}),
+			}
+		);
+	}),
 
 	/**
 	 * Worker heartbeat (health check)
 	 */
 	heartbeat: protectedProcedure
 		.input(z.object({ workerId: z.string().min(1, 'Worker ID cannot be empty') }))
-		.mutation(async ({ ctx, input }) => {
+		.mutation(async ({ ctx, input: _input }) => {
 			const telemetry = ctx.telemetry;
 
-			return telemetry?.traceAsync('workers.heartbeat', async () => {
-				// TODO: Update last heartbeat timestamp
+			return (
+				telemetry?.traceAsync('workers.heartbeat', async () => {
+					// TODO: Update last heartbeat timestamp
 
-				return {
+					return {
+						success: true,
+						timestamp: new Date().toISOString(),
+					};
+				}) ?? {
 					success: true,
 					timestamp: new Date().toISOString(),
-				};
-			}) ?? {
-				success: true,
-				timestamp: new Date().toISOString(),
-			};
+				}
+			);
 		}),
 
 	/**
 	 * List all workers
 	 */
-	list: publicProcedure.input(listWorkersSchema).query(async ({ ctx, input }) => {
+	list: publicProcedure.input(listWorkersSchema).query(async ({ ctx, input: _input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('workers.list', async () => {
-			// TODO: Fetch workers from state store with filtering
+		return (
+			telemetry?.traceAsync('workers.list', async () => {
+				// TODO: Fetch workers from state store with filtering
 
-			return {
+				return {
+					items: [],
+					total: 0,
+					hasMore: false,
+				};
+			}) ?? {
 				items: [],
 				total: 0,
 				hasMore: false,
-			};
-		}) ?? {
-			items: [],
-			total: 0,
-			hasMore: false,
-		};
+			}
+		);
 	}),
 
 	/**
@@ -107,10 +111,24 @@ export const workersRouter = router({
 		.query(async ({ ctx, input }) => {
 			const telemetry = ctx.telemetry;
 
-			return telemetry?.traceAsync('workers.getStatus', async () => {
-				// TODO: Fetch worker status from state store
+			return (
+				telemetry?.traceAsync('workers.getStatus', async () => {
+					// TODO: Fetch worker status from state store
 
-				return {
+					return {
+						workerId: input,
+						status: 'idle' as const,
+						currentTask: null,
+						uptime: 0,
+						totalTasksCompleted: 0,
+						lastHeartbeat: new Date().toISOString(),
+						resources: {
+							cpu: 0,
+							memory: 0,
+						},
+						capabilities: [],
+					};
+				}) ?? {
 					workerId: input,
 					status: 'idle' as const,
 					currentTask: null,
@@ -122,31 +140,18 @@ export const workersRouter = router({
 						memory: 0,
 					},
 					capabilities: [],
-				};
-			}) ?? {
-				workerId: input,
-				status: 'idle' as const,
-				currentTask: null,
-				uptime: 0,
-				totalTasksCompleted: 0,
-				lastHeartbeat: new Date().toISOString(),
-				resources: {
-					cpu: 0,
-					memory: 0,
-				},
-				capabilities: [],
-			};
+				}
+			);
 		}),
 
 	/**
 	 * Assign task to worker
 	 */
-	assignTask: protectedProcedure
-		.input(assignTaskSchema)
-		.mutation(async ({ ctx, input }) => {
-			const telemetry = ctx.telemetry;
+	assignTask: protectedProcedure.input(assignTaskSchema).mutation(async ({ ctx, input }) => {
+		const telemetry = ctx.telemetry;
 
-			return telemetry?.traceAsync('workers.assignTask', async () => {
+		return (
+			telemetry?.traceAsync('workers.assignTask', async () => {
 				// TODO: Assign task to worker via orchestrator
 
 				return {
@@ -160,8 +165,9 @@ export const workersRouter = router({
 				workerId: input.workerId,
 				taskId: input.taskId,
 				assignedAt: new Date().toISOString(),
-			};
-		}),
+			}
+		);
+	}),
 
 	/**
 	 * Unregister worker
@@ -171,19 +177,21 @@ export const workersRouter = router({
 		.mutation(async ({ ctx, input }) => {
 			const telemetry = ctx.telemetry;
 
-			return telemetry?.traceAsync('workers.unregister', async () => {
-				// TODO: Remove worker from registry
+			return (
+				telemetry?.traceAsync('workers.unregister', async () => {
+					// TODO: Remove worker from registry
 
-				return {
+					return {
+						success: true,
+						workerId: input,
+						unregisteredAt: new Date().toISOString(),
+					};
+				}) ?? {
 					success: true,
 					workerId: input,
 					unregisteredAt: new Date().toISOString(),
-				};
-			}) ?? {
-				success: true,
-				workerId: input,
-				unregisteredAt: new Date().toISOString(),
-			};
+				}
+			);
 		}),
 
 	/**

@@ -2,25 +2,22 @@
  * Tests for DocFirstWorkflow
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CheckpointManager, InMemoryCheckpointStorage } from '../../checkpoint/index.js';
+import { AutoFixEngine } from '../auto-fix-engine.js';
 import {
 	DocFirstWorkflow,
-	createDocFirstWorkflow,
 	type DocFirstWorkflowContext,
 	type WorkflowPhase,
+	createDocFirstWorkflow,
 } from '../doc-first-workflow.js';
-import { SpecGenerator } from '../spec-generator.js';
-import { TaskDecomposer } from '../task-decomposer.js';
-import { TaskClassifier } from '../task-classifier.js';
-import { QualityValidationCoordinator } from '../quality-validation-coordinator.js';
-import { AutoFixEngine } from '../auto-fix-engine.js';
-import { HITLCheckpointCoordinator } from '../hitl-checkpoint-coordinator.js';
-import { StuckDetector } from '../stuck-detector.js';
 import { EscalationEngine } from '../escalation-engine.js';
-import {
-	CheckpointManager,
-	InMemoryCheckpointStorage,
-} from '../../checkpoint/index.js';
+import { HITLCheckpointCoordinator } from '../hitl-checkpoint-coordinator.js';
+import { QualityValidationCoordinator } from '../quality-validation-coordinator.js';
+import { SpecGenerator } from '../spec-generator.js';
+import { StuckDetector } from '../stuck-detector.js';
+import { TaskClassifier } from '../task-classifier.js';
+import { TaskDecomposer } from '../task-decomposer.js';
 
 describe('DocFirstWorkflow', () => {
 	let workflow: DocFirstWorkflow;
@@ -39,9 +36,7 @@ describe('DocFirstWorkflow', () => {
 		qualityValidator = new QualityValidationCoordinator();
 		stuckDetector = new StuckDetector();
 		autoFixEngine = new AutoFixEngine(stuckDetector);
-		const checkpointManager = new CheckpointManager(
-			new InMemoryCheckpointStorage(),
-		);
+		const checkpointManager = new CheckpointManager(new InMemoryCheckpointStorage());
 		hitlCoordinator = new HITLCheckpointCoordinator(checkpointManager);
 		escalationEngine = new EscalationEngine();
 
@@ -238,9 +233,7 @@ describe('DocFirstWorkflow', () => {
 				duration: 100,
 			};
 
-			vi.spyOn(qualityValidator, 'validate').mockResolvedValue(
-				mockValidationReport,
-			);
+			vi.spyOn(qualityValidator, 'validate').mockResolvedValue(mockValidationReport);
 
 			const result = await workflow.execute(context);
 
@@ -466,7 +459,7 @@ describe('DocFirstWorkflow', () => {
 				};
 			});
 
-			const result = await workflow.execute(context);
+			const _result = await workflow.execute(context);
 
 			// Should have attempted auto-fix and re-validated
 			expect(callCount).toBeGreaterThan(1);
@@ -481,18 +474,16 @@ describe('DocFirstWorkflow', () => {
 				workingDirectory: '/test',
 			};
 
-			const validateSpy = vi
-				.spyOn(qualityValidator, 'validate')
-				.mockResolvedValue({
+			const validateSpy = vi.spyOn(qualityValidator, 'validate').mockResolvedValue({
+				passed: true,
+				results: [],
+				qualityGate: {
 					passed: true,
-					results: [],
-					qualityGate: {
-						passed: true,
-						blockers: [],
-						warnings: [],
-					},
-					duration: 100,
-				});
+					blockers: [],
+					warnings: [],
+				},
+				duration: 100,
+			});
 
 			await workflow.execute(context);
 

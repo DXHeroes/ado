@@ -159,9 +159,7 @@ export class K8sWorkerSpawner {
 	async terminateAllWorkers(namespace?: string): Promise<void> {
 		const workers = await this.listWorkers(namespace);
 
-		await Promise.all(
-			workers.map((worker) => this.terminateWorker(worker.name, worker.namespace)),
-		);
+		await Promise.all(workers.map((worker) => this.terminateWorker(worker.name, worker.namespace)));
 	}
 
 	/**
@@ -170,9 +168,7 @@ export class K8sWorkerSpawner {
 	async cleanupCompletedWorkers(namespace?: string): Promise<number> {
 		const workers = await this.listWorkers(namespace);
 
-		const completed = workers.filter(
-			(w) => w.status === 'Succeeded' || w.status === 'Failed',
-		);
+		const completed = workers.filter((w) => w.status === 'Succeeded' || w.status === 'Failed');
 
 		await Promise.all(
 			completed.map((worker) => this.terminateWorker(worker.name, worker.namespace)),

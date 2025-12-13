@@ -8,8 +8,8 @@
 import type {
 	LanguageValidator,
 	QualityGateConfig,
-	ValidatorContext,
 	ValidationResult,
+	ValidatorContext,
 } from './quality-validator.js';
 import {
 	DEFAULT_QUALITY_GATES,
@@ -63,9 +63,7 @@ export class QualityValidationCoordinator {
 				if (isPresent) {
 					detected.push(language);
 				}
-			} catch (error) {
-				console.warn(`Failed to detect ${language}:`, error);
-			}
+			} catch (_error) {}
 		}
 
 		return detected;
@@ -74,28 +72,22 @@ export class QualityValidationCoordinator {
 	/**
 	 * Validate project
 	 */
-	async validate(
-		context: ValidatorContext,
-		languages?: string[],
-	): Promise<ValidationReport> {
+	async validate(context: ValidatorContext, languages?: string[]): Promise<ValidationReport> {
 		const startTime = Date.now();
 
 		// Auto-detect languages if not specified
-		const languagesToValidate =
-			languages ?? (await this.detectLanguages(context));
+		const languagesToValidate = languages ?? (await this.detectLanguages(context));
 
 		// Run validators in parallel
 		const validatorPromises = languagesToValidate.map(async (language) => {
 			const validator = this.validators.get(language);
 			if (!validator) {
-				console.warn(`No validator registered for ${language}`);
 				return [];
 			}
 
 			try {
 				return await validator.validate(context);
-			} catch (error) {
-				console.error(`Validation failed for ${language}:`, error);
+			} catch (_error) {
 				return [];
 			}
 		});
@@ -146,10 +138,7 @@ export class QualityValidationCoordinator {
 		for (const [language, langResults] of byLanguage.entries()) {
 			const validator = this.validators.get(language);
 			if (validator) {
-				const { blockers, warnings } = validator.checkQualityGates(
-					langResults,
-					this.qualityGates,
-				);
+				const { blockers, warnings } = validator.checkQualityGates(langResults, this.qualityGates);
 				allBlockers.push(...blockers);
 				allWarnings.push(...warnings);
 			}

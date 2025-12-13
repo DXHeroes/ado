@@ -64,7 +64,7 @@ describe('Scaling Utilities', () => {
 
 		it('should fallback to POD_NAME when HOSTNAME not available', () => {
 			process.env.KUBERNETES_SERVICE_HOST = '10.0.0.1';
-			delete process.env.HOSTNAME;
+			process.env.HOSTNAME = undefined;
 			process.env.POD_NAME = 'ado-pod-specific';
 
 			const instance = getCurrentInstance();
@@ -91,8 +91,8 @@ describe('Scaling Utilities', () => {
 		});
 
 		it('should return local instance info for non-K8s environment', () => {
-			delete process.env.KUBERNETES_SERVICE_HOST;
-			delete process.env.K8S_NAMESPACE;
+			process.env.KUBERNETES_SERVICE_HOST = undefined;
+			process.env.K8S_NAMESPACE = undefined;
 
 			const instance = getCurrentInstance();
 
@@ -141,9 +141,9 @@ describe('Scaling Utilities', () => {
 		});
 
 		it('should return false for local deployment', () => {
-			delete process.env.KUBERNETES_SERVICE_HOST;
-			delete process.env.K8S_NAMESPACE;
-			delete process.env.DEPLOYMENT_MODE;
+			process.env.KUBERNETES_SERVICE_HOST = undefined;
+			process.env.K8S_NAMESPACE = undefined;
+			process.env.DEPLOYMENT_MODE = undefined;
 
 			expect(isScaledDeployment()).toBe(false);
 		});
@@ -170,8 +170,8 @@ describe('Scaling Utilities', () => {
 		});
 
 		it('should return undefined when no infrastructure is available', () => {
-			delete process.env.REDIS_URL;
-			delete process.env.DATABASE_URL;
+			process.env.REDIS_URL = undefined;
+			process.env.DATABASE_URL = undefined;
 
 			expect(getRecommendedCoordinationStrategy()).toBeUndefined();
 		});
@@ -264,9 +264,9 @@ describe('Scaling Utilities', () => {
 
 		it('should timeout if handlers take too long', async () => {
 			const handler = new GracefulShutdownHandler(50);
-			const slowHandler = vi.fn().mockImplementation(
-				() => new Promise((resolve) => setTimeout(resolve, 200)),
-			);
+			const slowHandler = vi
+				.fn()
+				.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 200)));
 
 			handler.onShutdown(slowHandler);
 
@@ -402,7 +402,7 @@ describe('Scaling Utilities', () => {
 
 		it('should record activity', () => {
 			const probe = new LivenessProbe();
-			const before = Date.now();
+			const _before = Date.now();
 
 			probe.recordActivity();
 

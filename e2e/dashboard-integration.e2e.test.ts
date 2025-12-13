@@ -2,10 +2,10 @@
  * E2E test for dashboard integration with real data
  */
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SqliteStateStore } from '../packages/core/src/state/sqlite.js';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { SqliteStateStore } from '../packages/core/src/state/sqlite.js';
 
 describe('Dashboard Integration E2E', () => {
 	const testDir = join(process.cwd(), 'tmp', 'e2e-dashboard');

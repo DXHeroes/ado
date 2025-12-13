@@ -2,11 +2,11 @@
  * Providers Routes Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { StateStore } from '@dxheroes/ado-core';
 import { Hono } from 'hono';
-import { createProvidersRoutes } from '../providers.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiContext } from '../../types.js';
+import { createProvidersRoutes } from '../providers.js';
 
 // Mock @dxheroes/ado-core to control config loading
 vi.mock('@dxheroes/ado-core', async (importOriginal) => {
@@ -400,9 +400,7 @@ describe('Providers Routes', () => {
 			const res = await app.request('/providers');
 			const json = await res.json();
 
-			const apiProvider = json.find((p: any) =>
-				p.accessModes.some((m: any) => m.mode === 'api'),
-			);
+			const apiProvider = json.find((p: any) => p.accessModes.some((m: any) => m.mode === 'api'));
 
 			expect(apiProvider).toBeDefined();
 		});
@@ -411,9 +409,7 @@ describe('Providers Routes', () => {
 			const res = await app.request('/providers');
 			const json = await res.json();
 
-			const freeProvider = json.find((p: any) =>
-				p.accessModes.some((m: any) => m.mode === 'free'),
-			);
+			const freeProvider = json.find((p: any) => p.accessModes.some((m: any) => m.mode === 'free'));
 
 			expect(freeProvider).toBeDefined();
 		});
@@ -450,11 +446,7 @@ describe('Providers Routes', () => {
 		});
 
 		it('should return valid JSON for all endpoints', async () => {
-			const endpoints = [
-				'/providers',
-				'/providers/claude-code',
-				'/providers/claude-code/usage',
-			];
+			const endpoints = ['/providers', '/providers/claude-code', '/providers/claude-code/usage'];
 
 			for (const endpoint of endpoints) {
 				const res = await app.request(endpoint);

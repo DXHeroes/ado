@@ -121,9 +121,7 @@ export interface LanguageValidator {
 /**
  * Aggregate validation results from multiple validators
  */
-export function aggregateValidationResults(
-	results: ValidationResult[],
-): ValidationResult {
+export function aggregateValidationResults(results: ValidationResult[]): ValidationResult {
 	const allIssues = results.flatMap((r) => r.issues);
 
 	const errors = allIssues.filter((i) => i.severity === 'error').length;
@@ -135,22 +133,18 @@ export function aggregateValidationResults(
 		.map((r) => r.coverage)
 		.filter((c): c is NonNullable<typeof c> => c !== undefined);
 
-	const avgCoverage = coverageResults.length > 0
-		? {
-				lines:
-					coverageResults.reduce((sum, c) => sum + c.lines, 0) /
-					coverageResults.length,
-				statements:
-					coverageResults.reduce((sum, c) => sum + c.statements, 0) /
-					coverageResults.length,
-				branches:
-					coverageResults.reduce((sum, c) => sum + c.branches, 0) /
-					coverageResults.length,
-				functions:
-					coverageResults.reduce((sum, c) => sum + c.functions, 0) /
-					coverageResults.length,
-			}
-		: undefined;
+	const avgCoverage =
+		coverageResults.length > 0
+			? {
+					lines: coverageResults.reduce((sum, c) => sum + c.lines, 0) / coverageResults.length,
+					statements:
+						coverageResults.reduce((sum, c) => sum + c.statements, 0) / coverageResults.length,
+					branches:
+						coverageResults.reduce((sum, c) => sum + c.branches, 0) / coverageResults.length,
+					functions:
+						coverageResults.reduce((sum, c) => sum + c.functions, 0) / coverageResults.length,
+				}
+			: undefined;
 
 	return {
 		success: results.every((r) => r.success),

@@ -2,15 +2,14 @@
  * Tests for DynamicWorkerPool
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-	DynamicWorkerPool,
-	createDynamicWorkerPool,
-	type DynamicWorkerPoolConfig,
-	type WorkerInstance,
-} from '../dynamic-worker-pool.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { K8sWorkerSpawner } from '../../worker/k8s-worker-spawner.js';
 import type { WorkerMessage } from '../../worker/worker-protocol.js';
+import {
+	DynamicWorkerPool,
+	type DynamicWorkerPoolConfig,
+	createDynamicWorkerPool,
+} from '../dynamic-worker-pool.js';
 
 describe('DynamicWorkerPool', () => {
 	let mockSpawner: K8sWorkerSpawner;
@@ -99,7 +98,7 @@ describe('DynamicWorkerPool', () => {
 			await pool.initialize();
 			await new Promise((resolve) => setTimeout(resolve, 100));
 
-			const workerId = await pool.getAvailableWorker();
+			const _workerId = await pool.getAvailableWorker();
 
 			const metrics = pool.getMetrics();
 			expect(metrics.busyWorkers).toBe(1);
@@ -266,7 +265,7 @@ describe('DynamicWorkerPool', () => {
 			await scalingPool.initialize();
 
 			// Simulate queue buildup
-			const initialMetrics = scalingPool.getMetrics();
+			const _initialMetrics = scalingPool.getMetrics();
 
 			scalingPool.stopAutoScaling();
 		});

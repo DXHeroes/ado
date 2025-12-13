@@ -2,14 +2,12 @@
  * Tests for EscalationEngine
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	type EscalationContext,
 	EscalationEngine,
 	createEscalationEngine,
-	type EscalationContext,
-	type EscalationLevel,
 } from '../escalation-engine.js';
-import type { StuckDetectionResult } from '../stuck-detector.js';
 
 describe('EscalationEngine', () => {
 	let engine: EscalationEngine;
@@ -199,11 +197,7 @@ describe('EscalationEngine', () => {
 			const context: EscalationContext = {
 				taskId: 'task-4',
 				attemptCount: 10,
-				previousEscalations: [
-					'different_approach',
-					'different_approach',
-					'different_approach',
-				],
+				previousEscalations: ['different_approach', 'different_approach', 'different_approach'],
 				stuckDetection: {
 					isStuck: true,
 					reason: 'identical_errors',
@@ -254,11 +248,7 @@ describe('EscalationEngine', () => {
 			const context: EscalationContext = {
 				taskId: 'task-6',
 				attemptCount: 15,
-				previousEscalations: [
-					'different_approach',
-					'different_approach',
-					'different_approach',
-				],
+				previousEscalations: ['different_approach', 'different_approach', 'different_approach'],
 				stuckDetection: {
 					isStuck: true,
 					reason: 'no_progress',
@@ -541,11 +531,7 @@ describe('EscalationEngine', () => {
 			const context: EscalationContext = {
 				taskId: 'task',
 				attemptCount: 15,
-				previousEscalations: [
-					'different_approach',
-					'different_approach',
-					'different_approach',
-				],
+				previousEscalations: ['different_approach', 'different_approach', 'different_approach'],
 				stuckDetection: {
 					isStuck: true,
 					reason: 'no_progress',
@@ -561,9 +547,9 @@ describe('EscalationEngine', () => {
 			const decision = engine.decide(context);
 
 			expect(decision.level).toBe('partial_completion');
-			expect(decision.suggestedNextSteps.some((step) =>
-				step.toLowerCase().includes('handoff'),
-			)).toBe(true);
+			expect(
+				decision.suggestedNextSteps.some((step) => step.toLowerCase().includes('handoff')),
+			).toBe(true);
 		});
 
 		it('should provide clear guidance for human intervention', () => {
@@ -587,21 +573,15 @@ describe('EscalationEngine', () => {
 
 			expect(decision.level).toBe('human_intervention');
 			expect(decision.actions).toBeDefined();
-			expect(decision.actions.some((action) =>
-				action.toLowerCase().includes('pause'),
-			)).toBe(true);
+			expect(decision.actions.some((action) => action.toLowerCase().includes('pause'))).toBe(true);
 		});
 	});
 
 	describe('alternative strategies', () => {
 		it('should provide relevant strategies based on stuck reason', () => {
-			const reasons: Array<'identical_errors' | 'no_progress' | 'timeout' | 'oscillating' | 'test_failure_loop'> = [
-				'identical_errors',
-				'no_progress',
-				'timeout',
-				'oscillating',
-				'test_failure_loop',
-			];
+			const reasons: Array<
+				'identical_errors' | 'no_progress' | 'timeout' | 'oscillating' | 'test_failure_loop'
+			> = ['identical_errors', 'no_progress', 'timeout', 'oscillating', 'test_failure_loop'];
 
 			for (const reason of reasons) {
 				const context: EscalationContext = {

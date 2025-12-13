@@ -167,11 +167,7 @@ describe('MCP Server', () => {
 	describe('Request Handlers', () => {
 		it('should handle list tools request successfully', async () => {
 			const handler = async () => {
-				try {
-					return { tools: createTools() };
-				} catch (error) {
-					throw error;
-				}
+				return { tools: createTools() };
 			};
 
 			const result = await handler();
@@ -189,11 +185,7 @@ describe('MCP Server', () => {
 
 		it('should handle tool call request successfully', async () => {
 			const handler = async (request: any) => {
-				try {
-					return await handleToolCall(request.params.name, request.params.arguments ?? {});
-				} catch (error) {
-					throw error;
-				}
+				return await handleToolCall(request.params.name, request.params.arguments ?? {});
 			};
 
 			const result = await handler({
@@ -208,11 +200,7 @@ describe('MCP Server', () => {
 
 		it('should handle tool call with no arguments', async () => {
 			const handler = async (request: any) => {
-				try {
-					return await handleToolCall(request.params.name, request.params.arguments ?? {});
-				} catch (error) {
-					throw error;
-				}
+				return await handleToolCall(request.params.name, request.params.arguments ?? {});
 			};
 
 			await handler({ params: { name: 'test_tool' } });
@@ -222,11 +210,7 @@ describe('MCP Server', () => {
 
 		it('should handle list resources request successfully', async () => {
 			const handler = async () => {
-				try {
-					return { resources: createResources() };
-				} catch (error) {
-					throw error;
-				}
+				return { resources: createResources() };
 			};
 
 			const result = await handler();
@@ -245,11 +229,7 @@ describe('MCP Server', () => {
 
 		it('should handle read resource request successfully', async () => {
 			const handler = async (request: any) => {
-				try {
-					return await handleResourceRead(request.params.uri);
-				} catch (error) {
-					throw error;
-				}
+				return await handleResourceRead(request.params.uri);
 			};
 
 			const result = await handler({ params: { uri: 'test://resource' } });
@@ -266,11 +246,7 @@ describe('MCP Server', () => {
 			});
 
 			const handler = async () => {
-				try {
-					return { tools: createTools() };
-				} catch (error) {
-					throw error;
-				}
+				return { tools: createTools() };
 			};
 
 			await expect(handler()).rejects.toThrow('Tool creation failed');
@@ -280,11 +256,7 @@ describe('MCP Server', () => {
 			vi.mocked(handleToolCall).mockRejectedValueOnce(new Error('Tool execution failed'));
 
 			const handler = async (request: any) => {
-				try {
-					return await handleToolCall(request.params.name, request.params.arguments ?? {});
-				} catch (error) {
-					throw error;
-				}
+				return await handleToolCall(request.params.name, request.params.arguments ?? {});
 			};
 
 			await expect(handler({ params: { name: 'test_tool', arguments: {} } })).rejects.toThrow(
@@ -298,27 +270,17 @@ describe('MCP Server', () => {
 			});
 
 			const handler = async () => {
-				try {
-					return { resources: createResources() };
-				} catch (error) {
-					throw error;
-				}
+				return { resources: createResources() };
 			};
 
 			await expect(handler()).rejects.toThrow('Resource listing failed');
 		});
 
 		it('should handle errors in resource read gracefully', async () => {
-			vi.mocked(handleResourceRead).mockRejectedValueOnce(
-				new Error('Resource read failed'),
-			);
+			vi.mocked(handleResourceRead).mockRejectedValueOnce(new Error('Resource read failed'));
 
 			const handler = async (request: any) => {
-				try {
-					return await handleResourceRead(request.params.uri);
-				} catch (error) {
-					throw error;
-				}
+				return await handleResourceRead(request.params.uri);
 			};
 
 			await expect(handler({ params: { uri: 'test://resource' } })).rejects.toThrow(
@@ -329,10 +291,7 @@ describe('MCP Server', () => {
 
 	describe('Server Connection', () => {
 		it('should connect server to stdio transport', async () => {
-			const serverInstance = new Server(
-				{ name: 'test', version: '1.0.0' },
-				{ capabilities: {} },
-			);
+			const serverInstance = new Server({ name: 'test', version: '1.0.0' }, { capabilities: {} });
 
 			const transport = new StdioServerTransport();
 			await serverInstance.connect(transport);

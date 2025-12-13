@@ -6,18 +6,18 @@
  * the results.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createTempProject, cleanupTempDir } from '@dxheroes/ado-shared/test-utils';
 import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { promisify } from 'node:util';
+import { cleanupTempDir, createTempProject } from '@dxheroes/ado-shared/test-utils';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const execAsync = promisify(exec);
 
 describe('E2E: Single Task Workflow', () => {
 	let projectDir: string;
-	let cliPath: string;
+	let _cliPath: string;
 
 	beforeAll(async () => {
 		// Create a temporary test project
@@ -65,7 +65,7 @@ export function subtract(a: number, b: number): number {
 		});
 
 		// Set CLI path (adjust based on actual build output)
-		cliPath = path.join(process.cwd(), 'packages/cli/dist/index.js');
+		_cliPath = path.join(process.cwd(), 'packages/cli/dist/index.js');
 	});
 
 	afterAll(async () => {
@@ -107,7 +107,10 @@ preferences:
 
 			await fs.writeFile(configPath, configContent);
 
-			const exists = await fs.access(configPath).then(() => true).catch(() => false);
+			const exists = await fs
+				.access(configPath)
+				.then(() => true)
+				.catch(() => false);
 			expect(exists).toBe(true);
 		});
 	});
@@ -128,7 +131,7 @@ preferences:
 		});
 
 		it('should handle task state transitions', () => {
-			const states = ['pending', 'running', 'completed'];
+			const _states = ['pending', 'running', 'completed'];
 			let currentState = 'pending';
 
 			// Simulate state transition
@@ -146,7 +149,7 @@ preferences:
 			const originalContent = await fs.readFile(calculatorPath, 'utf-8');
 
 			// Simulate adding a new function
-			const newContent = originalContent + `
+			const newContent = `${originalContent}
 export function multiply(a: number, b: number): number {
   return a * b;
 }
@@ -180,7 +183,10 @@ describe('Calculator', () => {
 
 			await fs.writeFile(testFilePath, testContent);
 
-			const exists = await fs.access(testFilePath).then(() => true).catch(() => false);
+			const exists = await fs
+				.access(testFilePath)
+				.then(() => true)
+				.catch(() => false);
 			expect(exists).toBe(true);
 		});
 	});
@@ -265,9 +271,7 @@ describe('Calculator', () => {
 		it('should handle file system errors', async () => {
 			const invalidPath = path.join(projectDir, 'nonexistent/file.ts');
 
-			await expect(
-				fs.readFile(invalidPath, 'utf-8'),
-			).rejects.toThrow();
+			await expect(fs.readFile(invalidPath, 'utf-8')).rejects.toThrow();
 		});
 	});
 
@@ -280,7 +284,10 @@ describe('Calculator', () => {
 			// Remove it
 			await fs.unlink(tempFile);
 
-			const exists = await fs.access(tempFile).then(() => true).catch(() => false);
+			const exists = await fs
+				.access(tempFile)
+				.then(() => true)
+				.catch(() => false);
 			expect(exists).toBe(false);
 		});
 	});
@@ -297,7 +304,10 @@ describe('Calculator', () => {
 
 			for (const file of expectedFiles) {
 				const filePath = path.join(projectDir, file);
-				const exists = await fs.access(filePath).then(() => true).catch(() => false);
+				const exists = await fs
+					.access(filePath)
+					.then(() => true)
+					.catch(() => false);
 				expect(exists).toBe(true);
 			}
 		});

@@ -2,19 +2,19 @@
  * Tests for HITLCheckpointCoordinator
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	HITLCheckpointCoordinator,
-	createHITLCheckpointCoordinator,
-	type HITLCheckpointConfig,
-	type CheckpointReview,
-	type HITLCheckpointEvent,
-} from '../hitl-checkpoint-coordinator.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	CheckpointManager,
 	InMemoryCheckpointStorage,
 	type TaskState,
 } from '../../checkpoint/index.js';
+import {
+	type CheckpointReview,
+	type HITLCheckpointConfig,
+	HITLCheckpointCoordinator,
+	type HITLCheckpointEvent,
+	createHITLCheckpointCoordinator,
+} from '../hitl-checkpoint-coordinator.js';
 import type { AttemptRecord } from '../stuck-detector.js';
 import type { CheckpointDefinition } from '../task-decomposer.js';
 
@@ -190,11 +190,7 @@ describe('HITLCheckpointCoordinator', () => {
 				progress: 50,
 			};
 
-			const result = await coordinator.evaluateCheckpoint(
-				taskId,
-				checkpoint,
-				state,
-			);
+			const result = await coordinator.evaluateCheckpoint(taskId, checkpoint, state);
 
 			expect(result.shouldProceed).toBe(true);
 			expect(result.reason).toBe('Checkpoint passed');
@@ -268,11 +264,7 @@ describe('HITLCheckpointCoordinator', () => {
 				progress: 25,
 			};
 
-			const result = await coordinator.evaluateCheckpoint(
-				taskId,
-				checkpoint,
-				state,
-			);
+			const result = await coordinator.evaluateCheckpoint(taskId, checkpoint, state);
 
 			expect(result.shouldProceed).toBe(false);
 			expect(result.reason).toContain('stuck');
@@ -301,11 +293,7 @@ describe('HITLCheckpointCoordinator', () => {
 				progress: 40,
 			};
 
-			const result = await coordinator.evaluateCheckpoint(
-				taskId,
-				checkpoint,
-				state,
-			);
+			const result = await coordinator.evaluateCheckpoint(taskId, checkpoint, state);
 
 			expect(result.shouldProceed).toBe(false);
 			expect(result.reason).toContain('Blocking issues');
@@ -338,9 +326,7 @@ describe('HITLCheckpointCoordinator', () => {
 
 			await coordinator.evaluateCheckpoint(taskId, checkpoint, state);
 
-			const checkpointEvent = events.find(
-				(e) => e.type === 'checkpoint_reached',
-			);
+			const checkpointEvent = events.find((e) => e.type === 'checkpoint_reached');
 			expect(checkpointEvent).toBeDefined();
 			expect(checkpointEvent?.checkpoint?.id).toBe('checkpoint-5');
 		});
@@ -521,9 +507,7 @@ describe('HITLCheckpointCoordinator', () => {
 				});
 			}
 
-			const escalationEvent = events.find(
-				(e) => e.type === 'escalation_triggered',
-			);
+			const escalationEvent = events.find((e) => e.type === 'escalation_triggered');
 			expect(escalationEvent).toBeDefined();
 		});
 
@@ -693,9 +677,7 @@ describe('HITLCheckpointCoordinator', () => {
 				});
 			}
 
-			const escalationEvents = events.filter(
-				(e) => e.type === 'escalation_triggered',
-			);
+			const escalationEvents = events.filter((e) => e.type === 'escalation_triggered');
 			expect(escalationEvents.length).toBe(0);
 		});
 	});

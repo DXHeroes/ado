@@ -133,14 +133,10 @@ export class ParallelScheduler {
 
 				// Check for failures
 				const stageExecutions = stage.tasks.map((tid) => this.executions.get(tid));
-				const failedTasks = stageExecutions.filter(
-					(e) => e?.status === 'failed',
-				);
+				const failedTasks = stageExecutions.filter((e) => e?.status === 'failed');
 
 				if (failedTasks.length > 0 && this.config.failureStrategy === 'abort') {
-					throw new Error(
-						`Stage ${stage.stage} failed with ${failedTasks.length} task(s)`,
-					);
+					throw new Error(`Stage ${stage.stage} failed with ${failedTasks.length} task(s)`);
 				}
 			}
 
@@ -157,7 +153,7 @@ export class ParallelScheduler {
 				duration: Date.now() - startTime,
 				executions,
 			};
-		} catch (error) {
+		} catch (_error) {
 			const executions = Array.from(this.executions.values());
 			return {
 				success: false,
@@ -218,68 +214,64 @@ export class ParallelScheduler {
 		}
 
 		// Use recovery manager for retry logic
-		await this.recoveryManager.withRetry(
-			async () => {
-				// Get available worker
-				const workerId = await this.workerPool.getAvailableWorker();
-				if (!workerId) {
-					throw new Error('No available workers');
-				}
+		await this.recoveryManager
+			.withRetry(
+				async () => {
+					// Get available worker
+					const workerId = await this.workerPool.getAvailableWorker();
+					if (!workerId) {
+						throw new Error('No available workers');
+					}
 
-				// Update execution
-				execution.status = 'running';
-				execution.workerId = workerId;
-				execution.startedAt = new Date();
+					// Update execution
+					execution.status = 'running';
+					execution.workerId = workerId;
+					execution.startedAt = new Date();
 
-				// Execute task with timeout
-				const result = await this.executeWithTimeout(
-					() => this.workerPool.executeTask(workerId, taskId, taskDefinition),
-					this.config.taskTimeout,
-				);
+					// Execute task with timeout
+					const result = await this.executeWithTimeout(
+						() => this.workerPool.executeTask(workerId, taskId, taskDefinition),
+						this.config.taskTimeout,
+					);
 
-				// Update execution
+					// Update execution
+					execution.completedAt = new Date();
+					execution.duration =
+						execution.completedAt.getTime() - (execution.startedAt?.getTime() ?? 0);
+
+					if (result.success) {
+						execution.status = 'completed';
+					} else {
+						execution.error = result.error;
+						throw new Error(result.error ?? 'Task execution failed');
+					}
+
+					// Release worker
+					this.workerPool.releaseWorker(workerId);
+
+					return result;
+				},
+				{
+					taskId,
+					operationName: `task-${taskId}`,
+				},
+			)
+			.catch((error) => {
+				// Handle final failure after retries
+				execution.status = 'failed';
+				execution.error = error instanceof Error ? error.message : 'Unknown error';
 				execution.completedAt = new Date();
-				execution.duration = execution.completedAt.getTime() - (execution.startedAt?.getTime() ?? 0);
 
-				if (result.success) {
-					execution.status = 'completed';
-				} else {
-					execution.error = result.error;
-					throw new Error(result.error ?? 'Task execution failed');
+				if (this.config.failureStrategy === 'abort') {
+					throw error;
 				}
-
-				// Release worker
-				this.workerPool.releaseWorker(workerId);
-
-				return result;
-			},
-			{
-				taskId,
-				operationName: `task-${taskId}`,
-			},
-		)
-		.catch((error) => {
-			// Handle final failure after retries
-			execution.status = 'failed';
-			execution.error = error instanceof Error ? error.message : 'Unknown error';
-			execution.completedAt = new Date();
-
-			if (this.config.failureStrategy === 'abort') {
-				throw error;
-			}
-
-			// Log failure but continue if strategy is 'continue' or 'retry'
-			console.error(`Task ${taskId} failed:`, error);
-		});
+			});
 	}
 
 	/**
 	 * Execute operation with timeout
 	 */
-	private async executeWithTimeout<T>(
-		operation: () => Promise<T>,
-		timeout: number,
-	): Promise<T> {
+	private async executeWithTimeout<T>(operation: () => Promise<T>, timeout: number): Promise<T> {
 		return await Promise.race([
 			operation(),
 			new Promise<T>((_resolve, reject) => {

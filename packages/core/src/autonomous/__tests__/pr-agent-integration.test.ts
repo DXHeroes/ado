@@ -2,14 +2,8 @@
  * Tests for PRAgent (Qodo Merge Integration)
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import {
-	PRAgent,
-	createPRAgent,
-	type PRAgentConfig,
-	type PRDescription,
-	type PRReview,
-} from '../pr-agent-integration.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { PRAgent, type PRAgentConfig, createPRAgent } from '../pr-agent-integration.js';
 
 describe('PRAgent', () => {
 	let prAgent: PRAgent;
@@ -58,10 +52,7 @@ describe('PRAgent', () => {
 		it('should generate PR description from commits', async () => {
 			const prData = {
 				files: ['src/auth.ts', 'src/login.ts'],
-				commits: [
-					{ message: 'feat: add OAuth2 login' },
-					{ message: 'fix: handle token expiry' },
-				],
+				commits: [{ message: 'feat: add OAuth2 login' }, { message: 'fix: handle token expiry' }],
 				diff: '+ const login = () => { }',
 			};
 
@@ -76,10 +67,7 @@ describe('PRAgent', () => {
 		it('should infer type from commit messages', async () => {
 			const prData = {
 				files: ['src/feature.ts'],
-				commits: [
-					{ message: 'feat: new feature' },
-					{ message: 'feat: another feature' },
-				],
+				commits: [{ message: 'feat: new feature' }, { message: 'feat: another feature' }],
 				diff: '',
 			};
 
@@ -93,8 +81,7 @@ describe('PRAgent', () => {
 				files: ['src/api.ts'],
 				commits: [
 					{
-						message:
-							'feat: change API\n\nBREAKING CHANGE: API endpoint structure changed',
+						message: 'feat: change API\n\nBREAKING CHANGE: API endpoint structure changed',
 					},
 				],
 				diff: '',
@@ -109,10 +96,7 @@ describe('PRAgent', () => {
 		it('should extract related issues', async () => {
 			const prData = {
 				files: ['src/fix.ts'],
-				commits: [
-					{ message: 'fix: resolve issue #123' },
-					{ message: 'fix: also fixes #456' },
-				],
+				commits: [{ message: 'fix: resolve issue #123' }, { message: 'fix: also fixes #456' }],
 				diff: '',
 			};
 
@@ -340,10 +324,7 @@ describe('PRAgent', () => {
 		it('should categorize changes by type', async () => {
 			const prData = {
 				version: '2.0.0',
-				commits: [
-					{ message: 'feat: new feature' },
-					{ message: 'fix: bug fix' },
-				],
+				commits: [{ message: 'feat: new feature' }, { message: 'fix: bug fix' }],
 			};
 
 			const changelog = await prAgent.updateChangelog(prData);
@@ -357,8 +338,7 @@ describe('PRAgent', () => {
 				version: '3.0.0',
 				commits: [
 					{
-						message:
-							'feat: major update\n\nBREAKING CHANGE: API restructured',
+						message: 'feat: major update\n\nBREAKING CHANGE: API restructured',
 					},
 				],
 			};
@@ -615,9 +595,7 @@ describe('PRAgent', () => {
 			expect(review.score).toBeLessThanOrEqual(100);
 
 			// If there are errors, score should be reduced
-			const errorCount = review.comments.filter(
-				(c) => c.severity === 'error',
-			).length;
+			const errorCount = review.comments.filter((c) => c.severity === 'error').length;
 			if (errorCount > 0) {
 				expect(review.score).toBeLessThan(100);
 			}

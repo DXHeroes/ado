@@ -343,9 +343,7 @@ export class WorkStealingScheduler<T = unknown> {
 		}
 
 		// Select most loaded worker
-		return victims.reduce((max, worker) =>
-			worker.tasks.length > max.tasks.length ? worker : max,
-		);
+		return victims.reduce((max, worker) => (worker.tasks.length > max.tasks.length ? worker : max));
 	}
 
 	/**
@@ -357,9 +355,7 @@ export class WorkStealingScheduler<T = unknown> {
 			return undefined;
 		}
 
-		return workers.reduce((min, worker) =>
-			worker.tasks.length < min.tasks.length ? worker : min,
-		);
+		return workers.reduce((min, worker) => (worker.tasks.length < min.tasks.length ? worker : min));
 	}
 
 	/**

@@ -81,7 +81,10 @@ export class ParallelExecutor {
 	): Promise<ParallelExecutionResult[]> {
 		const results: ParallelExecutionResult[] = [];
 		const queue = [...tasks];
-		const executing: Map<Promise<ParallelExecutionResult>, {taskId: string; index: number}> = new Map();
+		const executing: Map<
+			Promise<ParallelExecutionResult>,
+			{ taskId: string; index: number }
+		> = new Map();
 
 		// Process tasks with concurrency limit
 		while (queue.length > 0 || executing.size > 0) {
@@ -90,7 +93,7 @@ export class ParallelExecutor {
 				const item = queue.shift();
 				if (item) {
 					const promise = this.executeTask(item.task, item.adapter);
-					executing.set(promise, {taskId: item.task.id, index: results.length});
+					executing.set(promise, { taskId: item.task.id, index: results.length });
 				}
 			}
 

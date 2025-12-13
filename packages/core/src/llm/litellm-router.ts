@@ -43,10 +43,12 @@ export interface LLMProvider {
 	/**
 	 * Rate limits
 	 */
-	rateLimit?: {
-		requestsPerMinute: number;
-		tokensPerMinute: number;
-	} | undefined;
+	rateLimit?:
+		| {
+				requestsPerMinute: number;
+				tokensPerMinute: number;
+		  }
+		| undefined;
 
 	/**
 	 * Priority (higher = preferred)
@@ -336,9 +338,6 @@ export class LiteLLMRouter {
 							provider.healthy = true;
 						}, 60000); // Retry after 1 minute
 					}
-
-					// Try next provider in chain
-					continue;
 				}
 			}
 
@@ -418,9 +417,14 @@ export class LiteLLMRouter {
 	 * Round-robin selection
 	 */
 	private selectRoundRobin(providers: LLMProvider[]): LLMProvider {
-		const provider = providers[this.providerIndex % providers.length];
+		if (providers.length === 0) {
+			throw new Error('No providers available');
+		}
+		const index = this.providerIndex % providers.length;
 		this.providerIndex++;
-		return provider!;
+		// Safe to assert non-null because we checked length > 0
+		// biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
+		return providers[index]!;
 	}
 
 	/**
@@ -438,8 +442,12 @@ export class LiteLLMRouter {
 	 * Select provider with least latency
 	 */
 	private selectLeastLatency(providers: LLMProvider[]): LLMProvider {
+		if (providers.length === 0) {
+			throw new Error('No providers available');
+		}
 		// In real implementation, would track latency per provider
 		// For now, return first available
+		// biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
 		return providers[0]!;
 	}
 
@@ -447,6 +455,9 @@ export class LiteLLMRouter {
 	 * Weighted selection based on priority
 	 */
 	private selectWeighted(providers: LLMProvider[]): LLMProvider {
+		if (providers.length === 0) {
+			throw new Error('No providers available');
+		}
 		const totalPriority = providers.reduce((sum, p) => sum + p.priority, 0);
 		let random = Math.random() * totalPriority;
 
@@ -457,6 +468,8 @@ export class LiteLLMRouter {
 			}
 		}
 
+		// Fallback to first provider (shouldn't happen with valid priorities)
+		// biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
 		return providers[0]!;
 	}
 

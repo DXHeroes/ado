@@ -2,12 +2,12 @@
  * Dashboard Routes Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { StateStore, AsyncStateStore } from '@dxheroes/ado-core';
+import type { AsyncStateStore, StateStore } from '@dxheroes/ado-core';
 import type { TaskState } from '@dxheroes/ado-shared';
 import { Hono } from 'hono';
-import { createDashboardRoutes } from '../dashboard.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiContext } from '../../types.js';
+import { createDashboardRoutes } from '../dashboard.js';
 
 describe('Dashboard Routes', () => {
 	let app: Hono<ApiContext>;
@@ -137,19 +137,40 @@ describe('Dashboard Routes', () => {
 					id: 'task-1',
 					definition: { prompt: 'Test', projectKey: 'test', repositoryPath: '/test' },
 					status: 'completed',
-					result: { success: true, output: '', duration: 100, tokensUsed: { input: 0, output: 0 }, costUsd: 0, filesModified: [] },
+					result: {
+						success: true,
+						output: '',
+						duration: 100,
+						tokensUsed: { input: 0, output: 0 },
+						costUsd: 0,
+						filesModified: [],
+					},
 				},
 				{
 					id: 'task-2',
 					definition: { prompt: 'Test', projectKey: 'test', repositoryPath: '/test' },
 					status: 'completed',
-					result: { success: true, output: '', duration: 200, tokensUsed: { input: 0, output: 0 }, costUsd: 0, filesModified: [] },
+					result: {
+						success: true,
+						output: '',
+						duration: 200,
+						tokensUsed: { input: 0, output: 0 },
+						costUsd: 0,
+						filesModified: [],
+					},
 				},
 				{
 					id: 'task-3',
 					definition: { prompt: 'Test', projectKey: 'test', repositoryPath: '/test' },
 					status: 'completed',
-					result: { success: true, output: '', duration: 300, tokensUsed: { input: 0, output: 0 }, costUsd: 0, filesModified: [] },
+					result: {
+						success: true,
+						output: '',
+						duration: 300,
+						tokensUsed: { input: 0, output: 0 },
+						costUsd: 0,
+						filesModified: [],
+					},
 				},
 			];
 
@@ -233,7 +254,7 @@ describe('Dashboard Routes', () => {
 
 		it('should calculate task volume by day', async () => {
 			const now = new Date();
-			const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+			const _sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
 			const completedTasks: TaskState[] = [
 				{
@@ -270,7 +291,7 @@ describe('Dashboard Routes', () => {
 
 		it('should calculate provider usage', async () => {
 			const now = new Date();
-			const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+			const _sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
 			const completedTasks: TaskState[] = [
 				{

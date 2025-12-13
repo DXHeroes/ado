@@ -84,28 +84,13 @@ export class TaskClassifier {
 		}
 
 		// Test patterns
-		const testKeywords = [
-			'test',
-			'unit test',
-			'integration test',
-			'e2e',
-			'coverage',
-			'spec',
-		];
+		const testKeywords = ['test', 'unit test', 'integration test', 'e2e', 'coverage', 'spec'];
 		if (testKeywords.some((kw) => prompt.includes(kw))) {
 			return 'test';
 		}
 
 		// Documentation patterns
-		const docsKeywords = [
-			'document',
-			'readme',
-			'docs',
-			'comment',
-			'jsdoc',
-			'guide',
-			'tutorial',
-		];
+		const docsKeywords = ['document', 'readme', 'docs', 'comment', 'jsdoc', 'guide', 'tutorial'];
 		if (docsKeywords.some((kw) => prompt.includes(kw))) {
 			return 'docs';
 		}
@@ -137,11 +122,7 @@ export class TaskClassifier {
 			'ci/cd',
 			'pipeline',
 		];
-		const chorePatterns = [
-			'update dependencies',
-			'update config',
-			'update tooling',
-		];
+		const chorePatterns = ['update dependencies', 'update config', 'update tooling'];
 		if (
 			choreKeywords.some((kw) => prompt.includes(kw)) ||
 			chorePatterns.some((pattern) => prompt.includes(pattern))
@@ -156,10 +137,7 @@ export class TaskClassifier {
 	/**
 	 * Detect priority from prompt and context
 	 */
-	private detectPriority(
-		prompt: string,
-		context: TaskContext,
-	): TaskNode['priority'] {
+	private detectPriority(prompt: string, context: TaskContext): TaskNode['priority'] {
 		// Critical patterns
 		const criticalKeywords = [
 			'critical',
@@ -174,25 +152,13 @@ export class TaskClassifier {
 		}
 
 		// High priority patterns
-		const highKeywords = [
-			'important',
-			'high priority',
-			'blocker',
-			'blocking',
-			'asap',
-		];
+		const highKeywords = ['important', 'high priority', 'blocker', 'blocking', 'asap'];
 		if (highKeywords.some((kw) => prompt.includes(kw))) {
 			return 'high';
 		}
 
 		// Low priority patterns
-		const lowKeywords = [
-			'nice to have',
-			'low priority',
-			'when possible',
-			'future',
-			'someday',
-		];
+		const lowKeywords = ['nice to have', 'low priority', 'when possible', 'future', 'someday'];
 		if (lowKeywords.some((kw) => prompt.includes(kw))) {
 			return 'low';
 		}
@@ -224,13 +190,7 @@ export class TaskClassifier {
 		let score = 0;
 
 		// Check if this is documentation/simple task first
-		const simpleDocsKeywords = [
-			'readme',
-			'typo',
-			'comment',
-			'log statement',
-			'button color',
-		];
+		const simpleDocsKeywords = ['readme', 'typo', 'comment', 'log statement', 'button color'];
 		const isSimpleDocs = simpleDocsKeywords.some((kw) => prompt.includes(kw));
 
 		// Epic indicators (score 4+)
@@ -282,12 +242,7 @@ export class TaskClassifier {
 			'functionality',
 			'feature',
 		];
-		const moderatePatterns = [
-			'for.*service',
-			'for.*module',
-			'for.*component',
-			'add.*for',
-		];
+		const moderatePatterns = ['for.*service', 'for.*module', 'for.*component', 'add.*for'];
 		if (!isSimpleDocs && score === 0) {
 			if (
 				moderateKeywords.some((kw) => prompt.includes(kw)) ||
@@ -329,9 +284,7 @@ export class TaskClassifier {
 			chore: 0.6,
 		};
 
-		return Math.round(
-			complexityDuration[complexity] * typeMultiplier[type],
-		);
+		return Math.round(complexityDuration[complexity] * typeMultiplier[type]);
 	}
 
 	/**

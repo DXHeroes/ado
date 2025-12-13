@@ -2,9 +2,9 @@
  * Tests for TaskDecomposer
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TaskDecomposer, type DecompositionResult } from '../task-decomposer.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { TaskContext } from '../task-classifier.js';
+import { TaskDecomposer } from '../task-decomposer.js';
 
 describe('TaskDecomposer', () => {
 	let decomposer: TaskDecomposer;
@@ -237,12 +237,8 @@ describe('TaskDecomposer', () => {
 			const result = await decomposer.decompose(context);
 
 			// Design should come before implementation
-			const designStage = result.executionPlan.stages.find((s) =>
-				s.tasks.includes('design'),
-			);
-			const implStage = result.executionPlan.stages.find((s) =>
-				s.tasks.includes('core-impl'),
-			);
+			const designStage = result.executionPlan.stages.find((s) => s.tasks.includes('design'));
+			const implStage = result.executionPlan.stages.find((s) => s.tasks.includes('core-impl'));
 
 			expect(designStage).toBeDefined();
 			expect(implStage).toBeDefined();
@@ -260,7 +256,7 @@ describe('TaskDecomposer', () => {
 			const result = await decomposer.decompose(context);
 
 			// Docs and quality can run in parallel
-			const parallelStage = result.executionPlan.stages.find(
+			const _parallelStage = result.executionPlan.stages.find(
 				(s) => s.tasks.includes('docs') && s.tasks.includes('quality'),
 			);
 

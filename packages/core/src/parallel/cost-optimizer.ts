@@ -239,7 +239,8 @@ export class CostOptimizer {
 		const underutilized = this.workerProfiles.filter((w) => w.currentUtilization < 0.3);
 
 		if (underutilized.length > 0) {
-			const avgCost = underutilized.reduce((sum, w) => sum + w.costPerHour, 0) / underutilized.length;
+			const avgCost =
+				underutilized.reduce((sum, w) => sum + w.costPerHour, 0) / underutilized.length;
 			const dailySavings = avgCost * 24 * underutilized.length;
 
 			recommendations.push({
@@ -309,10 +310,12 @@ export class CostOptimizer {
 			highTierWorkers.reduce((sum, w) => sum + w.currentUtilization, 0) / (highTierCount || 1);
 
 		if (highTierCount > 0 && highTierUtilization < 0.5) {
-			const avgHighCost = highTierWorkers.reduce((sum, w) => sum + w.costPerHour, 0) / highTierCount;
+			const avgHighCost =
+				highTierWorkers.reduce((sum, w) => sum + w.costPerHour, 0) / highTierCount;
 			const mediumTierWorkers = byTier.medium;
 			const avgMediumCost =
-				mediumTierWorkers.reduce((sum, w) => sum + w.costPerHour, 0) / (mediumTierWorkers.length || 1);
+				mediumTierWorkers.reduce((sum, w) => sum + w.costPerHour, 0) /
+				(mediumTierWorkers.length || 1);
 
 			const potentialSavings = (avgHighCost - avgMediumCost) * 24 * highTierCount;
 
@@ -355,7 +358,8 @@ export class CostOptimizer {
 			.map((h) => h.hour);
 
 		if (lowUsageHours.length >= 6) {
-			const avgWorkerCost = this.workerProfiles.reduce((sum, w) => sum + w.costPerHour, 0) /
+			const avgWorkerCost =
+				this.workerProfiles.reduce((sum, w) => sum + w.costPerHour, 0) /
 				(this.workerProfiles.length || 1);
 
 			const dailySavings = avgWorkerCost * lowUsageHours.length * 0.5;
@@ -494,6 +498,9 @@ export class CostOptimizer {
 /**
  * Create cost optimizer
  */
-export function createCostOptimizer(costTracker: CostTracker, goal?: OptimizationGoal): CostOptimizer {
+export function createCostOptimizer(
+	costTracker: CostTracker,
+	goal?: OptimizationGoal,
+): CostOptimizer {
 	return new CostOptimizer(costTracker, goal);
 }

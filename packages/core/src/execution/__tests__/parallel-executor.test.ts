@@ -4,29 +4,28 @@
  * (line 103 in parallel-executor.ts - Promise.resolve creates new promise)
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { AgentAdapter, AgentTask, RateLimitDetector } from '@dxheroes/ado-shared';
 import {
-	ParallelExecutor,
-	type ParallelExecutionConfig,
-} from '../parallel-executor.js';
-import type { WorktreeManager, WorktreeInfo } from '../worktree-manager.js';
-import { AdoError } from '@dxheroes/ado-shared';
-import {
-	createMockTask,
-	createMockStartEvent,
+	createMockCapabilities,
 	createMockCompleteEvent,
 	createMockErrorEvent,
-	createMockCapabilities,
+	createMockStartEvent,
+	createMockTask,
 } from '@dxheroes/ado-shared/test-utils';
-import type { AgentTask, AgentAdapter, RateLimitDetector } from '@dxheroes/ado-shared';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { type ParallelExecutionConfig, ParallelExecutor } from '../parallel-executor.js';
+import type { WorktreeInfo, WorktreeManager } from '../worktree-manager.js';
 
 /**
  * Create a simple test adapter
  */
-function createTestAdapter(id = 'test-adapter', options: {
-	delay?: number;
-	shouldFail?: boolean;
-} = {}): AgentAdapter {
+function createTestAdapter(
+	id = 'test-adapter',
+	options: {
+		delay?: number;
+		shouldFail?: boolean;
+	} = {},
+): AgentAdapter {
 	const { delay = 0, shouldFail = false } = options;
 
 	return {
@@ -75,12 +74,14 @@ describe('ParallelExecutor', () => {
 
 		// Create mock worktree manager
 		mockWorktreeManager = {
-			createWorktree: vi.fn(async (taskId: string): Promise<WorktreeInfo> => ({
-				id: `wt-${taskId}`,
-				path: `/test/worktrees/wt-${taskId}`,
-				branch: `ado/wt-${taskId}`,
-				createdAt: new Date(),
-			})),
+			createWorktree: vi.fn(
+				async (taskId: string): Promise<WorktreeInfo> => ({
+					id: `wt-${taskId}`,
+					path: `/test/worktrees/wt-${taskId}`,
+					branch: `ado/wt-${taskId}`,
+					createdAt: new Date(),
+				}),
+			),
 			removeWorktree: vi.fn(async () => {}),
 		} as unknown as WorktreeManager;
 
@@ -98,7 +99,7 @@ describe('ParallelExecutor', () => {
 					new ParallelExecutor({
 						maxConcurrency: 2,
 						useWorktreeIsolation: true,
-					})
+					}),
 			).toThrow('WorktreeManager is required when useWorktreeIsolation is true');
 		});
 
@@ -108,7 +109,7 @@ describe('ParallelExecutor', () => {
 					maxConcurrency: 2,
 					useWorktreeIsolation: true,
 				},
-				mockWorktreeManager
+				mockWorktreeManager,
 			);
 
 			expect(executorWithWorktree).toBeInstanceOf(ParallelExecutor);
@@ -243,9 +244,7 @@ describe('ParallelExecutor', () => {
 			const adapter = createTestAdapter();
 
 			// Mock worktree removal failure
-			vi.mocked(mockWorktreeManager.removeWorktree).mockRejectedValue(
-				new Error('Cleanup failed')
-			);
+			vi.mocked(mockWorktreeManager.removeWorktree).mockRejectedValue(new Error('Cleanup failed'));
 
 			// Should not throw even if cleanup fails
 			const results = await executor.executeParallel([{ task, adapter }]);
@@ -311,7 +310,7 @@ describe('ParallelExecutor', () => {
 					maxConcurrency: 1,
 					useWorktreeIsolation: true,
 				},
-				mockWorktreeManager
+				mockWorktreeManager,
 			);
 
 			const task = createMockTask({ id: 'task-1' });

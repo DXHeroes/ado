@@ -318,21 +318,17 @@ export class K8sAutoscaler {
 		}
 
 		return {
-			name: hpa.metadata!.name!,
+			name: hpa.metadata?.name!,
 			currentReplicas: hpa.status?.currentReplicas ?? 0,
 			desiredReplicas: hpa.status?.desiredReplicas ?? 0,
 			currentCPUUtilization,
 			currentMemoryUtilization,
-			lastScaleTime: hpa.status?.lastScaleTime
-				? new Date(hpa.status.lastScaleTime)
-				: undefined,
+			lastScaleTime: hpa.status?.lastScaleTime ? new Date(hpa.status.lastScaleTime) : undefined,
 			conditions:
 				hpa.status?.conditions?.map((c: k8s.V2HorizontalPodAutoscalerCondition) => ({
 					type: c.type,
 					status: c.status,
-					lastTransitionTime: c.lastTransitionTime
-						? new Date(c.lastTransitionTime)
-						: undefined,
+					lastTransitionTime: c.lastTransitionTime ? new Date(c.lastTransitionTime) : undefined,
 					reason: c.reason,
 					message: c.message,
 				})) ?? [],
@@ -349,7 +345,7 @@ export class K8sAutoscaler {
 
 		return Promise.all(
 			(list.items ?? []).map((hpa: k8s.V2HorizontalPodAutoscaler) =>
-				this.getHPAStatus(hpa.metadata!.name!, hpa.metadata!.namespace),
+				this.getHPAStatus(hpa.metadata?.name!, hpa.metadata?.namespace),
 			),
 		);
 	}

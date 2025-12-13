@@ -2,12 +2,12 @@
  * E2E test for parallel task execution
  */
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { SqliteStateStore } from '../packages/core/src/state/sqlite.js';
-import { ParallelScheduler } from '../packages/core/src/parallel/parallel-scheduler.js';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import type { TaskDefinition } from '@dxheroes/ado-shared';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ParallelScheduler } from '../packages/core/src/parallel/parallel-scheduler.js';
+import { SqliteStateStore } from '../packages/core/src/state/sqlite.js';
 
 describe('Parallel Execution E2E', () => {
 	const testDir = join(process.cwd(), 'tmp', 'e2e-parallel');

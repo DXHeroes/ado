@@ -3,7 +3,7 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TaskClassifier, createTaskClassifier, type TaskContext } from './task-classifier.js';
+import { type TaskClassifier, type TaskContext, createTaskClassifier } from './task-classifier.js';
 
 describe('TaskClassifier', () => {
 	let classifier: TaskClassifier;
@@ -220,11 +220,7 @@ describe('TaskClassifier', () => {
 		});
 
 		it('should classify simple complexity', () => {
-			const simplePrompts = [
-				'Change button color',
-				'Fix typo in README',
-				'Add log statement',
-			];
+			const simplePrompts = ['Change button color', 'Fix typo in README', 'Add log statement'];
 
 			for (const prompt of simplePrompts) {
 				const result = classifier.classify({ prompt, repositoryPath: '/test' });

@@ -14,11 +14,10 @@ import type {
 	AgentErrorEvent,
 	AgentEvent,
 	AgentInterruptEvent,
-	AgentOutputEvent,
-	AgentStartEvent,
 } from '@dxheroes/ado-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	ProgressStream,
 	type TaskCompletedEvent,
 	type TaskEvent,
 	type TaskFailedEvent,
@@ -29,7 +28,6 @@ import {
 	type TaskResumedEvent,
 	type TaskStartedEvent,
 	createProgressStream,
-	ProgressStream,
 } from '../progress-stream.js';
 
 describe('ProgressStream', () => {
@@ -396,7 +394,7 @@ describe('ProgressStream', () => {
 			stream.emit(event2);
 
 			// Subscribe after events were emitted
-			const events: TaskEvent[] = [];
+			const _events: TaskEvent[] = [];
 			const subscription = stream.subscribe('task-1');
 
 			const event3: TaskCompletedEvent = {
@@ -492,7 +490,7 @@ describe('ProgressStream', () => {
 				duration: 1000,
 			});
 
-			const events = await promise;
+			const _events = await promise;
 
 			// Subscribers should be cleaned up
 			const subscribers = (stream as any).subscribers;
@@ -567,7 +565,7 @@ describe('ProgressStream', () => {
 			});
 
 			// Subscribe late
-			const events: TaskEvent[] = [];
+			const _events: TaskEvent[] = [];
 			const subscription = stream.subscribe('task-1');
 
 			const iterator = subscription[Symbol.asyncIterator]();
@@ -1411,7 +1409,7 @@ describe('ProgressStream', () => {
 		});
 
 		it('should handle subscription to non-existent task', async () => {
-			const events: TaskEvent[] = [];
+			const _events: TaskEvent[] = [];
 
 			const subscription = stream.subscribe('non-existent');
 			const iterator = subscription[Symbol.asyncIterator]();

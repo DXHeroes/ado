@@ -2,11 +2,11 @@
  * Tests for SpecGenerator
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	type SpecGenerationContext,
 	SpecGenerator,
 	createSpecGenerator,
-	type SpecGenerationContext,
 } from '../spec-generator.js';
 import { createDefaultConstitution } from '../spec-templates.js';
 import type { ClassificationResult } from '../task-classifier.js';
@@ -680,10 +680,7 @@ describe('SpecGenerator', () => {
 			const result = await generator.generate(context);
 			const constitution = createDefaultConstitution();
 
-			const validation = generator.validateAgainstConstitution(
-				result.specification,
-				constitution,
-			);
+			const validation = generator.validateAgainstConstitution(result.specification, constitution);
 
 			// Should have violations since spec doesn't address security principles
 			expect(validation.violations.length).toBeGreaterThan(0);
@@ -718,10 +715,7 @@ describe('SpecGenerator', () => {
 				impact: 'blocker',
 			});
 
-			const validation = generator.validateAgainstConstitution(
-				result.specification,
-				constitution,
-			);
+			const validation = generator.validateAgainstConstitution(result.specification, constitution);
 
 			// Should detect blocker constraint not addressed
 			const hasBlockerViolation = validation.violations.some((v) =>

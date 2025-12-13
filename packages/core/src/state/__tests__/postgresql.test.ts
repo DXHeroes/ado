@@ -2,7 +2,6 @@
  * PostgreSQL State Store Tests
  */
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TaskState, UsageRecord } from '@dxheroes/ado-shared';
 import {
 	createMockTaskDefinition,
@@ -12,7 +11,7 @@ import {
 	stopPostgresContainer,
 } from '@dxheroes/ado-shared/test-utils';
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { CheckpointRecord, SessionRecord } from '../sqlite.js';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { PostgresqlStateStore, createPostgresqlStateStore } from '../postgresql.js';
 
 describe('PostgresqlStateStore', () => {
@@ -21,14 +20,8 @@ describe('PostgresqlStateStore', () => {
 	let store: PostgresqlStateStore;
 
 	beforeAll(async () => {
-		// Start PostgreSQL container (reuse for all tests)
-		try {
-			container = await startPostgresContainer();
-			connectionString = getPostgresConnectionString(container);
-		} catch (error) {
-			console.error('Failed to start PostgreSQL container:', error);
-			throw error;
-		}
+		container = await startPostgresContainer();
+		connectionString = getPostgresConnectionString(container);
 	}, 60000); // Increase timeout for container startup
 
 	afterAll(async () => {
@@ -204,7 +197,7 @@ describe('PostgresqlStateStore', () => {
 			});
 
 			const updated = await store.getSession('session-timestamp');
-			expect(updated?.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt!.getTime());
+			expect(updated?.updatedAt.getTime()).toBeGreaterThan(originalUpdatedAt?.getTime());
 		});
 
 		it('should handle empty update', async () => {

@@ -85,8 +85,7 @@ export function validatePromptLength(
 					const halfLength = Math.floor(cfg.maxLength / 2);
 					const start = prompt.slice(0, halfLength);
 					const end = prompt.slice(length - halfLength);
-					const ellipsis =
-						'\n\n[... middle section truncated due to length ...]\n\n';
+					const ellipsis = '\n\n[... middle section truncated due to length ...]\n\n';
 					result.truncatedPrompt = start + ellipsis + end;
 					result.truncated = true;
 					result.valid = true;

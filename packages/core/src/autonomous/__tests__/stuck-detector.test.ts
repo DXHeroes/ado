@@ -2,8 +2,8 @@
  * Tests for StuckDetector
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { StuckDetector, type AttemptRecord } from '../stuck-detector.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { type AttemptRecord, StuckDetector } from '../stuck-detector.js';
 
 describe('StuckDetector', () => {
 	let detector: StuckDetector;

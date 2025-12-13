@@ -3,11 +3,10 @@
  */
 
 import { existsSync } from 'node:fs';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as p from '@clack/prompts';
 import { createStateStore } from '@dxheroes/ado-core';
 import type { SqliteStateStore } from '@dxheroes/ado-core';
-import { createTempProject, cleanupTempDir } from '@dxheroes/ado-shared/test-utils';
+import { cleanupTempDir, createTempProject } from '@dxheroes/ado-shared/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock @clack/prompts
 vi.mock('@clack/prompts', async (importOriginal) => {
@@ -149,9 +148,7 @@ routing:
 			> = {};
 
 			for (const [id, providerConfig] of Object.entries(config.providers)) {
-				const enabledModes = providerConfig.accessModes
-					.filter((m) => m.enabled)
-					.map((m) => m.mode);
+				const enabledModes = providerConfig.accessModes.filter((m) => m.enabled).map((m) => m.mode);
 
 				providerStatus[id] = {
 					enabled: providerConfig.enabled,

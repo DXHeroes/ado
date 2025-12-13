@@ -2,13 +2,13 @@
  * SQLite State Store Tests
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { TaskState, UsageRecord } from '@dxheroes/ado-shared';
 import { createMockTaskDefinition, createMockTaskResult } from '@dxheroes/ado-shared/test-utils';
-import { SqliteStateStore, type SessionRecord, type CheckpointRecord } from '../sqlite.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SqliteStateStore } from '../sqlite.js';
 
 describe('SqliteStateStore', () => {
 	let tempDir: string;

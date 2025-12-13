@@ -1,4 +1,13 @@
-import { Activity, AlertCircle, Cpu, DollarSign, GitMerge, Server, TrendingUp, Zap } from 'lucide-react';
+import {
+	Activity,
+	AlertCircle,
+	Cpu,
+	DollarSign,
+	GitMerge,
+	Server,
+	TrendingUp,
+	Zap,
+} from 'lucide-react';
 import {
 	Bar,
 	BarChart,
@@ -87,7 +96,9 @@ export function ParallelExecution() {
 		<div className="space-y-8">
 			<div>
 				<h1 className="text-3xl font-bold tracking-tight">Parallel Execution</h1>
-				<p className="text-muted-foreground">Monitor distributed worker pools and task parallelization</p>
+				<p className="text-muted-foreground">
+					Monitor distributed worker pools and task parallelization
+				</p>
 			</div>
 
 			{/* Stats Grid */}
@@ -177,10 +188,7 @@ export function ParallelExecution() {
 									label={(entry) => `${entry.tier}: $${entry.cost.toFixed(2)}`}
 								>
 									{stats.costByTier.map((_entry, index) => (
-										<Cell
-											key={`cell-${index}`}
-											fill={['#3b82f6', '#10b981', '#f59e0b'][index]}
-										/>
+										<Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b'][index]} />
 									))}
 								</Pie>
 								<Tooltip />
@@ -218,9 +226,7 @@ export function ParallelExecution() {
 							>
 								<div
 									className={`mt-1 px-2 py-1 text-xs font-medium rounded ${
-										rec.priority >= 4
-											? 'bg-red-100 text-red-700'
-											: 'bg-yellow-100 text-yellow-700'
+										rec.priority >= 4 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
 									}`}
 								>
 									P{rec.priority}

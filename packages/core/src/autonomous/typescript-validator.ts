@@ -11,9 +11,9 @@ import { promisify } from 'node:util';
 import type {
 	LanguageValidator,
 	QualityGateConfig,
-	ValidatorContext,
 	ValidationIssue,
 	ValidationResult,
+	ValidatorContext,
 } from './quality-validator.js';
 
 const execAsync = promisify(exec);
@@ -27,15 +27,11 @@ export class TypeScriptValidator implements LanguageValidator {
 	 */
 	async detect(context: ValidatorContext): Promise<boolean> {
 		try {
-			const packageJson = await fs.readFile(
-				`${context.workingDirectory}/package.json`,
-				'utf-8',
-			);
+			const packageJson = await fs.readFile(`${context.workingDirectory}/package.json`, 'utf-8');
 			const pkg = JSON.parse(packageJson);
 
 			return (
-				pkg.devDependencies?.typescript !== undefined ||
-				pkg.dependencies?.typescript !== undefined
+				pkg.devDependencies?.typescript !== undefined || pkg.dependencies?.typescript !== undefined
 			);
 		} catch {
 			return false;
@@ -50,18 +46,16 @@ export class TypeScriptValidator implements LanguageValidator {
 
 		if (context.parallel) {
 			// Run validators in parallel
-			const [tscResult, eslintResult, prettierResult, testResult] =
-				await Promise.allSettled([
-					this.runTypeCheck(context),
-					this.runLint(context),
-					this.runFormat(context),
-					this.runTests(context),
-				]);
+			const [tscResult, eslintResult, prettierResult, testResult] = await Promise.allSettled([
+				this.runTypeCheck(context),
+				this.runLint(context),
+				this.runFormat(context),
+				this.runTests(context),
+			]);
 
 			if (tscResult.status === 'fulfilled') results.push(tscResult.value);
 			if (eslintResult.status === 'fulfilled') results.push(eslintResult.value);
-			if (prettierResult.status === 'fulfilled')
-				results.push(prettierResult.value);
+			if (prettierResult.status === 'fulfilled') results.push(prettierResult.value);
 			if (testResult.status === 'fulfilled') results.push(testResult.value);
 		} else {
 			// Run sequentially
@@ -77,9 +71,7 @@ export class TypeScriptValidator implements LanguageValidator {
 	/**
 	 * Run TypeScript type checking
 	 */
-	private async runTypeCheck(
-		context: ValidatorContext,
-	): Promise<ValidationResult> {
+	private async runTypeCheck(context: ValidatorContext): Promise<ValidationResult> {
 		const startTime = Date.now();
 		const issues: ValidationIssue[] = [];
 
@@ -98,9 +90,7 @@ export class TypeScriptValidator implements LanguageValidator {
 
 			for (const line of lines) {
 				// Match format: path/to/file.ts(line,col): error TS1234: message
-				const match = line.match(
-					/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS(\d+):\s+(.+)$/,
-				);
+				const match = line.match(/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS(\d+):\s+(.+)$/);
 				if (match) {
 					const [, file, line, column, severity, code, message] = match;
 					issues.push({
@@ -134,9 +124,7 @@ export class TypeScriptValidator implements LanguageValidator {
 			const lines = output.split('\n');
 
 			for (const line of lines) {
-				const match = line.match(
-					/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS(\d+):\s+(.+)$/,
-				);
+				const match = line.match(/^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+TS(\d+):\s+(.+)$/);
 				if (match) {
 					const [, file, line, column, severity, code, message] = match;
 					issues.push({
@@ -223,7 +211,7 @@ export class TypeScriptValidator implements LanguageValidator {
 					infos: 0,
 				},
 			};
-		} catch (error) {
+		} catch (_error) {
 			return {
 				success: false,
 				language: 'typescript',
@@ -309,13 +297,8 @@ export class TypeScriptValidator implements LanguageValidator {
 
 		try {
 			// Try Vitest first, fall back to Jest
-			const hasVitest = await this.hasPackage(
-				context.workingDirectory,
-				'vitest',
-			);
-			const cmd = hasVitest
-				? 'pnpm vitest run --coverage'
-				: 'pnpm jest --coverage';
+			const hasVitest = await this.hasPackage(context.workingDirectory, 'vitest');
+			const cmd = hasVitest ? 'pnpm vitest run --coverage' : 'pnpm jest --coverage';
 
 			const { stdout, stderr } = await execAsync(cmd, {
 				cwd: context.workingDirectory,
@@ -379,15 +362,9 @@ export class TypeScriptValidator implements LanguageValidator {
 	/**
 	 * Check if package is installed
 	 */
-	private async hasPackage(
-		workingDir: string,
-		packageName: string,
-	): Promise<boolean> {
+	private async hasPackage(workingDir: string, packageName: string): Promise<boolean> {
 		try {
-			const packageJson = await fs.readFile(
-				`${workingDir}/package.json`,
-				'utf-8',
-			);
+			const packageJson = await fs.readFile(`${workingDir}/package.json`, 'utf-8');
 			const pkg = JSON.parse(packageJson);
 			return (
 				pkg.devDependencies?.[packageName] !== undefined ||
@@ -414,25 +391,15 @@ export class TypeScriptValidator implements LanguageValidator {
 
 		for (const result of results) {
 			const errors = result.issues.filter((i) => i.severity === 'error');
-			const warningIssues = result.issues.filter(
-				(i) => i.severity === 'warning',
-			);
+			const warningIssues = result.issues.filter((i) => i.severity === 'warning');
 
 			// Check type errors
-			if (
-				config.blockOnTypeErrors &&
-				result.validator === 'tsc' &&
-				errors.length > 0
-			) {
+			if (config.blockOnTypeErrors && result.validator === 'tsc' && errors.length > 0) {
 				blockers.push(`${errors.length} type errors found`);
 			}
 
 			// Check lint errors
-			if (
-				config.blockOnLintErrors &&
-				result.validator === 'eslint' &&
-				errors.length > 0
-			) {
+			if (config.blockOnLintErrors && result.validator === 'eslint' && errors.length > 0) {
 				blockers.push(`${errors.length} lint errors found`);
 			}
 
@@ -456,9 +423,7 @@ export class TypeScriptValidator implements LanguageValidator {
 
 			// Check max errors
 			if (config.maxErrors !== undefined && errors.length > config.maxErrors) {
-				blockers.push(
-					`${errors.length} errors exceeds maximum allowed (${config.maxErrors})`,
-				);
+				blockers.push(`${errors.length} errors exceeds maximum allowed (${config.maxErrors})`);
 			}
 
 			// Collect warnings

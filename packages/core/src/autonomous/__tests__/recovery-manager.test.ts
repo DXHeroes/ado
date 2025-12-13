@@ -2,19 +2,13 @@
  * Tests for RecoveryManager
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	RecoveryManager,
-	createRecoveryManager,
-	type RecoveryPoint,
-	type RetryConfig,
-} from '../recovery-manager.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	CheckpointManager,
 	InMemoryCheckpointStorage,
 	type TaskState,
-	type CheckpointId,
 } from '../../checkpoint/index.js';
+import { RecoveryManager, type RetryConfig, createRecoveryManager } from '../recovery-manager.js';
 
 describe('RecoveryManager', () => {
 	let checkpointManager: CheckpointManager;
@@ -73,10 +67,7 @@ describe('RecoveryManager', () => {
 				progress: 50,
 			};
 
-			const recoveryPoint = await recoveryManager.createRecoveryPoint(
-				taskId,
-				state,
-			);
+			const recoveryPoint = await recoveryManager.createRecoveryPoint(taskId, state);
 
 			expect(recoveryPoint).toBeDefined();
 			expect(recoveryPoint.id).toBeTruthy();
@@ -99,11 +90,7 @@ describe('RecoveryManager', () => {
 				lastError: 'Some error',
 			};
 
-			const recoveryPoint = await recoveryManager.createRecoveryPoint(
-				taskId,
-				state,
-				metadata,
-			);
+			const recoveryPoint = await recoveryManager.createRecoveryPoint(taskId, state, metadata);
 
 			expect(recoveryPoint.metadata).toEqual(metadata);
 		});
@@ -337,15 +324,9 @@ describe('RecoveryManager', () => {
 				progress: 60,
 			};
 
-			const recoveryPoint = await recoveryManager.createRecoveryPoint(
-				taskId,
-				state,
-			);
+			const recoveryPoint = await recoveryManager.createRecoveryPoint(taskId, state);
 
-			const result = await recoveryManager.restore(
-				taskId,
-				recoveryPoint.checkpointId,
-			);
+			const result = await recoveryManager.restore(taskId, recoveryPoint.checkpointId);
 
 			expect(result.success).toBe(true);
 			expect(result.strategy).toBe('restore');
@@ -360,10 +341,7 @@ describe('RecoveryManager', () => {
 				progress: 40,
 			};
 
-			const recoveryPoint = await recoveryManager.createRecoveryPoint(
-				taskId,
-				state,
-			);
+			const recoveryPoint = await recoveryManager.createRecoveryPoint(taskId, state);
 
 			const initialCount = recoveryManager.getRecoveryPoints(taskId).length;
 
@@ -478,11 +456,7 @@ describe('RecoveryManager', () => {
 		it('should handle restore when no checkpoint available', async () => {
 			const error = new Error('invalid state detected');
 
-			const result = await recoveryManager.executeRecovery(
-				'unknown-task',
-				error,
-				2,
-			);
+			const result = await recoveryManager.executeRecovery('unknown-task', error, 2);
 
 			expect(result.success).toBe(false);
 			expect(result.message).toContain('No checkpoint');

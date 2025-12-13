@@ -2,11 +2,11 @@
  * Health Routes Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { StateStore } from '@dxheroes/ado-core';
 import { Hono } from 'hono';
-import { createHealthRoutes } from '../health.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiContext } from '../../types.js';
+import { createHealthRoutes } from '../health.js';
 
 describe('Health Routes', () => {
 	let app: Hono<ApiContext>;

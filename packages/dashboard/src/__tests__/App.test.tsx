@@ -43,7 +43,9 @@ describe('App Component', () => {
 
 	it('renders Providers route', () => {
 		renderApp('/providers');
-		expect(screen.getByText('Manage AI coding agents and their configurations')).toBeInTheDocument();
+		expect(
+			screen.getByText('Manage AI coding agents and their configurations'),
+		).toBeInTheDocument();
 	});
 
 	it('renders Settings route', () => {
@@ -53,7 +55,9 @@ describe('App Component', () => {
 
 	it('renders ParallelExecution route', () => {
 		renderApp('/parallel');
-		expect(screen.getByText('Monitor distributed worker pools and task parallelization')).toBeInTheDocument();
+		expect(
+			screen.getByText('Monitor distributed worker pools and task parallelization'),
+		).toBeInTheDocument();
 	});
 
 	it('has correct navigation structure', () => {

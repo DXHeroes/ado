@@ -2,12 +2,12 @@
  * Tasks Routes Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { StateStore, AsyncStateStore } from '@dxheroes/ado-core';
+import type { AsyncStateStore, StateStore } from '@dxheroes/ado-core';
 import type { TaskState } from '@dxheroes/ado-shared';
 import { Hono } from 'hono';
-import { createTasksRoutes } from '../tasks.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiContext } from '../../types.js';
+import { createTasksRoutes } from '../tasks.js';
 
 describe('Tasks Routes', () => {
 	let app: Hono<ApiContext>;
@@ -343,9 +343,12 @@ describe('Tasks Routes', () => {
 			});
 
 			expect(res.status).toBe(200);
-			expect(mockStateStore.updateTask).toHaveBeenCalledWith('task-123', expect.objectContaining({
-				status: 'running',
-			}));
+			expect(mockStateStore.updateTask).toHaveBeenCalledWith(
+				'task-123',
+				expect.objectContaining({
+					status: 'running',
+				}),
+			);
 		});
 
 		it('should set completedAt when status is completed', async () => {
@@ -364,10 +367,13 @@ describe('Tasks Routes', () => {
 				body: JSON.stringify({ status: 'completed' }),
 			});
 
-			expect(mockStateStore.updateTask).toHaveBeenCalledWith('task-456', expect.objectContaining({
-				status: 'completed',
-				completedAt: expect.any(Date),
-			}));
+			expect(mockStateStore.updateTask).toHaveBeenCalledWith(
+				'task-456',
+				expect.objectContaining({
+					status: 'completed',
+					completedAt: expect.any(Date),
+				}),
+			);
 		});
 
 		it('should return 404 when task not found', async () => {

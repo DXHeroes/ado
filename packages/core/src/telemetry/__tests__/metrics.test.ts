@@ -2,7 +2,7 @@
  * OpenTelemetry Metrics Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { MetricsCollector, measureDuration } from '../metrics.js';
 import type { TelemetryConfig } from '../types.js';
 

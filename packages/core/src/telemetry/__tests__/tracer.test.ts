@@ -2,8 +2,8 @@
  * OpenTelemetry Tracer Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Tracer, traceTaskExecution, traceProviderRequest } from '../tracer.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { Tracer, traceProviderRequest, traceTaskExecution } from '../tracer.js';
 import type { TelemetryConfig } from '../types.js';
 
 describe('Tracer', () => {
@@ -252,14 +252,9 @@ describe('Tracer', () => {
 		});
 
 		it('should trace successful task execution', async () => {
-			const result = await traceTaskExecution(
-				tracer,
-				'task-123',
-				'test-provider',
-				async () => {
-					return { success: true };
-				},
-			);
+			const result = await traceTaskExecution(tracer, 'task-123', 'test-provider', async () => {
+				return { success: true };
+			});
 
 			expect(result).toEqual({ success: true });
 		});
@@ -318,14 +313,9 @@ describe('Tracer', () => {
 		});
 
 		it('should trace successful provider request', async () => {
-			const result = await traceProviderRequest(
-				tracer,
-				'claude-code',
-				'execute',
-				async () => {
-					return { data: 'response' };
-				},
-			);
+			const result = await traceProviderRequest(tracer, 'claude-code', 'execute', async () => {
+				return { data: 'response' };
+			});
 
 			expect(result).toEqual({ data: 'response' });
 		});

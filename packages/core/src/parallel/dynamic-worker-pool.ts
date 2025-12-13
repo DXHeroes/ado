@@ -127,11 +127,13 @@ export interface ScalingMetrics {
 	/**
 	 * Last scaling action
 	 */
-	lastScalingAction?: {
-		timestamp: Date;
-		action: 'scale-up' | 'scale-down';
-		delta: number;
-	} | undefined;
+	lastScalingAction?:
+		| {
+				timestamp: Date;
+				action: 'scale-up' | 'scale-down';
+				delta: number;
+		  }
+		| undefined;
 }
 
 /**
@@ -311,10 +313,7 @@ export class DynamicWorkerPool implements WorkerPool {
 			return now - w.lastUsedAt.getTime() > idleTime;
 		});
 
-		if (
-			idleWorkers.length > 0 &&
-			metrics.currentWorkers > this.config.minWorkers
-		) {
+		if (idleWorkers.length > 0 && metrics.currentWorkers > this.config.minWorkers) {
 			// Scale down one worker at a time
 			await this.scaleDown(1);
 		}
@@ -330,8 +329,6 @@ export class DynamicWorkerPool implements WorkerPool {
 
 		if (delta <= 0) return;
 
-		console.log(`Scaling up: adding ${delta} worker(s)`);
-
 		await this.scaleToTarget(targetCount);
 
 		this.lastScalingAction = new Date();
@@ -346,8 +343,6 @@ export class DynamicWorkerPool implements WorkerPool {
 		const delta = currentCount - targetCount;
 
 		if (delta <= 0) return;
-
-		console.log(`Scaling down: removing ${delta} worker(s)`);
 
 		// Find idle workers to terminate
 		const idleWorkers = Array.from(this.workers.values())
@@ -417,10 +412,9 @@ export class DynamicWorkerPool implements WorkerPool {
 
 			// Update status
 			worker.status = 'ready';
-		} catch (error) {
+		} catch (_error) {
 			// Failed to spawn
 			this.workers.delete(workerId);
-			console.error(`Failed to spawn worker ${workerId}:`, error);
 		}
 	}
 
@@ -436,9 +430,7 @@ export class DynamicWorkerPool implements WorkerPool {
 		try {
 			await this.spawner.terminateWorker(workerId);
 			this.workers.delete(workerId);
-		} catch (error) {
-			console.error(`Failed to terminate worker ${workerId}:`, error);
-		}
+		} catch (_error) {}
 	}
 
 	/**
@@ -451,12 +443,10 @@ export class DynamicWorkerPool implements WorkerPool {
 		const idleWorkers = workers.filter((w) => w.status === 'idle').length;
 
 		const avgCpuUtilization =
-			workers.reduce((sum, w) => sum + w.cpuUtilization, 0) /
-			(workers.length || 1);
+			workers.reduce((sum, w) => sum + w.cpuUtilization, 0) / (workers.length || 1);
 
 		const avgMemoryUtilization =
-			workers.reduce((sum, w) => sum + w.memoryUtilization, 0) /
-			(workers.length || 1);
+			workers.reduce((sum, w) => sum + w.memoryUtilization, 0) / (workers.length || 1);
 
 		// Calculate desired workers inline to avoid circular dependency
 		const demandBasedCount = busyWorkers + Math.ceil(this.taskQueue.length / 2);
@@ -481,34 +471,6 @@ export class DynamicWorkerPool implements WorkerPool {
 	}
 
 	/**
-	 * Calculate desired worker count based on metrics
-	 */
-	private calculateDesiredWorkers(): number {
-		const workers = Array.from(this.workers.values());
-		const busyWorkers = workers.filter((w) => w.status === 'busy').length;
-		const avgCpuUtilization =
-			workers.reduce((sum, w) => sum + w.cpuUtilization, 0) /
-			(workers.length || 1);
-
-		// Calculate based on queue and busy workers
-		const demandBasedCount = busyWorkers + Math.ceil(this.taskQueue.length / 2);
-
-		// Calculate based on utilization
-		const utilizationBasedCount = Math.ceil(
-			workers.length * (avgCpuUtilization / this.config.targetUtilization),
-		);
-
-		// Take maximum of both
-		const desiredCount = Math.max(demandBasedCount, utilizationBasedCount);
-
-		// Clamp to min/max
-		return Math.max(
-			this.config.minWorkers,
-			Math.min(desiredCount, this.config.maxWorkers),
-		);
-	}
-
-	/**
 	 * Shutdown pool
 	 */
 	async shutdown(): Promise<void> {
@@ -516,9 +478,7 @@ export class DynamicWorkerPool implements WorkerPool {
 
 		// Terminate all workers
 		const workerIds = Array.from(this.workers.keys());
-		await Promise.allSettled(
-			workerIds.map((id) => this.terminateWorker(id)),
-		);
+		await Promise.allSettled(workerIds.map((id) => this.terminateWorker(id)));
 	}
 
 	/**

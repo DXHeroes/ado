@@ -89,11 +89,7 @@ export class InMemoryWorkerRegistry implements WorkerRegistry {
 	}
 
 	// Helper methods for metrics
-	async recordTaskCompletion(
-		workerId: string,
-		success: boolean,
-		duration: number,
-	): Promise<void> {
+	async recordTaskCompletion(workerId: string, success: boolean, duration: number): Promise<void> {
 		const worker = this.workers.get(workerId);
 		if (!worker) return;
 
@@ -104,8 +100,7 @@ export class InMemoryWorkerRegistry implements WorkerRegistry {
 		}
 
 		// Update average task duration
-		const totalTasks =
-			worker.metrics.totalTasksCompleted + worker.metrics.totalTasksFailed;
+		const totalTasks = worker.metrics.totalTasksCompleted + worker.metrics.totalTasksFailed;
 		worker.metrics.avgTaskDuration =
 			(worker.metrics.avgTaskDuration * (totalTasks - 1) + duration) / totalTasks;
 	}

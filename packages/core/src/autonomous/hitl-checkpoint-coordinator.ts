@@ -6,17 +6,13 @@
  */
 
 import type { CheckpointManager, TaskState } from '../checkpoint/index.js';
-import type { CheckpointDefinition } from './task-decomposer.js';
 import {
-	EscalationEngine,
 	type EscalationContext,
 	type EscalationDecision,
+	EscalationEngine,
 } from './escalation-engine.js';
-import {
-	StuckDetector,
-	type AttemptRecord,
-	type StuckDetectionResult,
-} from './stuck-detector.js';
+import { type AttemptRecord, type StuckDetectionResult, StuckDetector } from './stuck-detector.js';
+import type { CheckpointDefinition } from './task-decomposer.js';
 
 export interface HITLCheckpointConfig {
 	/**
@@ -71,10 +67,7 @@ export class HITLCheckpointCoordinator {
 	private checkpointReviews: Map<string, CheckpointReview> = new Map();
 	private eventListeners: ((event: HITLCheckpointEvent) => void)[] = [];
 
-	constructor(
-		checkpointManager: CheckpointManager,
-		config?: Partial<HITLCheckpointConfig>,
-	) {
+	constructor(checkpointManager: CheckpointManager, config?: Partial<HITLCheckpointConfig>) {
 		this.checkpointManager = checkpointManager;
 		this.stuckDetector = new StuckDetector();
 		this.escalationEngine = new EscalationEngine();
@@ -180,10 +173,7 @@ export class HITLCheckpointCoordinator {
 	/**
 	 * Request human review
 	 */
-	private async requestHumanReview(
-		taskId: string,
-		escalation: EscalationDecision,
-	): Promise<void> {
+	private async requestHumanReview(taskId: string, escalation: EscalationDecision): Promise<void> {
 		this.emitEvent({
 			type: 'human_review_required',
 			taskId,
@@ -318,9 +308,7 @@ export class HITLCheckpointCoordinator {
 		for (const listener of this.eventListeners) {
 			try {
 				listener(event);
-			} catch (error) {
-				console.error('Error in checkpoint event listener:', error);
-			}
+			} catch (_error) {}
 		}
 	}
 
@@ -346,9 +334,7 @@ export class HITLCheckpointCoordinator {
 		const escalations = this.escalationEngine.getHistory(taskId);
 		const startTime = this.taskStartTimes.get(taskId);
 
-		const elapsedMs = startTime
-			? Date.now() - new Date(startTime).getTime()
-			: 0;
+		const elapsedMs = startTime ? Date.now() - new Date(startTime).getTime() : 0;
 		const elapsedMinutes = elapsedMs / (1000 * 60);
 
 		const stuckResult = startTime

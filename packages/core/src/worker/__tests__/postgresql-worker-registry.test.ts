@@ -4,13 +4,13 @@
  * Tests for PostgreSQL-backed worker registry with mocked database.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { Pool, QueryResult } from 'pg';
+import type { Pool } from 'pg';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	PostgreSQLWorkerRegistry,
 	createPostgreSQLWorkerRegistry,
 } from '../postgresql-worker-registry.js';
-import type { WorkerRegistration, WorkerHeartbeat } from '../worker-protocol.js';
+import type { WorkerHeartbeat, WorkerRegistration } from '../worker-protocol.js';
 
 describe('PostgreSQLWorkerRegistry', () => {
 	let registry: PostgreSQLWorkerRegistry;
@@ -527,9 +527,7 @@ describe('PostgreSQLWorkerRegistry', () => {
 				resources: { cpu: 4, memory: 8192 },
 			};
 
-			await expect(registry.register(registration)).rejects.toThrow(
-				'Database connection failed',
-			);
+			await expect(registry.register(registration)).rejects.toThrow('Database connection failed');
 		});
 
 		it('should propagate database errors during queries', async () => {

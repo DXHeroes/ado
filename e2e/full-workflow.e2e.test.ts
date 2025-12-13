@@ -2,10 +2,10 @@
  * E2E test for complete task execution workflow
  */
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 describe('Full Workflow E2E', () => {
 	const testDir = join(process.cwd(), 'tmp', 'e2e-test');
@@ -48,7 +48,6 @@ providers:
 		const cliPath = join(process.cwd(), 'packages', 'cli', 'dist', 'index.js');
 
 		if (!existsSync(cliPath)) {
-			console.warn('CLI not built, skipping E2E test');
 			return;
 		}
 
@@ -98,7 +97,6 @@ providers:
 		const cliPath = join(process.cwd(), 'packages', 'cli', 'dist', 'index.js');
 
 		if (!existsSync(cliPath)) {
-			console.warn('CLI not built, skipping E2E test');
 			return;
 		}
 
@@ -136,7 +134,6 @@ providers:
 		const cliPath = join(process.cwd(), 'packages', 'cli', 'dist', 'index.js');
 
 		if (!existsSync(cliPath)) {
-			console.warn('CLI not built, skipping E2E test');
 			return;
 		}
 

@@ -3,8 +3,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { WebhookNotifier } from '../webhook.js';
 import type { NotificationPayload, WebhookConfig } from '../types.js';
+import { WebhookNotifier } from '../webhook.js';
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -91,7 +91,7 @@ describe('WebhookNotifier', () => {
 
 		it('should default to POST method when not specified', async () => {
 			const config = { ...webhookConfig };
-			delete config.method;
+			config.method = undefined;
 			const notifier = new WebhookNotifier(config);
 			const payload: NotificationPayload = {
 				title: 'Test',

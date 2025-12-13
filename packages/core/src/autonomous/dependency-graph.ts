@@ -187,9 +187,7 @@ export class DependencyGraph {
 				const task = this.nodes.get(taskId);
 				if (!task) continue;
 
-				const canExecute = task.dependencies.every((depId) =>
-					completed.has(depId),
-				);
+				const canExecute = task.dependencies.every((depId) => completed.has(depId));
 				if (canExecute) {
 					ready.push(taskId);
 				}
@@ -218,10 +216,7 @@ export class DependencyGraph {
 		}
 
 		// Calculate total duration
-		const estimatedTotalDuration = stages.reduce(
-			(sum, stage) => sum + stage.estimatedDuration,
-			0,
-		);
+		const estimatedTotalDuration = stages.reduce((sum, stage) => sum + stage.estimatedDuration, 0);
 
 		// Calculate sequential duration
 		const sequentialDuration = Array.from(this.nodes.values()).reduce(
@@ -230,9 +225,7 @@ export class DependencyGraph {
 		);
 
 		const parallelizationFactor =
-			estimatedTotalDuration > 0
-				? sequentialDuration / estimatedTotalDuration
-				: 1;
+			estimatedTotalDuration > 0 ? sequentialDuration / estimatedTotalDuration : 1;
 
 		return {
 			tasks: Array.from(this.nodes.values()),

@@ -364,11 +364,6 @@ export class TemporalWorkflowEngine {
 		avgWorkflowDuration: 0,
 	};
 
-	constructor(_config: Partial<TemporalWorkflowConfig>) {
-		// TODO: In real implementation, initialize Temporal client with config
-		// this.client = new WorkflowClient({ serverUrl: config.serverUrl, ... });
-	}
-
 	/**
 	 * Register workflow definition
 	 */
@@ -386,10 +381,7 @@ export class TemporalWorkflowEngine {
 	/**
 	 * Start workflow execution
 	 */
-	async startWorkflow(
-		workflowName: string,
-		input?: unknown,
-	): Promise<WorkflowExecution> {
+	async startWorkflow(workflowName: string, input?: unknown): Promise<WorkflowExecution> {
 		const workflow = this.workflows.get(workflowName);
 		if (!workflow) {
 			throw new Error(`Workflow not found: ${workflowName}`);
@@ -485,10 +477,7 @@ export class TemporalWorkflowEngine {
 	/**
 	 * Replay workflow from checkpoint
 	 */
-	async replayFromCheckpoint(
-		workflowId: string,
-		checkpointId: string,
-	): Promise<void> {
+	async replayFromCheckpoint(workflowId: string, checkpointId: string): Promise<void> {
 		const execution = this.executions.get(workflowId);
 		if (!execution) {
 			throw new Error(`Workflow not found: ${workflowId}`);
@@ -514,7 +503,8 @@ export class TemporalWorkflowEngine {
 	): Promise<void> {
 		try {
 			for (let i = execution.currentStepIndex; i < workflow.steps.length; i++) {
-				const step = workflow.steps[i]!;
+				const step = workflow.steps[i];
+				if (!step) continue;
 				execution.currentStepIndex = i;
 
 				// Create checkpoint if required
@@ -555,10 +545,7 @@ export class TemporalWorkflowEngine {
 	/**
 	 * Execute workflow step
 	 */
-	private async executeStep(
-		_execution: WorkflowExecution,
-		step: WorkflowStep,
-	): Promise<void> {
+	private async executeStep(_execution: WorkflowExecution, step: WorkflowStep): Promise<void> {
 		switch (step.type) {
 			case 'activity': {
 				if (!step.activityName) {
@@ -626,8 +613,7 @@ export class TemporalWorkflowEngine {
 
 				// Calculate backoff delay
 				const delay = Math.min(
-					retryPolicy.initialInterval *
-						Math.pow(retryPolicy.backoffCoefficient, attempt - 1),
+					retryPolicy.initialInterval * retryPolicy.backoffCoefficient ** (attempt - 1),
 					retryPolicy.maximumInterval,
 				);
 
@@ -641,10 +627,7 @@ export class TemporalWorkflowEngine {
 	/**
 	 * Create checkpoint
 	 */
-	private async createCheckpoint(
-		execution: WorkflowExecution,
-		step: WorkflowStep,
-	): Promise<void> {
+	private async createCheckpoint(execution: WorkflowExecution, step: WorkflowStep): Promise<void> {
 		const checkpoint: WorkflowCheckpoint = {
 			id: `checkpoint-${execution.checkpoints.length}`,
 			stepId: step.id,
@@ -664,10 +647,7 @@ export class TemporalWorkflowEngine {
 	/**
 	 * Wait for human approval signal
 	 */
-	private async waitForApproval(
-		execution: WorkflowExecution,
-		_step: WorkflowStep,
-	): Promise<void> {
+	private async waitForApproval(execution: WorkflowExecution, _step: WorkflowStep): Promise<void> {
 		execution.status = 'paused';
 
 		// In real implementation, this would wait for approval signal
@@ -747,9 +727,10 @@ export class TemporalWorkflowEngine {
  * Create Temporal workflow engine
  */
 export function createTemporalWorkflowEngine(
-	config?: Partial<TemporalWorkflowConfig>,
+	_config?: Partial<TemporalWorkflowConfig>,
 ): TemporalWorkflowEngine {
-	return new TemporalWorkflowEngine(config ?? {});
+	// TODO: Use config when TemporalWorkflowEngine supports configuration
+	return new TemporalWorkflowEngine();
 }
 
 /**

@@ -4,12 +4,12 @@
  * Tests for Firecracker microVM management with mocked VM operations.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	type ExecutionRequest,
+	type FirecrackerConfig,
 	FirecrackerSandbox,
 	createFirecrackerSandbox,
-	type FirecrackerConfig,
-	type ExecutionRequest,
 } from '../firecracker-sandbox.js';
 
 describe('FirecrackerSandbox', () => {
@@ -459,7 +459,7 @@ describe('FirecrackerSandbox', () => {
 
 			expect(sandbox.getMetrics().active).toBe(2);
 
-			await sandbox.destroySandbox(instances[0]!.id);
+			await sandbox.destroySandbox(instances[0]?.id);
 
 			expect(sandbox.getMetrics().active).toBe(1);
 		});

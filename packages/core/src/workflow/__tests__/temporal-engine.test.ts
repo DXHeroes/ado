@@ -2,16 +2,15 @@
  * Tests for TemporalWorkflowEngine
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-	TemporalWorkflowEngine,
-	createTemporalWorkflowEngine,
-	createLLMRetryPolicy,
-	type WorkflowDefinition,
 	type ActivityDefinition,
-	type WorkflowStep,
-	type RetryPolicy,
 	type TemporalWorkflowConfig,
+	TemporalWorkflowEngine,
+	type WorkflowDefinition,
+	type WorkflowStep,
+	createLLMRetryPolicy,
+	createTemporalWorkflowEngine,
 } from '../temporal-engine.js';
 
 describe('TemporalWorkflowEngine', () => {
@@ -825,9 +824,7 @@ describe('TemporalWorkflowEngine', () => {
 
 	describe('cancelWorkflow', () => {
 		it('should throw error for non-existent workflow', async () => {
-			await expect(engine.cancelWorkflow('non-existent')).rejects.toThrow(
-				'Workflow not found',
-			);
+			await expect(engine.cancelWorkflow('non-existent')).rejects.toThrow('Workflow not found');
 		});
 
 		it('should cancel running workflow', async () => {
@@ -858,9 +855,7 @@ describe('TemporalWorkflowEngine', () => {
 
 	describe('getWorkflowHistory', () => {
 		it('should throw error for non-existent workflow', async () => {
-			await expect(engine.getWorkflowHistory('non-existent')).rejects.toThrow(
-				'Workflow not found',
-			);
+			await expect(engine.getWorkflowHistory('non-existent')).rejects.toThrow('Workflow not found');
 		});
 
 		it('should return workflow checkpoints', async () => {
@@ -978,7 +973,7 @@ describe('TemporalWorkflowEngine', () => {
 			const checkpoints = await engine.getWorkflowHistory(execution.workflowId);
 			expect(checkpoints.length).toBeGreaterThan(0);
 
-			const checkpointId = checkpoints[0]!.id;
+			const checkpointId = checkpoints[0]?.id;
 			await engine.replayFromCheckpoint(execution.workflowId, checkpointId);
 
 			const queried = await engine.queryWorkflow(execution.workflowId);
@@ -1228,7 +1223,7 @@ describe('TemporalWorkflowEngine', () => {
 			// Wait a bit for the workflow to start
 			await new Promise((resolve) => setTimeout(resolve, 100));
 
-			const queried = await engine.queryWorkflow(execution.workflowId);
+			const _queried = await engine.queryWorkflow(execution.workflowId);
 			// Should eventually complete after simulated approval
 			await new Promise((resolve) => setTimeout(resolve, 1200));
 

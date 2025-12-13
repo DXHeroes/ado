@@ -2,12 +2,12 @@
  * Tests for WorkStealingScheduler
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+	type Task,
+	type WorkStealingConfig,
 	WorkStealingScheduler,
 	createWorkStealingScheduler,
-	type WorkStealingConfig,
-	type Task,
 } from '../work-stealing-scheduler.js';
 
 describe('WorkStealingScheduler', () => {
@@ -329,7 +329,7 @@ describe('WorkStealingScheduler', () => {
 			if (queue1) {
 				queue1.tasks.push(
 					{ id: 'task-1', data: {}, priority: 1 },
-					{ id: 'task-2', data: {}, priority: 1 }
+					{ id: 'task-2', data: {}, priority: 1 },
 				);
 			}
 
@@ -426,7 +426,7 @@ describe('WorkStealingScheduler', () => {
 			// worker-0 steals
 			const stolenTask = await splittingScheduler.getNextTask('worker-0');
 
-			if (stolenTask && stolenTask.splittable) {
+			if (stolenTask?.splittable) {
 				// Original worker should have split task
 				const queue1After = splittingScheduler.getWorkerQueue('worker-1');
 				// Check that queue has some tasks

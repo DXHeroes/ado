@@ -4,9 +4,9 @@
  * Tests for in-memory worker registry implementation.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type { WorkerHeartbeat, WorkerRegistration } from '../worker-protocol.js';
 import { InMemoryWorkerRegistry, createWorkerRegistry } from '../worker-registry.js';
-import type { WorkerRegistration, WorkerHeartbeat } from '../worker-protocol.js';
 
 describe('InMemoryWorkerRegistry', () => {
 	let registry: InMemoryWorkerRegistry;
@@ -95,8 +95,8 @@ describe('InMemoryWorkerRegistry', () => {
 			const worker = await registry.getWorker('worker-time');
 			expect(worker).not.toBeNull();
 
-			const registeredAt = new Date(worker!.registeredAt);
-			const lastHeartbeat = new Date(worker!.lastHeartbeat);
+			const registeredAt = new Date(worker?.registeredAt);
+			const lastHeartbeat = new Date(worker?.lastHeartbeat);
 
 			expect(registeredAt.getTime()).toBeGreaterThanOrEqual(beforeRegistration.getTime());
 			expect(registeredAt.getTime()).toBeLessThanOrEqual(afterRegistration.getTime());

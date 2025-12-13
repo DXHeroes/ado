@@ -44,10 +44,7 @@ export class WorkerHealthMonitor {
 		}
 
 		this.isRunning = true;
-		this.intervalId = setInterval(
-			() => this.checkHealth(),
-			this.config.checkInterval,
-		);
+		this.intervalId = setInterval(() => this.checkHealth(), this.config.checkInterval);
 	}
 
 	/**
@@ -88,9 +85,7 @@ export class WorkerHealthMonitor {
 					}
 				}
 			}
-		} catch (error) {
-			console.error('Health check failed:', error);
-		}
+		} catch (_error) {}
 	}
 
 	/**

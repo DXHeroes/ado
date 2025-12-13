@@ -4,14 +4,14 @@
  * Tests for worker health monitoring and heartbeat detection.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	type HealthMonitorConfig,
 	WorkerHealthMonitor,
 	createWorkerHealthMonitor,
-	type HealthMonitorConfig,
 } from '../worker-health-monitor.js';
+import type { WorkerHeartbeat, WorkerRegistration } from '../worker-protocol.js';
 import { InMemoryWorkerRegistry } from '../worker-registry.js';
-import type { WorkerRegistration, WorkerHeartbeat } from '../worker-protocol.js';
 
 describe('WorkerHealthMonitor', () => {
 	let registry: InMemoryWorkerRegistry;
@@ -415,10 +415,7 @@ describe('WorkerHealthMonitor', () => {
 			// Should not throw even with error
 			await expect(vi.advanceTimersByTimeAsync(2000)).resolves.not.toThrow();
 
-			expect(consoleErrorSpy).toHaveBeenCalledWith(
-				'Health check failed:',
-				expect.any(Error),
-			);
+			expect(consoleErrorSpy).toHaveBeenCalledWith('Health check failed:', expect.any(Error));
 
 			consoleErrorSpy.mockRestore();
 		});

@@ -2,21 +2,15 @@
  * Tests for AutoFixEngine
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	AutoFixEngine,
-	createAutoFixEngine,
-	type FixStrategy,
-	type FixContext,
-	type FixResult,
-} from '../auto-fix-engine.js';
-import { StuckDetector } from '../stuck-detector.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AutoFixEngine, type FixStrategy, createAutoFixEngine } from '../auto-fix-engine.js';
 import type {
-	ValidationResult,
-	ValidationIssue,
-	ValidatorContext,
 	QualityGateConfig,
+	ValidationIssue,
+	ValidationResult,
+	ValidatorContext,
 } from '../quality-validator.js';
+import { StuckDetector } from '../stuck-detector.js';
 
 describe('AutoFixEngine', () => {
 	let stuckDetector: StuckDetector;
@@ -126,12 +120,7 @@ describe('AutoFixEngine', () => {
 				},
 			];
 
-			const result = await disabledEngine.autoFix(
-				taskId,
-				results,
-				context,
-				qualityGates,
-			);
+			const result = await disabledEngine.autoFix(taskId, results, context, qualityGates);
 
 			expect(result.success).toBe(false);
 			expect(result.fixesApplied).toBe(0);
@@ -622,7 +611,7 @@ describe('AutoFixEngine', () => {
 		it('should match unused variable pattern', () => {
 			const engine = new AutoFixEngine(stuckDetector);
 
-			const issues: ValidationIssue[] = [
+			const _issues: ValidationIssue[] = [
 				{
 					file: 'test.ts',
 					line: 10,
@@ -639,7 +628,7 @@ describe('AutoFixEngine', () => {
 		it('should match missing import pattern', () => {
 			const engine = new AutoFixEngine(stuckDetector);
 
-			const issues: ValidationIssue[] = [
+			const _issues: ValidationIssue[] = [
 				{
 					file: 'test.ts',
 					line: 5,
@@ -655,7 +644,7 @@ describe('AutoFixEngine', () => {
 		it('should match lint errors', () => {
 			const engine = new AutoFixEngine(stuckDetector);
 
-			const issues: ValidationIssue[] = [
+			const _issues: ValidationIssue[] = [
 				{
 					file: 'test.ts',
 					line: 15,
@@ -671,7 +660,7 @@ describe('AutoFixEngine', () => {
 		it('should match format errors', () => {
 			const engine = new AutoFixEngine(stuckDetector);
 
-			const issues: ValidationIssue[] = [
+			const _issues: ValidationIssue[] = [
 				{
 					file: 'test.ts',
 					line: 20,

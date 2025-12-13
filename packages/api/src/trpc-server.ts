@@ -4,9 +4,6 @@
  * Standalone tRPC server with WebSocket subscriptions for real-time updates.
  */
 
-import { createHTTPServer } from '@trpc/server/adapters/standalone';
-import { applyWSSHandler } from '@trpc/server/adapters/ws';
-import { WebSocketServer } from 'ws';
 import {
 	type AsyncStateStore,
 	PostgresqlStateStore,
@@ -15,9 +12,12 @@ import {
 	createTelemetryServiceFromEnv,
 	setupGracefulShutdown,
 } from '@dxheroes/ado-core';
+import { createHTTPServer } from '@trpc/server/adapters/standalone';
+import { applyWSSHandler } from '@trpc/server/adapters/ws';
+import { WebSocketServer } from 'ws';
 
-import { appRouter } from './trpc/router.js';
 import { createContext, createWSSContext } from './trpc/context.js';
+import { appRouter } from './trpc/router.js';
 import type { ApiConfig } from './types.js';
 
 export type { AppRouter } from './trpc/router.js';
@@ -40,13 +40,13 @@ export function startTrpcServer(config: ApiConfig): void {
 	const telemetry = createTelemetryServiceFromEnv('ado-api-trpc');
 
 	const port = config.port ?? 8080;
-	const host = config.host ?? '0.0.0.0';
+	// TODO: Use host configuration when implementing custom server binding
+	// const host = config.host ?? '0.0.0.0';
 
 	// Create HTTP server with tRPC
 	const httpServer = createHTTPServer({
 		router: appRouter,
-		createContext: (opts) =>
-			createContext(opts, config, stateStore, telemetry),
+		createContext: (opts) => createContext(opts, config, stateStore, telemetry),
 	});
 
 	// Create WebSocket server for subscriptions
@@ -55,8 +55,7 @@ export function startTrpcServer(config: ApiConfig): void {
 	const wssHandler = applyWSSHandler({
 		wss,
 		router: appRouter,
-		createContext: (opts) =>
-			createWSSContext(opts, config, stateStore, telemetry),
+		createContext: (opts) => createWSSContext(opts, config, stateStore, telemetry),
 	});
 
 	// Setup graceful shutdown
@@ -64,14 +63,10 @@ export function startTrpcServer(config: ApiConfig): void {
 
 	// Handle server close
 	process.on('SIGTERM', () => {
-		console.log('SIGTERM signal received: closing WebSocket server');
 		wssHandler.broadcastReconnectNotification();
 		wss.close();
 	});
 
 	// Start server
 	httpServer.listen(port);
-
-	console.log(`✅ tRPC server running on http://${host}:${port}`);
-	console.log(`📡 WebSocket server ready for subscriptions`);
 }

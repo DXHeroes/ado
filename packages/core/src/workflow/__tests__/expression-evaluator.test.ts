@@ -2,7 +2,7 @@
  * Tests for Expression Evaluator
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	evaluateCondition,
 	parseConditionExpression,
@@ -92,9 +92,7 @@ describe('Expression Evaluator', () => {
 					duration: 100,
 				});
 
-				expect(
-					evaluateCondition('$results.step1.output.value == 42', context),
-				).toBe(true);
+				expect(evaluateCondition('$results.step1.output.value == 42', context)).toBe(true);
 			});
 
 			it('should return null for non-existent step', () => {
@@ -224,16 +222,16 @@ describe('Expression Evaluator', () => {
 		describe('in operator', () => {
 			it('should check if value is in array', () => {
 				context.variables.set('status', 'running');
-				expect(
-					evaluateCondition('$status in ["pending", "running", "completed"]', context),
-				).toBe(true);
+				expect(evaluateCondition('$status in ["pending", "running", "completed"]', context)).toBe(
+					true,
+				);
 			});
 
 			it('should return false if value not in array', () => {
 				context.variables.set('status', 'failed');
-				expect(
-					evaluateCondition('$status in ["pending", "running", "completed"]', context),
-				).toBe(false);
+				expect(evaluateCondition('$status in ["pending", "running", "completed"]', context)).toBe(
+					false,
+				);
 			});
 
 			it('should handle number arrays', () => {
@@ -242,9 +240,7 @@ describe('Expression Evaluator', () => {
 			});
 
 			it('should handle literal values', () => {
-				expect(evaluateCondition('"apple" in ["apple", "banana", "orange"]', context)).toBe(
-					true,
-				);
+				expect(evaluateCondition('"apple" in ["apple", "banana", "orange"]', context)).toBe(true);
 				expect(evaluateCondition('5 in [1, 2, 3, 4, 5]', context)).toBe(true);
 			});
 		});
@@ -262,9 +258,7 @@ describe('Expression Evaluator', () => {
 
 			it('should handle single quotes in pattern', () => {
 				context.variables.set('email', 'test@example.com');
-				expect(
-					evaluateCondition('$email matches "^[a-z]+@[a-z]+"', context),
-				).toBe(true);
+				expect(evaluateCondition('$email matches "^[a-z]+@[a-z]+"', context)).toBe(true);
 			});
 
 			it('should handle case-sensitive matching', () => {
@@ -275,9 +269,7 @@ describe('Expression Evaluator', () => {
 
 			it('should handle special regex characters', () => {
 				context.variables.set('version', 'v1.2.3');
-				expect(evaluateCondition('$version matches "^v[0-9]"', context)).toBe(
-					true,
-				);
+				expect(evaluateCondition('$version matches "^v[0-9]"', context)).toBe(true);
 			});
 		});
 
@@ -318,10 +310,7 @@ describe('Expression Evaluator', () => {
 				});
 
 				expect(
-					evaluateCondition(
-						'$results.step1.status == "failed" && $retryCount < 5',
-						context,
-					),
+					evaluateCondition('$results.step1.status == "failed" && $retryCount < 5', context),
 				).toBe(true);
 			});
 
@@ -334,9 +323,9 @@ describe('Expression Evaluator', () => {
 				context.variables.set('branch', 'feature-new-feature');
 				context.variables.set('approved', true);
 
-				expect(
-					evaluateCondition('$branch matches "^feature" && $approved == true', context),
-				).toBe(true);
+				expect(evaluateCondition('$branch matches "^feature" && $approved == true', context)).toBe(
+					true,
+				);
 			});
 		});
 
@@ -635,9 +624,7 @@ describe('Expression Evaluator', () => {
 			context.variables.set('c', 3);
 			context.variables.set('d', 4);
 
-			expect(
-				evaluateCondition('((($a + $b) + $c) + $d) == 10', context),
-			).toBe(true);
+			expect(evaluateCondition('((($a + $b) + $c) + $d) == 10', context)).toBe(true);
 		});
 	});
 });

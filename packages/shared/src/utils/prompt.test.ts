@@ -117,7 +117,7 @@ describe('Prompt Utilities', () => {
 		});
 
 		it('should preserve start and end', () => {
-			const prompt = 'START' + 'x'.repeat(10000) + 'END';
+			const prompt = `START${'x'.repeat(10000)}END`;
 			const { truncated, removed } = smartTruncatePrompt(prompt, 2000, {
 				preserveStart: 500,
 				preserveEnd: 500,

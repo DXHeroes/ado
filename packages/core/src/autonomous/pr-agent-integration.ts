@@ -456,7 +456,7 @@ export class PRAgent {
 	}): Promise<ChangelogEntry> {
 		const entry: ChangelogEntry = {
 			version: prData.version,
-			date: new Date().toISOString().split('T')[0]!,
+			date: new Date().toISOString().split('T')[0] || '',
 			changes: {
 				added: [],
 				changed: [],
@@ -734,8 +734,11 @@ export class PRAgent {
 	/**
 	 * Generate PR description
 	 */
-	private generateDescription(_prData: { files: string[]; commits: Array<{ message: string }> }): string {
-		return `## Summary\n\nThis PR includes code changes.\n\n## Changes\n\n- Updated implementation\n\n## Test Plan\n\n- Run tests`;
+	private generateDescription(_prData: {
+		files: string[];
+		commits: Array<{ message: string }>;
+	}): string {
+		return '## Summary\n\nThis PR includes code changes.\n\n## Changes\n\n- Updated implementation\n\n## Test Plan\n\n- Run tests';
 	}
 
 	/**
@@ -767,7 +770,8 @@ export class PRAgent {
 			'logic',
 			'best-practice',
 		];
-		return categories[Math.floor(Math.random() * categories.length)]!;
+		const category = categories[Math.floor(Math.random() * categories.length)];
+		return category || 'security';
 	}
 
 	/**
@@ -781,7 +785,8 @@ export class PRAgent {
 			'modernize',
 			'security',
 		];
-		return types[Math.floor(Math.random() * types.length)]!;
+		const type = types[Math.floor(Math.random() * types.length)];
+		return type || 'refactor';
 	}
 
 	/**

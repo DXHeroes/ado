@@ -2,15 +2,15 @@
  * Tests for CostOptimizer
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CostTracker } from '../../cost/tracker.js';
+import type { LoadBalancerMetrics } from '../cost-aware-load-balancer.js';
 import {
 	CostOptimizer,
 	type OptimizationGoal,
-	type WorkloadPattern,
 	type WorkerCostProfile,
+	type WorkloadPattern,
 } from '../cost-optimizer.js';
-import type { CostTracker } from '../../cost/tracker.js';
-import type { LoadBalancerMetrics } from '../cost-aware-load-balancer.js';
 
 describe('CostOptimizer', () => {
 	let costTracker: CostTracker;
@@ -183,7 +183,9 @@ describe('CostOptimizer', () => {
 					moderate: 30,
 					complex: 20,
 				},
-				hourlyPattern: Array(24).fill(0).map((_, i) => (i >= 22 || i <= 6 ? 0.1 : 0.8)),
+				hourlyPattern: Array(24)
+					.fill(0)
+					.map((_, i) => (i >= 22 || i <= 6 ? 0.1 : 0.8)),
 			};
 
 			optimizer.updateWorkerProfiles(profiles);

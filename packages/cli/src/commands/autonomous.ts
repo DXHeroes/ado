@@ -10,6 +10,7 @@
 import { randomUUID } from 'node:crypto';
 import * as p from '@clack/prompts';
 import {
+	InMemoryCheckpointStorage,
 	createAutoFixEngine,
 	createCheckpointManager,
 	createDocFirstWorkflow,
@@ -22,7 +23,6 @@ import {
 	createTaskClassifier,
 	createTaskDecomposer,
 	createTypeScriptValidator,
-	InMemoryCheckpointStorage,
 	loadConfigWithFallback,
 } from '@dxheroes/ado-core';
 import { Command } from 'commander';
@@ -42,7 +42,7 @@ export const autonomousCommand = new Command('auto')
 		p.intro(pc.bgCyan(pc.black(' ADO Autonomous Workflow ')));
 
 		// Load configuration
-		const config = loadConfigWithFallback(cwd);
+		const _config = loadConfigWithFallback(cwd);
 		const adoDir = ensureAdoDir(cwd);
 
 		// Initialize workflow components
@@ -85,7 +85,7 @@ export const autonomousCommand = new Command('auto')
 
 		// Checkpoint system
 		const checkpointManager = createCheckpointManager(new InMemoryCheckpointStorage());
-		const recoveryManager = createRecoveryManager(checkpointManager, {
+		const _recoveryManager = createRecoveryManager(checkpointManager, {
 			maxAttempts: options.maxRetries,
 			initialDelay: 1000,
 			maxDelay: 30000,
@@ -93,15 +93,11 @@ export const autonomousCommand = new Command('auto')
 		});
 
 		// HITL coordinator
-		const hitlCoordinator = createHITLCheckpointCoordinator(
-			stuckDetector,
-			escalationEngine,
-			{
-				requireApproval: !options.hitl, // Invert: --no-hitl means no approval required
-				escalateOnStuck: true,
-				escalateOnCritical: true,
-			},
-		);
+		const hitlCoordinator = createHITLCheckpointCoordinator(stuckDetector, escalationEngine, {
+			requireApproval: !options.hitl, // Invert: --no-hitl means no approval required
+			escalateOnStuck: true,
+			escalateOnCritical: true,
+		});
 
 		// Doc-first workflow
 		const workflow = createDocFirstWorkflow(
@@ -256,19 +252,14 @@ export const specifyCommand = new Command('specify')
 			// Save to file if requested
 			if (options.output) {
 				const fs = await import('node:fs/promises');
-				const content = result.specification.sections
-					.map((s) => `${s.content}\n\n`)
-					.join('');
+				const content = result.specification.sections.map((s) => `${s.content}\n\n`).join('');
 				await fs.writeFile(options.output, content, 'utf-8');
 				p.log.success(`Specification saved to ${pc.cyan(options.output)}`);
 			}
 
 			// Show required reviewers
 			if (result.requiredReviews.length > 0) {
-				p.note(
-					result.requiredReviews.map((r) => `• ${r}`).join('\n'),
-					'Required Reviews',
-				);
+				p.note(result.requiredReviews.map((r) => `• ${r}`).join('\n'), 'Required Reviews');
 			}
 		} catch (error) {
 			spinner.stop('Failed to generate specification');
@@ -330,10 +321,10 @@ export const decomposeCommand = new Command('decompose')
 			} else {
 				// Text output (default)
 				p.log.info(pc.bold('Execution Plan:'));
+				p.log.info(`${executionPlan.tasks.length} tasks in ${executionPlan.stages.length} stages`);
 				p.log.info(
-					`${executionPlan.tasks.length} tasks in ${executionPlan.stages.length} stages`,
+					`Estimated duration: ${(executionPlan.estimatedDuration / 60).toFixed(1)} minutes`,
 				);
-				p.log.info(`Estimated duration: ${(executionPlan.estimatedDuration / 60).toFixed(1)} minutes`);
 				p.log.info(
 					`Parallelization factor: ${pc.cyan(executionPlan.parallelizationFactor.toFixed(2))}`,
 				);
@@ -364,9 +355,7 @@ export const decomposeCommand = new Command('decompose')
 				if (checkpoints.length > 0) {
 					p.note(
 						checkpoints
-							.map(
-								(c) => `• ${c.name} (stage ${c.stage}): ${c.validations.join(', ')}`,
-							)
+							.map((c) => `• ${c.name} (stage ${c.stage}): ${c.validations.join(', ')}`)
 							.join('\n'),
 						'Checkpoints',
 					);

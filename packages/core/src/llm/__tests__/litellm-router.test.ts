@@ -2,18 +2,18 @@
  * Tests for LiteLLM Router
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-	LiteLLMRouter,
-	createLiteLLMRouter,
-	createDefaultFallbackChain,
-	type LLMProvider,
-	type LLMRouterConfig,
-	type LLMRequest,
-	type FallbackChain,
-} from '../litellm-router.js';
-import type { CostTracker } from '../../cost/tracker.js';
 import type { UsageRecord } from '@dxheroes/ado-shared';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CostTracker } from '../../cost/tracker.js';
+import {
+	type FallbackChain,
+	type LLMProvider,
+	type LLMRequest,
+	type LLMRouterConfig,
+	LiteLLMRouter,
+	createDefaultFallbackChain,
+	createLiteLLMRouter,
+} from '../litellm-router.js';
 
 // Mock cost tracker
 const createMockCostTracker = (): CostTracker => {
@@ -326,12 +326,12 @@ describe('LiteLLMRouter', () => {
 			const response = await router.complete(request);
 
 			// First provider should be unhealthy
-			expect(config.providers[0]!.healthy).toBe(false);
+			expect(config.providers[0]?.healthy).toBe(false);
 			expect(response.provider).toBe('openai');
 
 			// Provider should recover after 1 minute
 			vi.advanceTimersByTime(60000);
-			expect(config.providers[0]!.healthy).toBe(true);
+			expect(config.providers[0]?.healthy).toBe(true);
 
 			vi.useRealTimers();
 		});
@@ -694,7 +694,7 @@ describe('LiteLLMRouter', () => {
 
 	describe('cost calculation', () => {
 		it('should calculate cost for different token counts', async () => {
-			const provider = config.providers[0]!; // anthropic: input=3.0, output=15.0
+			const _provider = config.providers[0]!; // anthropic: input=3.0, output=15.0
 
 			vi.spyOn(router as any, 'simulateLLMCall').mockResolvedValue({
 				content: 'Test',

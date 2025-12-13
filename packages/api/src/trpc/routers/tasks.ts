@@ -4,10 +4,10 @@
  * Procedures for task management (CRUD, control, streaming).
  */
 
-import { z } from 'zod';
-import { observable } from '@trpc/server/observable';
-import { protectedProcedure, publicProcedure, router } from '../trpc.js';
 import type { TaskEvent } from '@dxheroes/ado-core';
+import { observable } from '@trpc/server/observable';
+import { z } from 'zod';
+import { protectedProcedure, publicProcedure, router } from '../trpc.js';
 
 // Input schemas
 const createTaskSchema = z.object({
@@ -17,9 +17,7 @@ const createTaskSchema = z.object({
 	taskType: z.enum(['greenfield', 'feature', 'bugfix', 'refactor']),
 
 	// Optional parameters
-	hitlPolicy: z
-		.enum(['autonomous', 'spec-review', 'review-major', 'review-all'])
-		.optional(),
+	hitlPolicy: z.enum(['autonomous', 'spec-review', 'review-major', 'review-all']).optional(),
 	providers: z.array(z.string()).optional(),
 	excludeProviders: z.array(z.string()).optional(),
 	maxCost: z.number().positive().optional(),
@@ -58,24 +56,22 @@ export const tasksRouter = router({
 	/**
 	 * Create a new task
 	 */
-	create: protectedProcedure
-		.input(createTaskSchema)
-		.mutation(async ({ input }) => {
-			// TODO: Implement task creation logic
-			// TODO: Add telemetry tracing
-			// This will interact with orchestrator to queue the task
+	create: protectedProcedure.input(createTaskSchema).mutation(async ({ input: _input }) => {
+		// TODO: Implement task creation logic
+		// TODO: Add telemetry tracing
+		// This will interact with orchestrator to queue the task
 
-			const taskId = `task-${Date.now()}`;
+		const taskId = `task-${Date.now()}`;
 
-			return {
-				id: taskId,
-				status: 'queued' as const,
-				createdAt: new Date().toISOString(),
-				estimatedDuration: 30,
-				estimatedCost: 0.5,
-				queuePosition: 1,
-			};
-		}),
+		return {
+			id: taskId,
+			status: 'queued' as const,
+			createdAt: new Date().toISOString(),
+			estimatedDuration: 30,
+			estimatedCost: 0.5,
+			queuePosition: 1,
+		};
+	}),
 
 	/**
 	 * Get task details
@@ -83,16 +79,35 @@ export const tasksRouter = router({
 	get: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('tasks.get', async () => {
-			// TODO: Fetch task from state store
-			const stateStore = ctx.stateStore;
+		return (
+			telemetry?.traceAsync('tasks.get', async () => {
+				// TODO: Fetch task from state store
+				const stateStore = ctx.stateStore;
 
-			if (!stateStore) {
-				throw new Error('State store not configured');
-			}
+				if (!stateStore) {
+					throw new Error('State store not configured');
+				}
 
-			// Placeholder response
-			return {
+				// Placeholder response
+				return {
+					id: input,
+					prompt: 'Sample task',
+					status: 'queued' as const,
+					progress: 0,
+					currentStep: 'Initializing',
+					subtasks: [],
+					createdAt: new Date().toISOString(),
+					startedAt: null,
+					completedAt: null,
+					estimatedRemaining: null,
+					result: null,
+					error: null,
+					provider: null,
+					workerId: null,
+					cost: 0,
+					checkpoints: [],
+				};
+			}) ?? {
 				id: input,
 				prompt: 'Sample task',
 				status: 'queued' as const,
@@ -109,46 +124,31 @@ export const tasksRouter = router({
 				workerId: null,
 				cost: 0,
 				checkpoints: [],
-			};
-		}) ?? {
-			id: input,
-			prompt: 'Sample task',
-			status: 'queued' as const,
-			progress: 0,
-			currentStep: 'Initializing',
-			subtasks: [],
-			createdAt: new Date().toISOString(),
-			startedAt: null,
-			completedAt: null,
-			estimatedRemaining: null,
-			result: null,
-			error: null,
-			provider: null,
-			workerId: null,
-			cost: 0,
-			checkpoints: [],
-		};
+			}
+		);
 	}),
 
 	/**
 	 * List tasks with filtering
 	 */
-	list: publicProcedure.input(listTasksSchema).query(async ({ ctx, input }) => {
+	list: publicProcedure.input(listTasksSchema).query(async ({ ctx, input: _input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('tasks.list', async () => {
-			// TODO: Fetch tasks from state store with filtering
+		return (
+			telemetry?.traceAsync('tasks.list', async () => {
+				// TODO: Fetch tasks from state store with filtering
 
-			return {
+				return {
+					items: [],
+					total: 0,
+					hasMore: false,
+				};
+			}) ?? {
 				items: [],
 				total: 0,
 				hasMore: false,
-			};
-		}) ?? {
-			items: [],
-			total: 0,
-			hasMore: false,
-		};
+			}
+		);
 	}),
 
 	/**
@@ -157,36 +157,40 @@ export const tasksRouter = router({
 	cancel: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('tasks.cancel', async () => {
-			// TODO: Cancel task via orchestrator
+		return (
+			telemetry?.traceAsync('tasks.cancel', async () => {
+				// TODO: Cancel task via orchestrator
 
-			return {
+				return {
+					success: true,
+					message: `Task ${input} cancelled`,
+				};
+			}) ?? {
 				success: true,
 				message: `Task ${input} cancelled`,
-			};
-		}) ?? {
-			success: true,
-			message: `Task ${input} cancelled`,
-		};
+			}
+		);
 	}),
 
 	/**
 	 * Pause a running task
 	 */
-	pause: protectedProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
+	pause: protectedProcedure.input(z.string()).mutation(async ({ ctx, input: _input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('tasks.pause', async () => {
-			// TODO: Pause task and create checkpoint
+		return (
+			telemetry?.traceAsync('tasks.pause', async () => {
+				// TODO: Pause task and create checkpoint
 
-			return {
+				return {
+					success: true,
+					checkpointId: `checkpoint-${Date.now()}`,
+				};
+			}) ?? {
 				success: true,
 				checkpointId: `checkpoint-${Date.now()}`,
-			};
-		}) ?? {
-			success: true,
-			checkpointId: `checkpoint-${Date.now()}`,
-		};
+			}
+		);
 	}),
 
 	/**
@@ -195,17 +199,19 @@ export const tasksRouter = router({
 	resume: protectedProcedure.input(resumeTaskSchema).mutation(async ({ ctx, input }) => {
 		const telemetry = ctx.telemetry;
 
-		return telemetry?.traceAsync('tasks.resume', async () => {
-			// TODO: Resume task from checkpoint
+		return (
+			telemetry?.traceAsync('tasks.resume', async () => {
+				// TODO: Resume task from checkpoint
 
-			return {
+				return {
+					success: true,
+					message: `Task ${input.taskId} resumed`,
+				};
+			}) ?? {
 				success: true,
 				message: `Task ${input.taskId} resumed`,
-			};
-		}) ?? {
-			success: true,
-			message: `Task ${input.taskId} resumed`,
-		};
+			}
+		);
 	}),
 
 	/**

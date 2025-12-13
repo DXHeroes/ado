@@ -7,21 +7,21 @@ import { type ChildProcess, spawn } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-	DEFAULT_PROMPT_CONFIG,
-	estimateTotalPromptLength,
-	smartTruncatePrompt,
-	validatePromptLength,
 	type AgentCapabilities,
 	type AgentCompleteEvent,
 	type AgentErrorEvent,
 	type AgentEvent,
 	type AgentStartEvent,
 	type AgentTask,
+	DEFAULT_PROMPT_CONFIG,
 	type RateLimitDetector,
 	type RateLimitInfo,
 	type RateLimitStatus,
 	type RemainingCapacity,
 	type UsageRecord,
+	estimateTotalPromptLength,
+	smartTruncatePrompt,
+	validatePromptLength,
 } from '@dxheroes/ado-shared';
 import { BaseAdapter } from '../base.js';
 
@@ -333,7 +333,10 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 			throw new Error(validation.error);
 		}
 
-		return validation.truncated ? validation.truncatedPrompt! : prompt;
+		if (validation.truncated && validation.truncatedPrompt) {
+			return validation.truncatedPrompt;
+		}
+		return prompt;
 	}
 }
 

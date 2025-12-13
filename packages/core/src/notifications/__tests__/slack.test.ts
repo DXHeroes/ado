@@ -298,7 +298,7 @@ describe('SlackNotifier', () => {
 
 		it('should not include channel when not specified', async () => {
 			const config = { ...slackConfig };
-			delete config.channel;
+			config.channel = undefined;
 			const notifier = new SlackNotifier(config);
 			const payload: NotificationPayload = {
 				title: 'Test',
@@ -330,7 +330,7 @@ describe('SlackNotifier', () => {
 
 		it('should use default username when not specified', async () => {
 			const config = { ...slackConfig };
-			delete config.username;
+			config.username = undefined;
 			const notifier = new SlackNotifier(config);
 			const payload: NotificationPayload = {
 				title: 'Test',
@@ -362,7 +362,7 @@ describe('SlackNotifier', () => {
 
 		it('should use default icon emoji when not specified', async () => {
 			const config = { ...slackConfig };
-			delete config.iconEmoji;
+			config.iconEmoji = undefined;
 			const notifier = new SlackNotifier(config);
 			const payload: NotificationPayload = {
 				title: 'Test',

@@ -5,12 +5,7 @@
 import type { ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import { Readable } from 'node:stream';
-import type {
-	AgentConfig,
-	AgentEvent,
-	AgentTask,
-	ProjectContext,
-} from '@dxheroes/ado-shared';
+import type { AgentConfig, AgentEvent, AgentTask, ProjectContext } from '@dxheroes/ado-shared';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CodexCLIAdapter } from '../adapter.js';
 

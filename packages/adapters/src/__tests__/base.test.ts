@@ -2,15 +2,14 @@
  * Tests for BaseAdapter
  */
 
-import type { Span } from '@opentelemetry/api';
 import type {
 	AgentCapabilities,
 	AgentConfig,
 	AgentEvent,
 	AgentTask,
 	ProjectContext,
-	RateLimitDetector,
 } from '@dxheroes/ado-shared';
+import type { Span } from '@opentelemetry/api';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BaseAdapter } from '../base.js';
 
@@ -333,11 +332,13 @@ describe('BaseAdapter', () => {
 				_task: AgentTask,
 				_span: Span,
 			): AsyncIterable<AgentEvent> {
+				// Throw before yielding to test error handling
 				throw new Error('Test error');
+				// biome-ignore lint/correctness/noUnreachable: This is intentionally unreachable
+				yield { type: 'started' as const };
 			};
 
 			await expect(async () => {
-				// biome-ignore lint/complexity/noForEach: Need to consume the async iterable to trigger the error
 				for await (const _event of adapter['executeWithTracing'](task, mockExecutor)) {
 					// Should throw before yielding
 				}
@@ -372,7 +373,6 @@ describe('BaseAdapter', () => {
 				vi.spyOn(spanCaptured, 'setStatus').mockImplementation(setStatusSpy);
 			}
 
-			// biome-ignore lint/complexity/noForEach: Need to consume the async iterable
 			for await (const _event of adapter['executeWithTracing'](task, mockExecutor)) {
 				// Consume events
 			}

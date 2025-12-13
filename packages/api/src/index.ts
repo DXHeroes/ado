@@ -23,8 +23,8 @@ import { createDashboardRoutes } from './routes/dashboard.js';
 import { createHealthRoutes } from './routes/health.js';
 import { createProvidersRoutes } from './routes/providers.js';
 import { createTasksRoutes } from './routes/tasks.js';
-import type { ApiConfig, ApiContext } from './types.js';
 import { startTrpcServer } from './trpc-server.js';
+import type { ApiConfig, ApiContext } from './types.js';
 
 export type { ApiConfig, ApiContext } from './types.js';
 

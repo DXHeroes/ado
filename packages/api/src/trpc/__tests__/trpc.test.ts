@@ -2,11 +2,17 @@
  * tRPC Initialization Tests
  */
 
-import { describe, expect, it, vi } from 'vitest';
 import type { StateStore, TelemetryService } from '@dxheroes/ado-core';
-import { middleware, protectedProcedure, publicProcedure, router, withStateStore } from '../trpc.js';
-import type { Context } from '../context.js';
+import { describe, expect, it, vi } from 'vitest';
 import type { ApiConfig } from '../../types.js';
+import type { Context } from '../context.js';
+import {
+	middleware,
+	protectedProcedure,
+	publicProcedure,
+	router,
+	withStateStore,
+} from '../trpc.js';
 
 describe('tRPC Initialization', () => {
 	const mockConfig: ApiConfig = {
@@ -315,7 +321,10 @@ describe('tRPC Initialization', () => {
 				return next();
 			});
 
-			const procedure = publicProcedure.use(middleware1).use(middleware2).query(() => 'test');
+			const procedure = publicProcedure
+				.use(middleware1)
+				.use(middleware2)
+				.query(() => 'test');
 
 			expect(procedure).toBeDefined();
 		});

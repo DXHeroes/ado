@@ -46,10 +46,7 @@ export class RecoveryManager {
 	private retryConfig: RetryConfig;
 	private recoveryPoints: Map<string, RecoveryPoint[]> = new Map();
 
-	constructor(
-		checkpointManager: CheckpointManager,
-		retryConfig?: Partial<RetryConfig>,
-	) {
+	constructor(checkpointManager: CheckpointManager, retryConfig?: Partial<RetryConfig>) {
 		this.checkpointManager = checkpointManager;
 		this.retryConfig = {
 			maxAttempts: 3,
@@ -94,7 +91,7 @@ export class RecoveryManager {
 	 */
 	async withRetry<T>(
 		operation: () => Promise<T>,
-		context: { taskId: string; operationName: string },
+		_context: { taskId: string; operationName: string },
 	): Promise<T> {
 		let attempt = 0;
 		let lastError: Error | undefined;
@@ -117,13 +114,8 @@ export class RecoveryManager {
 
 				// Calculate delay with exponential backoff
 				const delay = Math.min(
-					this.retryConfig.initialDelay *
-						Math.pow(this.retryConfig.backoffMultiplier, attempt - 1),
+					this.retryConfig.initialDelay * this.retryConfig.backoffMultiplier ** (attempt - 1),
 					this.retryConfig.maxDelay,
-				);
-
-				console.warn(
-					`Retry ${attempt}/${this.retryConfig.maxAttempts} for ${context.operationName} after ${delay}ms`,
 				);
 
 				// Wait before retry
@@ -266,7 +258,7 @@ export class RecoveryManager {
 			case 'rollback':
 				return await this.rollback(taskId, 1);
 
-			case 'restore':
+			case 'restore': {
 				// Restore from latest checkpoint
 				const latestCheckpoint = await this.checkpointManager.getLatestCheckpoint(taskId);
 				if (!latestCheckpoint) {
@@ -278,6 +270,7 @@ export class RecoveryManager {
 					};
 				}
 				return await this.restore(taskId, latestCheckpoint.id);
+			}
 
 			case 'skip':
 				return {
@@ -303,7 +296,7 @@ export class RecoveryManager {
 	private isRetryableError(error: unknown): boolean {
 		if (!(error instanceof Error)) return false;
 
-		const errorCode = (error as any).code;
+		const errorCode = (error as Error & { code?: string }).code;
 		if (errorCode && this.retryConfig.retryableErrors?.includes(errorCode)) {
 			return true;
 		}
@@ -312,10 +305,12 @@ export class RecoveryManager {
 		const message = error.message.toLowerCase();
 
 		// Check if message contains any configured retryable error codes
-		const messageMatchesRetryableError = this.retryConfig.retryableErrors?.some(
-			(errCode) => message.includes(errCode.toLowerCase().replace(/_/g, ' ')) ||
-			             message.includes(errCode.toLowerCase())
-		) ?? false;
+		const messageMatchesRetryableError =
+			this.retryConfig.retryableErrors?.some(
+				(errCode) =>
+					message.includes(errCode.toLowerCase().replace(/_/g, ' ')) ||
+					message.includes(errCode.toLowerCase()),
+			) ?? false;
 
 		if (messageMatchesRetryableError) {
 			return true;

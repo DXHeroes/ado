@@ -6,12 +6,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-	findConfigFile,
-	getDefaultConfig,
-	loadConfig,
-	loadConfigWithFallback,
-} from '../loader.js';
+import { findConfigFile, getDefaultConfig, loadConfig, loadConfigWithFallback } from '../loader.js';
 
 describe('Config Loader', () => {
 	const testDir = join(process.cwd(), '.test-config');
@@ -202,8 +197,8 @@ storage:
 			expect(config.project.id).toBe('env-project');
 			expect(config.storage.path).toBe('/custom/db.sqlite');
 
-			delete process.env.TEST_PROJECT_ID;
-			delete process.env.TEST_DB_PATH;
+			process.env.TEST_PROJECT_ID = undefined;
+			process.env.TEST_DB_PATH = undefined;
 		});
 
 		it('should use default value for undefined env vars', () => {
@@ -422,8 +417,8 @@ storage:
 			const config = loadConfig(configPath, { validate: false });
 			expect(config.storage.connectionString).toBe('postgres://localhost:5432/ado');
 
-			delete process.env.TEST_HOST;
-			delete process.env.TEST_PORT;
+			process.env.TEST_HOST = undefined;
+			process.env.TEST_PORT = undefined;
 		});
 
 		it('should substitute env vars in nested objects', () => {
@@ -445,7 +440,7 @@ hitl:
 			const config = loadConfig(configPath, { validate: false });
 			expect(config.hitl.notifications.slack.webhookUrl).toBe('https://hooks.slack.com/test');
 
-			delete process.env.SLACK_WEBHOOK;
+			process.env.SLACK_WEBHOOK = undefined;
 		});
 
 		it('should substitute env vars in arrays', () => {
@@ -472,8 +467,8 @@ providers:
 				'python',
 			]);
 
-			delete process.env.LANG1;
-			delete process.env.LANG2;
+			process.env.LANG1 = undefined;
+			process.env.LANG2 = undefined;
 		});
 	});
 

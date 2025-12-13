@@ -150,9 +150,7 @@ export class StuckDetector {
 	/**
 	 * Check for identical error messages
 	 */
-	private checkIdenticalErrors(
-		attempts: AttemptRecord[],
-	): StuckDetectionResult {
+	private checkIdenticalErrors(attempts: AttemptRecord[]): StuckDetectionResult {
 		const recentAttempts = attempts.slice(-this.config.identicalErrorThreshold);
 
 		if (recentAttempts.length < this.config.identicalErrorThreshold) {
@@ -202,8 +200,7 @@ export class StuckDetector {
 				isStuck: true,
 				reason: 'identical_errors',
 				confidence: 0.95,
-				recommendation:
-					'Try a different approach or escalate to human review',
+				recommendation: 'Try a different approach or escalate to human review',
 				evidence: [
 					`Same error repeated ${errors.length} times`,
 					`Error: "${firstError.substring(0, 100)}..."`,
@@ -224,9 +221,7 @@ export class StuckDetector {
 	 * Check for no progress
 	 */
 	private checkNoProgress(attempts: AttemptRecord[]): StuckDetectionResult {
-		const recentAttempts = attempts.slice(
-			-this.config.maxIterationsWithoutProgress,
-		);
+		const recentAttempts = attempts.slice(-this.config.maxIterationsWithoutProgress);
 
 		if (recentAttempts.length < this.config.maxIterationsWithoutProgress) {
 			return {
@@ -241,10 +236,7 @@ export class StuckDetector {
 		// Check if any attempt made meaningful progress
 		const hasProgress = recentAttempts.some((attempt) => {
 			const linesChanged = attempt.metrics?.linesChanged ?? 0;
-			return (
-				linesChanged >= this.config.minimumProgressLines &&
-				attempt.testsPassing
-			);
+			return linesChanged >= this.config.minimumProgressLines && attempt.testsPassing;
 		});
 
 		if (!hasProgress) {
@@ -275,10 +267,7 @@ export class StuckDetector {
 	/**
 	 * Check for timeout
 	 */
-	private checkTimeout(
-		taskStartTime: string,
-		attempts: AttemptRecord[],
-	): StuckDetectionResult {
+	private checkTimeout(taskStartTime: string, attempts: AttemptRecord[]): StuckDetectionResult {
 		const startTime = new Date(taskStartTime).getTime();
 		const now = Date.now();
 		const elapsedMinutes = (now - startTime) / (1000 * 60);
@@ -344,17 +333,12 @@ export class StuckDetector {
 		const setsEqual = (a: Set<string>, b: Set<string>) =>
 			a.size === b.size && [...a].every((x) => b.has(x));
 
-		if (
-			setsEqual(set1, set3) &&
-			setsEqual(set2, set4) &&
-			!setsEqual(set1, set2)
-		) {
+		if (setsEqual(set1, set3) && setsEqual(set2, set4) && !setsEqual(set1, set2)) {
 			return {
 				isStuck: true,
 				reason: 'oscillating',
 				confidence: 0.8,
-				recommendation:
-					'Agent is oscillating between two states. Try a different strategy.',
+				recommendation: 'Agent is oscillating between two states. Try a different strategy.',
 				evidence: [
 					`Alternating between ${set1.size} and ${set2.size} file changes`,
 					`Files: ${[...set1].join(', ')}`,
@@ -374,9 +358,7 @@ export class StuckDetector {
 	/**
 	 * Check for test failure loop
 	 */
-	private checkTestFailureLoop(
-		attempts: AttemptRecord[],
-	): StuckDetectionResult {
+	private checkTestFailureLoop(attempts: AttemptRecord[]): StuckDetectionResult {
 		if (attempts.length < 4) {
 			return {
 				isStuck: false,
@@ -397,8 +379,7 @@ export class StuckDetector {
 				isStuck: true,
 				reason: 'test_failure_loop',
 				confidence: 0.85,
-				recommendation:
-					'Tests consistently failing. Review test requirements or escalate.',
+				recommendation: 'Tests consistently failing. Review test requirements or escalate.',
 				evidence: [
 					`Last ${recentAttempts.length} attempts failed tests`,
 					'Consider: wrong approach, missing dependencies, or unclear requirements',
@@ -432,9 +413,7 @@ export class StuckDetector {
 		if (len2 === 0) return 0;
 
 		// Create distance matrix
-		const matrix: number[][] = Array.from({ length: len1 + 1 }, () =>
-			Array(len2 + 1).fill(0),
-		);
+		const matrix: number[][] = Array.from({ length: len1 + 1 }, () => Array(len2 + 1).fill(0));
 
 		// Initialize first column and row
 		for (let i = 0; i <= len1; i++) {
@@ -486,8 +465,6 @@ export class StuckDetector {
 /**
  * Create stuck detector
  */
-export function createStuckDetector(
-	config?: Partial<StuckDetectorConfig>,
-): StuckDetector {
+export function createStuckDetector(config?: Partial<StuckDetectorConfig>): StuckDetector {
 	return new StuckDetector(config);
 }

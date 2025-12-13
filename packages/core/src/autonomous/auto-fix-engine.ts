@@ -5,13 +5,13 @@
  * Integrates with stuck detection to avoid infinite fix loops.
  */
 
-import type { AttemptRecord, StuckDetector } from './stuck-detector.js';
 import type {
 	QualityGateConfig,
 	ValidationIssue,
 	ValidationResult,
 	ValidatorContext,
 } from './quality-validator.js';
+import type { AttemptRecord, StuckDetector } from './stuck-detector.js';
 
 export interface FixStrategy {
 	name: string;
@@ -99,10 +99,7 @@ export class AutoFixEngine {
 	private stuckDetector: StuckDetector;
 	private attempts: Map<string, AutoFixAttempt[]> = new Map();
 
-	constructor(
-		stuckDetector: StuckDetector,
-		config?: Partial<AutoFixConfig>,
-	) {
+	constructor(stuckDetector: StuckDetector, config?: Partial<AutoFixConfig>) {
 		this.stuckDetector = stuckDetector;
 		this.config = {
 			enabled: true,
@@ -245,10 +242,7 @@ export class AutoFixEngine {
 		this.stuckDetector.recordAttempt(taskId, attempt);
 
 		// Check if stuck before applying fixes
-		const stuckResult = this.stuckDetector.checkIfStuck(
-			taskId,
-			new Date().toISOString(),
-		);
+		const stuckResult = this.stuckDetector.checkIfStuck(taskId, new Date().toISOString());
 		if (stuckResult.isStuck) {
 			return {
 				success: false,
@@ -298,8 +292,7 @@ export class AutoFixEngine {
 				} else {
 					remainingIssues.push(issue);
 				}
-			} catch (error) {
-				console.error(`Fix strategy ${strategy.name} failed:`, error);
+			} catch (_error) {
 				remainingIssues.push(issue);
 			}
 		}

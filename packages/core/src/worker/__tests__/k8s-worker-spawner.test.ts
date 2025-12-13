@@ -4,12 +4,11 @@
  * Tests for Kubernetes worker pod spawning with mocked K8s API.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as k8s from '@kubernetes/client-node';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	type K8sWorkerConfig,
 	K8sWorkerSpawner,
 	createK8sWorkerSpawner,
-	type K8sWorkerConfig,
 } from '../k8s-worker-spawner.js';
 
 // Create mock API instance outside of mock factory
@@ -28,12 +27,8 @@ const mockKubeConfig = {
 // Mock the @kubernetes/client-node module
 vi.mock('@kubernetes/client-node', () => {
 	return {
-		KubeConfig: vi.fn(function() {
-			return mockKubeConfig;
-		}),
-		CoreV1Api: vi.fn(function() {
-			return mockCoreV1Api;
-		}),
+		KubeConfig: vi.fn(() => mockKubeConfig),
+		CoreV1Api: vi.fn(() => mockCoreV1Api),
 	};
 });
 

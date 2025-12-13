@@ -2,22 +2,22 @@
  * Orchestrator Core Tests
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdoError } from '@dxheroes/ado-shared';
 import { MockAgentAdapter, createMockTaskDefinition } from '@dxheroes/ado-shared/test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createCheckpointManager } from '../../checkpoint/checkpoint-manager.js';
+import { createCostTracker } from '../../cost/tracker.js';
+import { createHITLController } from '../../hitl/hitl-controller.js';
+import { createProviderRegistry } from '../../provider/registry.js';
+import { createProviderRouter } from '../../provider/router.js';
+import { createTaskQueue } from '../../queue/task-queue.js';
+import { createRateLimitTracker } from '../../rate-limit/tracker.js';
+import { createProgressStream } from '../../streaming/progress-stream.js';
 import {
 	type OrchestratorConfig,
 	OrchestratorCore,
 	createOrchestratorCore,
 } from '../orchestrator-core.js';
-import { createCheckpointManager } from '../../checkpoint/checkpoint-manager.js';
-import { createHITLController } from '../../hitl/hitl-controller.js';
-import { createProviderRegistry } from '../../provider/registry.js';
-import { createProviderRouter } from '../../provider/router.js';
-import { createRateLimitTracker } from '../../rate-limit/tracker.js';
-import { createCostTracker } from '../../cost/tracker.js';
-import { createTaskQueue } from '../../queue/task-queue.js';
-import { createProgressStream } from '../../streaming/progress-stream.js';
 
 describe('OrchestratorCore', () => {
 	let config: OrchestratorConfig;
@@ -174,7 +174,7 @@ describe('OrchestratorCore', () => {
 		});
 
 		it('should interrupt adapter if task is running', async () => {
-			const interruptSpy = vi.spyOn(mockAdapter, 'interrupt');
+			const _interruptSpy = vi.spyOn(mockAdapter, 'interrupt');
 
 			const definition = createMockTaskDefinition();
 			const handle = await orchestrator.submit(definition);

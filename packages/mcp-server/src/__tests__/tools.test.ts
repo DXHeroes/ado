@@ -3,8 +3,8 @@
  * Tests for the MCP tools implementation including all tool handlers
  */
 
+import type { OrchestratorCore } from '@dxheroes/ado-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { OrchestratorCore, TaskDefinition, TaskHandle } from '@dxheroes/ado-core';
 import { createTools, handleToolCall, initializeTools } from '../tools.js';
 
 describe('MCP Tools', () => {
@@ -232,7 +232,7 @@ describe('MCP Tools', () => {
 			});
 
 			it('should use current working directory by default', async () => {
-				const result = await handleToolCall('ado_run_task', {
+				const _result = await handleToolCall('ado_run_task', {
 					prompt: 'Test task',
 				});
 

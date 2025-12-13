@@ -8,7 +8,9 @@ describe('ParallelExecution Page', () => {
 		render(<ParallelExecution />);
 
 		expect(screen.getByText('Parallel Execution')).toBeInTheDocument();
-		expect(screen.getByText('Monitor distributed worker pools and task parallelization')).toBeInTheDocument();
+		expect(
+			screen.getByText('Monitor distributed worker pools and task parallelization'),
+		).toBeInTheDocument();
 	});
 
 	it('displays worker statistics', () => {
@@ -200,7 +202,9 @@ describe('ParallelExecution Page', () => {
 	it('displays correct trend colors', () => {
 		const { container } = render(<ParallelExecution />);
 
-		const greenElements = container.querySelectorAll('.text-green-600, .text-green-700, .bg-green-100');
+		const greenElements = container.querySelectorAll(
+			'.text-green-600, .text-green-700, .bg-green-100',
+		);
 		expect(greenElements.length).toBeGreaterThan(0);
 	});
 
@@ -268,7 +272,9 @@ describe('ParallelExecution Page', () => {
 	it('applies hover effects to interactive elements', () => {
 		const { container } = render(<ParallelExecution />);
 
-		const hoverElements = container.querySelectorAll('.hover\\:bg-gray-50, .hover\\:bg-blue-50, .hover\\:bg-orange-100');
+		const hoverElements = container.querySelectorAll(
+			'.hover\\:bg-gray-50, .hover\\:bg-blue-50, .hover\\:bg-orange-100',
+		);
 		expect(hoverElements.length).toBeGreaterThan(0);
 	});
 });
