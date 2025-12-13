@@ -485,7 +485,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN corepack enable && corepack prepare pnpm@10.22.0 --activate
 
 # Copy package files
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
