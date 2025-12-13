@@ -12,7 +12,11 @@
 	},
 	"packageManager": "pnpm@10.22.0",
 	"pnpm": {
-		"onlyBuiltDependencies": ["@biomejs/biome", "better-sqlite3", "esbuild"]
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"better-sqlite3",
+			"esbuild"
+		]
 	},
 	"scripts": {
 		"build": "pnpm -r build",
@@ -20,20 +24,32 @@
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
+		"format:check": "biome format .",
 		"test": "vitest run",
+		"test:unit": "vitest run --testNamePattern='(?<!integration|e2e)'",
+		"test:integration": "vitest run --testNamePattern='integration'",
+		"test:e2e": "vitest run --testNamePattern='e2e'",
 		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage",
 		"typecheck": "pnpm -r typecheck",
 		"clean": "pnpm -r clean && rm -rf node_modules",
-		"dashboard": "pnpm --filter @dxheroes/ado exec ado dashboard",
-		"dashboard:dev": "pnpm --filter @dxheroes/ado exec ado dashboard --dev",
+		"dashboard": "node packages/cli/dist/index.js dashboard",
+		"dashboard:dev": "node packages/cli/dist/index.js dashboard --dev",
 		"dashboard:build": "pnpm --filter @dxheroes/ado-dashboard build:api"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@playwright/test": "^1.57.0",
+		"@testcontainers/postgresql": "^11.10.0",
+		"@types/dockerode": "^3.3.47",
 		"@types/node": "^22.10.0",
+		"@vitest/coverage-v8": "^4.0.15",
+		"dockerode": "^4.0.9",
+		"msw": "^2.12.4",
+		"playwright": "^1.57.0",
 		"tsup": "^8.3.5",
 		"typescript": "^5.7.2",
-		"vitest": "^2.1.6"
+		"vitest": "^4.0.15"
 	},
 	"dependencies": {
 		"zod": "^4.1.13"

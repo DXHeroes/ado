@@ -435,7 +435,19 @@ export class MergeCoordinator {
 	 */
 	private isHighRisk(filePath: string): boolean {
 		return this.config.highRiskPatterns.some((pattern) => {
-			const regex = new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*'));
+			// Convert glob pattern to regex: ** matches any path, * matches any non-slash chars
+			let regexPattern = pattern
+				.replace(/\./g, '\\.') // Escape dots
+				.replace(/\*\*/g, '<!DOUBLESTAR!>') // Temp placeholder
+				.replace(/\*/g, '[^/]*') // Single star: match non-slash chars
+				.replace(/<!DOUBLESTAR!>/g, '.*'); // Double star: match any chars including slashes
+
+			// Handle patterns like **/*.env* that should also match .env* at root
+			if (regexPattern.startsWith('.*/')) {
+				regexPattern = `(${regexPattern}|${regexPattern.substring(3)})`;
+			}
+
+			const regex = new RegExp(`^${regexPattern}$`);
 			return regex.test(filePath);
 		});
 	}

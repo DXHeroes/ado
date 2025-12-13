@@ -10,6 +10,7 @@
   <a href="#quick-start">Quick Start</a> •
   <a href="#configuration">Configuration</a> •
   <a href="#commands">Commands</a> •
+  <a href="#deployment">Deployment</a> •
   <a href="#architecture">Architecture</a>
 </p>
 
@@ -84,22 +85,51 @@ npx @dxheroes/ado init
 
 ## Quick Start
 
+### Individual Developer (Local Mode)
+
 ```bash
 # Initialize ADO in your project
 ado init
 
-# Run a task
+# Run a task locally
 ado run "Implement user authentication with JWT"
 
 # Check status
 ado status
-
-# Start web dashboard
-ado dashboard
-
-# Run workflow
-ado workflow run workflow.yaml
 ```
+
+### Team Setup (Hybrid Mode - Recommended)
+
+Deploy workers once, whole team benefits:
+
+```bash
+# 1. Deploy workers to Coolify (one-time setup by DevOps)
+# See: docs/COOLIFY_DEPLOYMENT.md
+
+# 2. Each developer configures local CLI
+cat > ~/.ado/config.yaml <<EOF
+remote:
+  enabled: true
+  apiUrl: https://ado.yourcompany.com
+  defaultMode: hybrid
+  auth:
+    type: api_key
+    keyEnvVar: ADO_API_KEY
+EOF
+
+echo "ADO_API_KEY=your-api-key" > ~/.ado/.env
+
+# 3. Run tasks with powerful remote workers
+ado run "Implement authentication" --hybrid
+# ✨ Your code stays local, execution happens on cloud workers!
+```
+
+**Execution Modes:**
+- **Local** - Everything on your laptop (default for solo devs)
+- **Hybrid** ⭐ - Code local, execution remote (best for teams)
+- **Remote** - Everything on cloud (for CI/CD)
+
+See [Execution Modes](./docs/diagrams/execution-modes.md) | [Quick Start Guide](./docs/QUICKSTART.md) | [Coolify Deployment](./docs/COOLIFY_DEPLOYMENT.md)
 
 ## Configuration
 
@@ -371,15 +401,29 @@ pnpm lint
 
 ## Documentation
 
+### Quick Links
+- **[Quick Start (5 min)](./docs/QUICKSTART.md)** - Get running fast
+- **[Getting Started Guide](./docs/GETTING_STARTED.md)** - Complete walkthrough
+- **[Documentation Hub](./docs/README.md)** - All documentation organized by role
+
+### User Guides
 - [Installation Guide](./docs/installation.md)
 - [Configuration Reference](./docs/configuration.md)
 - [Provider Setup](./docs/providers.md)
+- [Troubleshooting](./docs/TROUBLESHOOTING.md)
+
+### Technical Documentation
+- [API Reference](./docs/api-reference.md)
 - [Web Dashboard](./packages/dashboard/README.md)
 - [Notifications](./docs/notifications.md)
-- [Telemetry & Monitoring](./packages/core/src/telemetry/README.md)
 - [Kubernetes Deployment](./docs/deployment.md)
-- [API Reference](./docs/api-reference.md)
-- [Specification Compliance Report](./SPECIFICATION-COMPLIANCE-GAPS.md)
+- [Error Codes](./docs/ERROR-CODES.md)
+
+### Project Information
+- [Contributing Guide](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Specification v2.1.0](./spec/README.md)
+- [Compliance Report (95%)](./docs/COMPLIANCE-REPORT.md)
 - [Project Context for AI Agents](./AGENTS.md)
 
 ## Project Status
@@ -453,6 +497,20 @@ See [Specification v2.1.0](./spec/README.md) and [SPECIFICATION-COMPLIANCE-GAPS.
 
 ## Deployment
 
+### Docker (Recommended)
+
+```bash
+# Pull latest images
+docker pull dxheroes/ado:latest
+docker pull dxheroes/ado-api:latest
+docker pull dxheroes/ado-dashboard:latest
+
+# Or from GitHub Container Registry
+docker pull ghcr.io/dxheroes/ado:latest
+```
+
+See [Docker Deployment Guide](./docs/DOCKER-DEPLOYMENT.md) for detailed instructions and [Release Workflow](./docs/RELEASE-WORKFLOW.md) for image publishing details.
+
 ### Local Development
 
 ```bash
@@ -483,4 +541,9 @@ MIT © DX Heroes
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines before submitting a PR.
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) and [Code of Conduct](./CODE_OF_CONDUCT.md) before submitting a PR.
+
+See also:
+- [Development Setup](./CONTRIBUTING.md#development-setup)
+- [Coding Standards](./AGENTS.md#coding-standards)
+- [Testing Guide](./CONTRIBUTING.md#testing)

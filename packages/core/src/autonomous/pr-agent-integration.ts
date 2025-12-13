@@ -471,14 +471,20 @@ export class PRAgent {
 		for (const commit of prData.commits) {
 			const msg = commit.message;
 
-			if (msg.startsWith('feat:')) {
-				entry.changes.added.push(msg.replace('feat:', '').trim());
-			} else if (msg.startsWith('fix:')) {
-				entry.changes.fixed.push(msg.replace('fix:', '').trim());
-			} else if (msg.startsWith('refactor:')) {
-				entry.changes.changed.push(msg.replace('refactor:', '').trim());
-			} else if (msg.includes('BREAKING CHANGE')) {
-				entry.changes.changed.push(msg.split('BREAKING CHANGE:')[1]?.trim() ?? '');
+			// Check for BREAKING CHANGE first (takes priority)
+			if (msg.includes('BREAKING CHANGE:')) {
+				const breakingChange = msg.split('BREAKING CHANGE:')[1]?.trim();
+				if (breakingChange) {
+					entry.changes.changed.push(breakingChange);
+				}
+			}
+
+			if (msg.startsWith('feat:') || msg.startsWith('feat(')) {
+				entry.changes.added.push(msg.replace(/^feat(\([^)]*\))?:/, '').trim());
+			} else if (msg.startsWith('fix:') || msg.startsWith('fix(')) {
+				entry.changes.fixed.push(msg.replace(/^fix(\([^)]*\))?:/, '').trim());
+			} else if (msg.startsWith('refactor:') || msg.startsWith('refactor(')) {
+				entry.changes.changed.push(msg.replace(/^refactor(\([^)]*\))?:/, '').trim());
 			}
 		}
 
@@ -513,7 +519,19 @@ export class PRAgent {
 	private checkSecuritySensitive(files: string[]): boolean {
 		return files.some((file) =>
 			this.config.securitySensitivePatterns.some((pattern) => {
-				const regex = new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*'));
+				// Convert glob pattern to regex: ** matches any path, * matches any non-slash chars
+				let regexPattern = pattern
+					.replace(/\./g, '\\.') // Escape dots
+					.replace(/\*\*/g, '<!DOUBLESTAR!>') // Temp placeholder
+					.replace(/\*/g, '[^/]*') // Single star: match non-slash chars
+					.replace(/<!DOUBLESTAR!>/g, '.*'); // Double star: match any chars including slashes
+
+				// Handle patterns like **/*.env that should also match .env at root
+				if (regexPattern.startsWith('.*/')) {
+					regexPattern = `(${regexPattern}|${regexPattern.substring(3)})`;
+				}
+
+				const regex = new RegExp(`^${regexPattern}$`);
 				return regex.test(file);
 			}),
 		);
@@ -525,7 +543,19 @@ export class PRAgent {
 	private checkHumanReviewRequired(files: string[]): boolean {
 		return files.some((file) =>
 			this.config.humanReviewRequired.some((pattern) => {
-				const regex = new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*'));
+				// Convert glob pattern to regex: ** matches any path, * matches any non-slash chars
+				let regexPattern = pattern
+					.replace(/\./g, '\\.') // Escape dots
+					.replace(/\*\*/g, '<!DOUBLESTAR!>') // Temp placeholder
+					.replace(/\*/g, '[^/]*') // Single star: match non-slash chars
+					.replace(/<!DOUBLESTAR!>/g, '.*'); // Double star: match any chars including slashes
+
+				// Handle patterns like **/foo/** that should also match foo/ at root
+				if (regexPattern.startsWith('.*/')) {
+					regexPattern = `(${regexPattern}|${regexPattern.substring(3)})`;
+				}
+
+				const regex = new RegExp(`^${regexPattern}$`);
 				return regex.test(file);
 			}),
 		);
@@ -648,11 +678,11 @@ export class PRAgent {
 		humanReviewRequired: boolean,
 		score: number,
 	): string {
-		if (securitySensitive) {
-			return 'Security-sensitive files require human review';
-		}
 		if (humanReviewRequired) {
 			return 'Critical infrastructure changes require human review';
+		}
+		if (securitySensitive) {
+			return 'Security-sensitive files require human review';
 		}
 		if (score < 70) {
 			return `Score too low (${score}/100) for auto-approval`;

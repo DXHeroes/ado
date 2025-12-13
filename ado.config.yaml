@@ -2,54 +2,28 @@
 # See https://github.com/dxheroes/ado for documentation
 version: "1.1"
 
-# ============================================
-# PROJECT IDENTIFICATION
-# ============================================
+# Project identification
 project:
   id: "ado"
-  repository: "github.com/dxheroes/ado"
+  repository: "https://github.com/DXHeroes/ado"
 
-# ============================================
-# PROVIDER CONFIGURATION
-# ============================================
-# Each provider can be enabled/disabled independently.
-# Access modes define how to connect (subscription vs API).
-# Priority determines failover order (lower = tried first).
-
+# Provider configuration
 providers:
-  # ==========================================
-  # Claude Code (Anthropic)
-  # ==========================================
   claude-code:
     enabled: true
     contextFile: "CLAUDE.md"
-
+    
     accessModes:
-      # Priority 1: Use MAX subscription first
       - mode: subscription
         priority: 1
         enabled: true
         subscription:
-          plan: "max"  # Options: free, pro, max, team
+          plan: "max"
           rateLimits:
             requestsPerDay: 500
             tokensPerDay: 5000000
           resetTime: "00:00 UTC"
-
-      # Priority 10: Fall back to API when subscription exhausted
-      # Uncomment to enable API fallback
-      # - mode: api
-      #   priority: 10
-      #   enabled: false
-      #   api:
-      #     apiKey: ${ANTHROPIC_API_KEY}
-      #     rateLimits:
-      #       requestsPerMinute: 50
-      #       tokensPerMinute: 100000
-      #     costPerMillion:
-      #       input: 3.00   # Claude Sonnet 4
-      #       output: 15.00
-
+    
     capabilities:
       codeGeneration: true
       codeReview: true
@@ -57,262 +31,43 @@ providers:
       testing: true
       documentation: true
       debugging: true
-      languages: ["typescript", "python", "go", "rust", "java", "javascript"]
+      languages: ["typescript", "python", "go", "rust", "java"]
       maxContextTokens: 200000
       supportsStreaming: true
       supportsMCP: true
       supportsResume: true
-
+    
     defaultOptions:
-      model: "claude-opus-4-5-20251101"
+      model: "claude-sonnet-4.5"
       maxTurns: 50
       permissionMode: "acceptEdits"
 
-  # ==========================================
-  # Gemini CLI (Google)
-  # ==========================================
-  gemini-cli:
-    enabled: false  # Set to true to enable
-    contextFile: "GEMINI.md"
-
-    accessModes:
-      - mode: subscription
-        priority: 2
-        enabled: true
-        subscription:
-          plan: "advanced"
-          rateLimits:
-            requestsPerDay: 1000
-          resetTime: "00:00 UTC"
-
-      # API fallback for Gemini
-      # - mode: api
-      #   priority: 11
-      #   enabled: false
-      #   api:
-      #     apiKey: ${GOOGLE_API_KEY}
-      #     rateLimits:
-      #       requestsPerMinute: 60
-      #       tokensPerMinute: 120000
-      #     costPerMillion:
-      #       input: 1.25
-      #       output: 5.00
-
-    capabilities:
-      codeGeneration: true
-      codeReview: true
-      refactoring: true
-      testing: true
-      documentation: true
-      debugging: true
-      languages: ["typescript", "python", "go", "java", "kotlin"]
-      maxContextTokens: 1000000
-      supportsStreaming: true
-      supportsMCP: true
-      supportsResume: false
-
-    defaultOptions:
-      model: "gemini-2.5-pro"
-      approvalMode: "auto_edit"
-
-  # ==========================================
-  # Cursor CLI
-  # ==========================================
-  cursor-cli:
-    enabled: false  # Set to true to enable
-    contextFile: ".cursorrules"
-
-    accessModes:
-      - mode: subscription
-        priority: 3
-        enabled: true
-        subscription:
-          plan: "pro"
-          rateLimits:
-            requestsPerDay: 500
-          resetTime: "00:00 UTC"
-
-    capabilities:
-      codeGeneration: true
-      codeReview: true
-      refactoring: true
-      testing: false
-      documentation: false
-      debugging: true
-      languages: ["typescript", "python", "javascript"]
-      maxContextTokens: 128000
-      supportsStreaming: true
-      supportsMCP: true
-      supportsResume: true
-
-  # ==========================================
-  # GitHub Copilot CLI
-  # ==========================================
-  copilot-cli:
-    enabled: false  # Set to true to enable
-    contextFile: ".github/copilot-instructions.md"
-
-    accessModes:
-      - mode: subscription
-        priority: 4
-        enabled: true
-        subscription:
-          plan: "individual"  # individual, business, enterprise
-          rateLimits:
-            requestsPerDay: 300  # Premium requests
-          resetTime: "00:00 UTC"
-
-    capabilities:
-      codeGeneration: true
-      codeReview: true
-      refactoring: true
-      testing: true
-      documentation: true
-      debugging: false
-      languages: ["typescript", "python", "go", "java", "c#"]
-      maxContextTokens: 64000
-      supportsStreaming: true
-      supportsMCP: true
-      supportsResume: true
-
-  # ==========================================
-  # Codex CLI (OpenAI)
-  # ==========================================
-  codex-cli:
-    enabled: false  # Set to true to enable
-    contextFile: "AGENTS.md"
-
-    accessModes:
-      - mode: subscription
-        priority: 5
-        enabled: true
-        subscription:
-          plan: "pro"
-          rateLimits:
-            requestsPerDay: 200
-          resetTime: "00:00 UTC"
-
-    capabilities:
-      codeGeneration: true
-      codeReview: false
-      refactoring: true
-      testing: true
-      documentation: false
-      debugging: true
-      languages: ["python", "typescript", "javascript"]
-      maxContextTokens: 192000
-      supportsStreaming: true
-      supportsMCP: true
-      supportsResume: true
-
-# ============================================
-# ROUTING CONFIGURATION
-# ============================================
+# Routing configuration
 routing:
-  # Default routing strategy
-  strategy: "subscription-first"  # subscription-first | round-robin | cost-optimized
-
-  # Failover behavior
+  strategy: "subscription-first"
   failover:
     enabled: true
     onErrors: ["rate_limit", "timeout", "server_error"]
     maxRetries: 3
-    retryDelay: 1000  # ms
-
-  # API fallback settings
-  apiFallback:
-    enabled: false  # Set to true to enable API fallback
-    confirmAboveCost: 1.00  # Ask for confirmation if estimated cost > $1
-    maxCostPerTask: 10.00   # Hard limit per task
-    maxDailyCost: 50.00     # Hard limit per day
-
-  # Task-to-provider matching
-  matching:
-    preferCapabilityMatch: true
-    preferLargerContext: true
-    preferFasterProvider: false
-
-# ============================================
-# ORCHESTRATION SETTINGS
-# ============================================
-orchestration:
-  maxParallelAgents: 10
-  worktreeIsolation: true
-  checkpointInterval: 30  # seconds
-
-  taskQueue:
-    concurrency: 5
-    retryAttempts: 3
     retryDelay: 1000
+  apiFallback:
+    enabled: false
+    confirmAboveCost: 1.00
+    maxCostPerTask: 10.00
+    maxDailyCost: 50.00
 
-# ============================================
-# HUMAN-IN-THE-LOOP
-# ============================================
-hitl:
-  defaultPolicy: "review-edits"  # autonomous | review-edits | approve-steps | manual
-  approvalTimeout: "24h"
-
-  # Cost-based escalation (optional)
-  # escalateOnCost:
-  #   threshold: 5.00  # Escalate if API cost exceeds this
-  #   channel: "slack"
-
-  # Notifications
-  notifications:
-    slack:
-      enabled: false  # Set to true to enable
-      # webhookUrl: ${SLACK_WEBHOOK_URL}
-      # channel: "#dev-agents"
-
-    email:
-      enabled: false  # Set to true to enable
-      # smtpHost: "smtp.gmail.com"
-      # smtpPort: 587
-      # from: "ado@example.com"
-      # to: ["team@example.com"]
-
-# ============================================
-# STORAGE CONFIGURATION
-# ============================================
+# Storage configuration
 storage:
-  driver: "sqlite"  # sqlite | postgresql
-  path: ".ado/state.db"  # For SQLite
-  # connectionString: ${DATABASE_URL}  # For PostgreSQL
-
+  driver: "sqlite"
+  path: ".ado/state.db"
   rateLimitTracking:
-    driver: "memory"  # memory | redis
-    # redisUrl: ${REDIS_URL}  # For Redis
+    driver: "memory"
 
-# ============================================
-# OBSERVABILITY
-# ============================================
+# Observability
 observability:
   logging:
-    level: "info"  # debug | info | warn | error
-    format: "pretty"  # pretty | json
-
+    level: "info"
+    format: "pretty"
   costTracking:
     enabled: true
-    reportInterval: "daily"  # daily | weekly | monthly
-
-  # OpenTelemetry (optional)
-  # telemetry:
-  #   enabled: false
-  #   endpoint: "http://localhost:4318"
-  #   serviceName: "ado"
-
-# ============================================
-# DEPLOYMENT CONTEXT
-# ============================================
-# Uncomment to enable Kubernetes deployment
-# deployment:
-#   default: "local"
-#
-#   contexts:
-#     local:
-#       type: "docker"
-#
-#     kubernetes:
-#       type: "k8s"
-#       namespace: "ado-system"
-#       kubeconfig: ${KUBECONFIG}
+    reportInterval: "daily"

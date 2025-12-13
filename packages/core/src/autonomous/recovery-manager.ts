@@ -310,8 +310,21 @@ export class RecoveryManager {
 
 		// Check error message for retryable patterns
 		const message = error.message.toLowerCase();
+
+		// Check if message contains any configured retryable error codes
+		const messageMatchesRetryableError = this.retryConfig.retryableErrors?.some(
+			(errCode) => message.includes(errCode.toLowerCase().replace(/_/g, ' ')) ||
+			             message.includes(errCode.toLowerCase())
+		) ?? false;
+
+		if (messageMatchesRetryableError) {
+			return true;
+		}
+
+		// Check for common retryable patterns
 		return (
 			message.includes('timeout') ||
+			message.includes('timed out') ||
 			message.includes('rate limit') ||
 			message.includes('network') ||
 			message.includes('temporary')

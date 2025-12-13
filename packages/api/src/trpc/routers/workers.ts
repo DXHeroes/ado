@@ -10,7 +10,7 @@ import { protectedProcedure, publicProcedure, router } from '../trpc.js';
 
 // Input schemas
 const registerWorkerSchema = z.object({
-	workerId: z.string(),
+	workerId: z.string().min(1, 'Worker ID cannot be empty'),
 	capabilities: z.array(z.string()),
 	resources: z.object({
 		cpu: z.number(),
@@ -20,8 +20,8 @@ const registerWorkerSchema = z.object({
 });
 
 const assignTaskSchema = z.object({
-	workerId: z.string(),
-	taskId: z.string(),
+	workerId: z.string().min(1, 'Worker ID cannot be empty'),
+	taskId: z.string().min(1, 'Task ID cannot be empty'),
 });
 
 const listWorkersSchema = z.object({
@@ -61,7 +61,7 @@ export const workersRouter = router({
 	 * Worker heartbeat (health check)
 	 */
 	heartbeat: protectedProcedure
-		.input(z.object({ workerId: z.string() }))
+		.input(z.object({ workerId: z.string().min(1, 'Worker ID cannot be empty') }))
 		.mutation(async ({ ctx, input }) => {
 			const telemetry = ctx.telemetry;
 
@@ -103,7 +103,7 @@ export const workersRouter = router({
 	 * Get worker status
 	 */
 	getStatus: publicProcedure
-		.input(z.string())
+		.input(z.string().min(1, 'Worker ID cannot be empty'))
 		.query(async ({ ctx, input }) => {
 			const telemetry = ctx.telemetry;
 
@@ -167,7 +167,7 @@ export const workersRouter = router({
 	 * Unregister worker
 	 */
 	unregister: protectedProcedure
-		.input(z.string())
+		.input(z.string().min(1, 'Worker ID cannot be empty'))
 		.mutation(async ({ ctx, input }) => {
 			const telemetry = ctx.telemetry;
 
@@ -190,7 +190,7 @@ export const workersRouter = router({
 	 * Subscribe to worker status changes
 	 */
 	onWorkerStatus: publicProcedure
-		.input(z.string()) // worker ID
+		.input(z.string().min(1, 'Worker ID cannot be empty')) // worker ID
 		.subscription(({ input }) => {
 			return observable<{
 				workerId: string;

@@ -4,20 +4,24 @@
  */
 
 import { type ChildProcess, spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import type {
-	AgentCapabilities,
-	AgentCompleteEvent,
-	AgentErrorEvent,
-	AgentEvent,
-	AgentStartEvent,
-	AgentTask,
-	RateLimitDetector,
-	RateLimitInfo,
-	RateLimitStatus,
-	RemainingCapacity,
-	UsageRecord,
+import {
+	DEFAULT_PROMPT_CONFIG,
+	estimateTotalPromptLength,
+	smartTruncatePrompt,
+	validatePromptLength,
+	type AgentCapabilities,
+	type AgentCompleteEvent,
+	type AgentErrorEvent,
+	type AgentEvent,
+	type AgentStartEvent,
+	type AgentTask,
+	type RateLimitDetector,
+	type RateLimitInfo,
+	type RateLimitStatus,
+	type RemainingCapacity,
+	type UsageRecord,
 } from '@dxheroes/ado-shared';
 import { BaseAdapter } from '../base.js';
 
@@ -216,8 +220,12 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 			args.push('--resume', task.sessionId);
 		}
 
+		// Validate and potentially truncate prompt
+		const workingDir = this.config?.workingDirectory ?? process.cwd();
+		const prompt = this.validateAndTruncatePrompt(task.prompt, workingDir);
+
 		// Add prompt
-		args.push(task.prompt);
+		args.push(prompt);
 
 		// Model selection - ONLY if explicitly specified by user (not from config defaults)
 		// Let Claude use its default model otherwise
@@ -238,12 +246,94 @@ export class ClaudeCodeAdapter extends BaseAdapter {
 
 		// Context file
 		const contextFile = this.getContextFile();
-		const contextPath = join(this.config?.workingDirectory ?? process.cwd(), contextFile);
+		const contextPath = join(workingDir, contextFile);
 		if (existsSync(contextPath)) {
 			// Claude automatically reads CLAUDE.md from the working directory
 		}
 
 		return args;
+	}
+
+	/**
+	 * Validate prompt length and truncate if necessary
+	 */
+	private validateAndTruncatePrompt(prompt: string, workingDir: string): string {
+		// Collect context files to estimate total length
+		const contextFiles: Array<{ name: string; size: number }> = [];
+
+		// Check for CLAUDE.md and AGENTS.md
+		const contextFile = this.getContextFile();
+		const contextPath = join(workingDir, contextFile);
+		if (existsSync(contextPath)) {
+			const stats = statSync(contextPath);
+			contextFiles.push({ name: contextFile, size: stats.size });
+		}
+
+		const agentsPath = join(workingDir, 'AGENTS.md');
+		if (existsSync(agentsPath)) {
+			const stats = statSync(agentsPath);
+			contextFiles.push({ name: 'AGENTS.md', size: stats.size });
+		}
+
+		// Estimate total length including context
+		const totalLength = estimateTotalPromptLength(prompt, contextFiles);
+
+		// If total length exceeds limit, use smart truncation
+		if (totalLength > DEFAULT_PROMPT_CONFIG.maxLength) {
+			const debugMode = process.env.ADO_DEBUG === '1';
+			if (debugMode) {
+				// biome-ignore lint/suspicious/noConsole: Debug logging
+				console.error(
+					`[WARN] Total prompt length (${totalLength} chars) exceeds limit (${DEFAULT_PROMPT_CONFIG.maxLength} chars)`,
+				);
+				// biome-ignore lint/suspicious/noConsole: Debug logging
+				console.error('[WARN] Applying smart truncation to prompt');
+			}
+
+			// Calculate how much to truncate from the base prompt
+			const contextSize = contextFiles.reduce((sum, f) => sum + f.size, 0);
+			const availableForPrompt = DEFAULT_PROMPT_CONFIG.maxLength - contextSize - 1000; // 1KB buffer
+
+			if (availableForPrompt < 500) {
+				throw new Error(
+					`Context files are too large (${contextSize} bytes). Cannot fit prompt. Consider reducing CLAUDE.md/AGENTS.md size.`,
+				);
+			}
+
+			const { truncated, removed } = smartTruncatePrompt(prompt, availableForPrompt, {
+				preserveStart: Math.min(1000, Math.floor(availableForPrompt * 0.3)),
+				preserveEnd: Math.min(500, Math.floor(availableForPrompt * 0.1)),
+			});
+
+			if (debugMode) {
+				// biome-ignore lint/suspicious/noConsole: Debug logging
+				console.error(
+					`[WARN] Truncated ${removed} characters from prompt (${prompt.length} → ${truncated.length})`,
+				);
+			}
+
+			return truncated;
+		}
+
+		// Validate without context estimation
+		const validation = validatePromptLength(prompt, {
+			maxLength: DEFAULT_PROMPT_CONFIG.maxLength,
+			truncationStrategy: 'truncate-middle',
+		});
+
+		if (validation.warning) {
+			const debugMode = process.env.ADO_DEBUG === '1';
+			if (debugMode) {
+				// biome-ignore lint/suspicious/noConsole: Debug logging
+				console.error(`[WARN] ${validation.warning}`);
+			}
+		}
+
+		if (!validation.valid && validation.error) {
+			throw new Error(validation.error);
+		}
+
+		return validation.truncated ? validation.truncatedPrompt! : prompt;
 	}
 }
 

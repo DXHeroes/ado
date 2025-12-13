@@ -81,28 +81,31 @@ export class ParallelExecutor {
 	): Promise<ParallelExecutionResult[]> {
 		const results: ParallelExecutionResult[] = [];
 		const queue = [...tasks];
-		const executing: Promise<ParallelExecutionResult>[] = [];
+		const executing: Map<Promise<ParallelExecutionResult>, {taskId: string; index: number}> = new Map();
 
 		// Process tasks with concurrency limit
-		while (queue.length > 0 || executing.length > 0) {
+		while (queue.length > 0 || executing.size > 0) {
 			// Start new tasks up to concurrency limit
-			while (queue.length > 0 && executing.length < this.config.maxConcurrency) {
+			while (queue.length > 0 && executing.size < this.config.maxConcurrency) {
 				const item = queue.shift();
 				if (item) {
 					const promise = this.executeTask(item.task, item.adapter);
-					executing.push(promise);
+					executing.set(promise, {taskId: item.task.id, index: results.length});
 				}
 			}
 
 			// Wait for at least one task to complete
-			if (executing.length > 0) {
-				const result = await Promise.race(executing);
+			if (executing.size > 0) {
+				const result = await Promise.race(Array.from(executing.keys()));
 				results.push(result);
 
-				// Remove completed task from executing list
-				const index = executing.findIndex((p) => p === Promise.resolve(result));
-				if (index >= 0) {
-					executing.splice(index, 1);
+				// Remove the completed promise from executing map
+				// We need to find which promise resolved
+				for (const [promise, info] of executing) {
+					if (result.taskId === info.taskId) {
+						executing.delete(promise);
+						break;
+					}
 				}
 			}
 		}

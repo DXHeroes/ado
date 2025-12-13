@@ -11,10 +11,10 @@ import { randomUUID } from 'node:crypto';
 import * as p from '@clack/prompts';
 import {
 	createAutoFixEngine,
+	createCheckpointManager,
 	createDocFirstWorkflow,
 	createEscalationEngine,
 	createHITLCheckpointCoordinator,
-	createInMemoryCheckpointManager,
 	createQualityValidationCoordinator,
 	createRecoveryManager,
 	createSpecGenerator,
@@ -22,6 +22,7 @@ import {
 	createTaskClassifier,
 	createTaskDecomposer,
 	createTypeScriptValidator,
+	InMemoryCheckpointStorage,
 	loadConfigWithFallback,
 } from '@dxheroes/ado-core';
 import { Command } from 'commander';
@@ -83,7 +84,7 @@ export const autonomousCommand = new Command('auto')
 		});
 
 		// Checkpoint system
-		const checkpointManager = createInMemoryCheckpointManager();
+		const checkpointManager = createCheckpointManager(new InMemoryCheckpointStorage());
 		const recoveryManager = createRecoveryManager(checkpointManager, {
 			maxAttempts: options.maxRetries,
 			initialDelay: 1000,

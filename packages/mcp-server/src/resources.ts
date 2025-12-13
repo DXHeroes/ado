@@ -33,9 +33,7 @@ let orchestratorInstance: OrchestratorCore | null = null;
  */
 export function initializeResources(config: AdoConfig, orchestrator?: OrchestratorCore): void {
 	configInstance = config;
-	if (orchestrator) {
-		orchestratorInstance = orchestrator;
-	}
+	orchestratorInstance = orchestrator ?? null;
 }
 
 /**

@@ -91,8 +91,8 @@ export class EscalationEngine {
 			);
 		}
 
-		// Count previous escalations
-		const previousEscalations = this.escalationHistory.get(context.taskId) ?? [];
+		// Count previous escalations from context
+		const previousEscalations = context.previousEscalations;
 		const retryCount = previousEscalations.filter((e) => e === 'retry').length;
 		const approachCount = previousEscalations.filter(
 			(e) => e === 'different_approach',

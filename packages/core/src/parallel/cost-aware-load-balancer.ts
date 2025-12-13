@@ -142,9 +142,10 @@ export class CostAwareLoadBalancer {
 	private config: LoadBalancerConfig;
 	private workerProfiles: Map<string, WorkerCostProfile> = new Map();
 	private routingHistory: TaskRoutingDecision[] = [];
+	private costTracker: CostTracker;
 
-	constructor(_costTracker: CostTracker, config?: Partial<LoadBalancerConfig>) {
-		// TODO: Integrate with CostTracker for real-time cost data
+	constructor(costTracker: CostTracker, config?: Partial<LoadBalancerConfig>) {
+		this.costTracker = costTracker;
 		this.config = {
 			strategy: 'balanced',
 			costWeight: 0.5,
@@ -191,7 +192,7 @@ export class CostAwareLoadBalancer {
 
 		// Check budget constraint
 		if (this.config.dailyBudgetLimit) {
-			const todayCosts = this.getTodayCosts();
+			const todayCosts = await this.getTodayCosts();
 			if (todayCosts >= this.config.dailyBudgetLimit) {
 				throw new Error('Daily budget limit reached');
 			}
@@ -377,16 +378,15 @@ export class CostAwareLoadBalancer {
 	/**
 	 * Get today's costs
 	 */
-	private getTodayCosts(): number {
-		// In real implementation, this would filter by timestamp
-		// For now, return total cost from all routing history
-		return this.routingHistory.reduce((sum, d) => sum + d.estimatedCost, 0);
+	private async getTodayCosts(): Promise<number> {
+		// Get daily cost from cost tracker
+		return await this.costTracker.getDailyCost();
 	}
 
 	/**
 	 * Get load balancer metrics
 	 */
-	getMetrics(): LoadBalancerMetrics {
+	async getMetrics(): Promise<LoadBalancerMetrics> {
 		const totalTasks = this.routingHistory.length;
 		const totalCost = this.routingHistory.reduce((sum, d) => sum + d.estimatedCost, 0);
 
@@ -402,7 +402,8 @@ export class CostAwareLoadBalancer {
 
 		let budgetUtilization: number | undefined;
 		if (this.config.dailyBudgetLimit) {
-			budgetUtilization = (this.getTodayCosts() / this.config.dailyBudgetLimit) * 100;
+			const todayCosts = await this.getTodayCosts();
+			budgetUtilization = (todayCosts / this.config.dailyBudgetLimit) * 100;
 		}
 
 		return {

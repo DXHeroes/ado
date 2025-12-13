@@ -378,7 +378,7 @@ export class WorkStealingScheduler<T = unknown> {
 		// Calculate load balance score
 		// Score is higher when queue lengths are more evenly distributed
 		const queueLengths = workers.map((w) => w.tasks.length);
-		const maxQueue = Math.max(...queueLengths, 1);
+		const maxQueue = Math.max(...queueLengths);
 		const minQueue = Math.min(...queueLengths);
 		const loadBalanceScore = maxQueue > 0 ? 1 - (maxQueue - minQueue) / maxQueue : 1;
 

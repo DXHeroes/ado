@@ -403,7 +403,7 @@ export class SpecGenerator {
 				);
 				if (!mentioned) {
 					violations.push(
-						`Blocker constraint not addressed: ${constraint.description}`,
+						`blocker constraint not addressed: ${constraint.description}`,
 					);
 				}
 			}

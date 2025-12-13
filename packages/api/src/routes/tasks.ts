@@ -11,7 +11,9 @@ import type { ApiContext, TaskDetailResponse, TaskResponse } from '../types.js';
  * Type guard to check if a method is async
  */
 function isAsyncStateStore(store: StateStore | AsyncStateStore): store is AsyncStateStore {
-	return 'then' in (store.getTask('') as Promise<unknown>);
+	// Check if getTask returns a Promise-like object
+	const result = store.getTask('__type_check__');
+	return result != null && typeof result === 'object' && 'then' in result;
 }
 
 /**

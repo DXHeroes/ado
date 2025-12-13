@@ -241,7 +241,7 @@ export class DocFirstWorkflow {
 		// For now, we just simulate validation
 
 		// Validate after implementation
-		const validation = await this.qualityValidator.validate({
+		let validation = await this.qualityValidator.validate({
 			workingDirectory: context.workingDirectory,
 			parallel: true,
 		});
@@ -263,6 +263,15 @@ export class DocFirstWorkflow {
 
 			if (!fixResult.success && fixResult.fixesApplied === 0) {
 				throw new Error(`Quality gates failed and no auto-fixes available`);
+			}
+
+			// Re-validate after applying fixes
+			if (fixResult.fixesApplied > 0) {
+				validation = await this.qualityValidator.validate({
+					workingDirectory: context.workingDirectory,
+					parallel: true,
+				});
+				state.validationReports.push(validation);
 			}
 		}
 	}

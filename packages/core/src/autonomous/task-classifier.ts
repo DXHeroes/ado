@@ -76,6 +76,7 @@ export class TaskClassifier {
 			'problem',
 			'not working',
 			'fails',
+			'failing',
 			'incorrect',
 		];
 		if (bugKeywords.some((kw) => prompt.includes(kw))) {
@@ -118,22 +119,33 @@ export class TaskClassifier {
 			'optimize',
 			'improve',
 			'simplify',
+			'caching',
 		];
 		if (refactorKeywords.some((kw) => prompt.includes(kw))) {
 			return 'refactor';
 		}
 
-		// Chore patterns
+		// Chore patterns - be specific to avoid false positives
 		const choreKeywords = [
 			'chore',
-			'update',
 			'upgrade',
 			'dependency',
+			'dependencies',
 			'config',
 			'setup',
 			'tooling',
+			'ci/cd',
+			'pipeline',
 		];
-		if (choreKeywords.some((kw) => prompt.includes(kw))) {
+		const chorePatterns = [
+			'update dependencies',
+			'update config',
+			'update tooling',
+		];
+		if (
+			choreKeywords.some((kw) => prompt.includes(kw)) ||
+			chorePatterns.some((pattern) => prompt.includes(pattern))
+		) {
 			return 'chore';
 		}
 
@@ -211,28 +223,43 @@ export class TaskClassifier {
 	): ClassificationResult['complexity'] {
 		let score = 0;
 
-		// Epic indicators
+		// Check if this is documentation/simple task first
+		const simpleDocsKeywords = [
+			'readme',
+			'typo',
+			'comment',
+			'log statement',
+			'button color',
+		];
+		const isSimpleDocs = simpleDocsKeywords.some((kw) => prompt.includes(kw));
+
+		// Epic indicators (score 4+)
 		const epicKeywords = [
 			'rewrite',
 			'redesign',
+			'complete',
+			'entire',
 			'architecture',
 			'migration',
 			'platform',
+			'from scratch',
 		];
 		if (epicKeywords.some((kw) => prompt.includes(kw))) {
-			score += 3;
+			score += 4;
 		}
 
-		// Complex indicators
+		// Complex indicators (score 2-3)
 		const complexKeywords = [
 			'integrate',
 			'implement',
-			'new feature',
-			'add support for',
 			'authentication',
 			'authorization',
 			'payment',
 			'multi-step',
+			'caching layer',
+			'add support for',
+			'system',
+			'gateway',
 		];
 		if (complexKeywords.some((kw) => prompt.includes(kw))) {
 			score += 2;
@@ -243,21 +270,36 @@ export class TaskClassifier {
 			score += 1;
 		}
 
-		// Moderate indicators
+		// Moderate indicators (score 1) - but not for simple docs
 		const moderateKeywords = [
 			'update',
 			'enhance',
 			'improve',
 			'extend',
 			'modify',
+			'notification',
+			'page',
+			'functionality',
+			'feature',
 		];
-		if (moderateKeywords.some((kw) => prompt.includes(kw))) {
-			score += 1;
+		const moderatePatterns = [
+			'for.*service',
+			'for.*module',
+			'for.*component',
+			'add.*for',
+		];
+		if (!isSimpleDocs && score === 0) {
+			if (
+				moderateKeywords.some((kw) => prompt.includes(kw)) ||
+				moderatePatterns.some((pattern) => new RegExp(pattern).test(prompt))
+			) {
+				score += 1;
+			}
 		}
 
 		// Map score to complexity
 		if (score >= 4) return 'epic';
-		if (score >= 3) return 'complex';
+		if (score >= 2) return 'complex';
 		if (score >= 1) return 'moderate';
 		return 'simple';
 	}

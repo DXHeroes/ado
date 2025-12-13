@@ -1,0 +1,296 @@
+version: '3.8'
+
+# ADO - Agentic Development Orchestrator
+# Docker Compose for Coolify deployment
+# https://github.com/dxheroes/ado
+
+services:
+  # ============================================================================
+  # PostgreSQL Database
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: ado-postgres
+    environment:
+      POSTGRES_DB: ado
+      POSTGRES_USER: ado
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Performance tuning
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Optional: Custom PostgreSQL config
+      # - ./postgres.conf:/etc/postgresql/postgresql.conf
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ado"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ado-network
+
+  # ============================================================================
+  # Redis Cache & Queue
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: ado-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ado-network
+
+  # ============================================================================
+  # ADO API Gateway
+  # ============================================================================
+  api:
+    image: dxheroes/ado:latest
+    container_name: ado-api
+    command: ["node", "packages/api/dist/index.js"]
+    environment:
+      # Node.js
+      NODE_ENV: production
+      PORT: 8080
+
+      # Database
+      DATABASE_URL: postgresql://ado:${POSTGRES_PASSWORD}@postgres:5432/ado
+
+      # Redis
+      REDIS_URL: redis://redis:6379
+
+      # API Keys
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+      # Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      ADO_API_KEY: ${ADO_API_KEY}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+
+      # Observability
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FORMAT: json
+
+      # Features
+      ENABLE_DASHBOARD: "true"
+      ENABLE_METRICS: "true"
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+
+      # Security
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW:-60000}
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ado-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================================
+  # ADO Workers (Claude Code)
+  # ============================================================================
+  worker-claude:
+    image: dxheroes/ado:latest
+    container_name: ado-worker-claude
+    command: ["node", "packages/cli/dist/worker.js"]
+    environment:
+      NODE_ENV: production
+
+      # Connect to API
+      ADO_API_URL: http://api:8080
+      ADO_API_KEY: ${ADO_API_KEY}
+
+      # Worker configuration
+      WORKER_ID: ${HOSTNAME:-worker-claude}
+      WORKER_PROVIDER: claude-code
+      WORKER_MODE: ${WORKER_MODE:-subscription}
+
+      # Provider credentials
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_SESSION_TOKEN: ${ANTHROPIC_SESSION_TOKEN:-}
+
+      # Resources
+      WORKER_MAX_TASKS: ${WORKER_MAX_TASKS:-3}
+      WORKER_TIMEOUT: ${WORKER_TIMEOUT:-3600}
+      WORKER_MEMORY_LIMIT: 4G
+      WORKER_CPU_LIMIT: 2
+
+      # Features
+      WORKER_ENABLE_CHECKPOINTS: "true"
+      WORKER_CHECKPOINT_INTERVAL: 300
+
+      # Git
+      GIT_USER_NAME: ${GIT_USER_NAME:-ADO Worker}
+      GIT_USER_EMAIL: ${GIT_USER_EMAIL:-ado@example.com}
+      GIT_SSH_KEY: ${GIT_SSH_KEY:-}
+
+    deploy:
+      replicas: ${WORKER_CLAUDE_REPLICAS:-2}
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - ado-network
+    volumes:
+      # Git SSH key (if needed)
+      - ${SSH_KEY_PATH:-./ssh}:/root/.ssh:ro
+      # Workspace for task execution
+      - worker-workspace:/workspace
+
+  # ============================================================================
+  # ADO Workers (Gemini CLI) - Optional
+  # ============================================================================
+  worker-gemini:
+    image: dxheroes/ado:latest
+    container_name: ado-worker-gemini
+    command: ["node", "packages/cli/dist/worker.js"]
+    environment:
+      NODE_ENV: production
+      ADO_API_URL: http://api:8080
+      ADO_API_KEY: ${ADO_API_KEY}
+
+      WORKER_ID: ${HOSTNAME:-worker-gemini}
+      WORKER_PROVIDER: gemini-cli
+      WORKER_MODE: api
+
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+
+      WORKER_MAX_TASKS: ${WORKER_MAX_TASKS:-3}
+      WORKER_TIMEOUT: ${WORKER_TIMEOUT:-3600}
+
+    deploy:
+      replicas: ${WORKER_GEMINI_REPLICAS:-0}
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - ado-network
+    volumes:
+      - worker-workspace:/workspace
+    profiles:
+      - full  # Only start if --profile full
+
+  # ============================================================================
+  # Dashboard (optional)
+  # ============================================================================
+  dashboard:
+    image: dxheroes/ado-dashboard:latest
+    container_name: ado-dashboard
+    environment:
+      VITE_API_URL: ${DASHBOARD_API_URL:-https://ado.yourcompany.com}
+      VITE_WS_URL: ${DASHBOARD_WS_URL:-wss://ado.yourcompany.com}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - ado-network
+    profiles:
+      - dashboard
+
+  # ============================================================================
+  # Jaeger (optional - distributed tracing)
+  # ============================================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: ado-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      SPAN_STORAGE_TYPE: badger
+      BADGER_EPHEMERAL: "false"
+      BADGER_DIRECTORY_VALUE: /badger/data
+      BADGER_DIRECTORY_KEY: /badger/key
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4318:4318"    # OTLP HTTP
+      - "4317:4317"    # OTLP gRPC
+    volumes:
+      - jaeger-data:/badger
+    restart: unless-stopped
+    networks:
+      - ado-network
+    profiles:
+      - observability
+
+  # ============================================================================
+  # PostgreSQL Backup (optional)
+  # ============================================================================
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: ado-postgres-backup
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ado
+      POSTGRES_USER: ado
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SCHEDULE: ${BACKUP_SCHEDULE:-@daily}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-7}
+      BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-4}
+      BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-6}
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - ado-network
+    profiles:
+      - backup
+
+# ==============================================================================
+# Networks
+# ==============================================================================
+networks:
+  ado-network:
+    driver: bridge
+
+# ==============================================================================
+# Volumes
+# ==============================================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  worker-workspace:
+    driver: local
+  jaeger-data:
+    driver: local

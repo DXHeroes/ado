@@ -3,6 +3,8 @@
  * Stores sessions, tasks, usage records, and checkpoints.
  */
 
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import type {
 	TaskDefinition,
 	TaskResult,
@@ -105,6 +107,10 @@ export class SqliteStateStore implements StateStore {
 	private db: Database.Database;
 
 	constructor(dbPath: string) {
+		// Ensure the directory exists before creating the database
+		const dir = dirname(dbPath);
+		mkdirSync(dir, { recursive: true });
+
 		this.db = new Database(dbPath);
 		this.db.pragma('journal_mode = WAL');
 		this.initialize();

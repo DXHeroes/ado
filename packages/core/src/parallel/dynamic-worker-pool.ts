@@ -458,9 +458,20 @@ export class DynamicWorkerPool implements WorkerPool {
 			workers.reduce((sum, w) => sum + w.memoryUtilization, 0) /
 			(workers.length || 1);
 
+		// Calculate desired workers inline to avoid circular dependency
+		const demandBasedCount = busyWorkers + Math.ceil(this.taskQueue.length / 2);
+		const utilizationBasedCount = Math.ceil(
+			workers.length * (avgCpuUtilization / this.config.targetUtilization),
+		);
+		const desiredCount = Math.max(demandBasedCount, utilizationBasedCount);
+		const desiredWorkers = Math.max(
+			this.config.minWorkers,
+			Math.min(this.config.maxWorkers, desiredCount),
+		);
+
 		return {
 			currentWorkers: workers.length,
-			desiredWorkers: this.calculateDesiredWorkers(),
+			desiredWorkers,
 			busyWorkers,
 			idleWorkers,
 			queueLength: this.taskQueue.length,
@@ -473,14 +484,18 @@ export class DynamicWorkerPool implements WorkerPool {
 	 * Calculate desired worker count based on metrics
 	 */
 	private calculateDesiredWorkers(): number {
-		const metrics = this.getMetrics();
+		const workers = Array.from(this.workers.values());
+		const busyWorkers = workers.filter((w) => w.status === 'busy').length;
+		const avgCpuUtilization =
+			workers.reduce((sum, w) => sum + w.cpuUtilization, 0) /
+			(workers.length || 1);
 
 		// Calculate based on queue and busy workers
-		const demandBasedCount = metrics.busyWorkers + Math.ceil(metrics.queueLength / 2);
+		const demandBasedCount = busyWorkers + Math.ceil(this.taskQueue.length / 2);
 
 		// Calculate based on utilization
 		const utilizationBasedCount = Math.ceil(
-			metrics.currentWorkers * (metrics.avgCpuUtilization / this.config.targetUtilization),
+			workers.length * (avgCpuUtilization / this.config.targetUtilization),
 		);
 
 		// Take maximum of both

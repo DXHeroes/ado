@@ -1,61 +1,66 @@
-# ADO v2 Specifikace
+# ADO v2.1.0 Specification
 
-**Agentic Development Orchestrator** - Plně autonomní, distribuovaný orchestrátor AI coding agentů.
+**Agentic Development Orchestrator** - Fully autonomous, distributed AI coding agent orchestrator.
 
-## Navigace
+## Navigation
 
-### Vize a principy
-- [Produktová vize](./01-vision/01-product-vision.md) - Kam směřujeme
-- [Principy návrhu](./01-vision/02-principles.md) - Jak přemýšlíme
-- [Metriky úspěchu](./01-vision/03-success-metrics.md) - Jak měříme úspěch
+### Vision and Principles
+- [Product Vision](./01-vision/01-product-vision.md) - Where we're heading
+- [Design Principles](./01-vision/02-principles.md) - How we think
+- [Success Metrics](./01-vision/03-success-metrics.md) - How we measure success
 
-### Požadavky
-- [Funkční požadavky](./02-requirements/01-functional/) - Co systém musí dělat
-- [Nefunkční požadavky](./02-requirements/02-non-functional/) - Jak dobře to musí dělat
+### Requirements
+- [Functional Requirements](./02-requirements/01-functional/) - What the system must do
+- [Non-Functional Requirements](./02-requirements/02-non-functional/) - How well it must do it
 
-### Architektura
-- [System Context (C4 L1)](./03-architecture/01-system-context.md) - Vysokoúrovňový pohled
-- [Container Diagram (C4 L2)](./03-architecture/02-container-diagram.md) - Hlavní komponenty
-- [Komponenty](./03-architecture/03-component-diagrams/) - Detailní komponenty
-- [Datové modely](./03-architecture/04-data-models/) - Entity a schémata
-- [Komunikace](./03-architecture/05-communication/) - tRPC, WebSocket
-- [Architektonická rozhodnutí](./03-architecture/06-decisions/) - ADRs
+### Architecture
+- [System Context (C4 L1)](./03-architecture/01-system-context.md) - High-level view
+- [Container Diagram (C4 L2)](./03-architecture/02-container-diagram.md) - Main components
+- [Components](./03-architecture/03-component-diagrams/) - Detailed components
+- [Data Models](./03-architecture/04-data-models/) - Entities and schemas
+- [Communication](./03-architecture/05-communication/) - tRPC, WebSocket
+- [Architectural Decisions](./03-architecture/06-decisions/) - ADRs
 
 ### Design
-- [Distribuovaný systém](./04-design/01-distributed-system/) - Cloud orchestrace
-- [Autonomní workflow](./04-design/02-autonomous-workflow/) - Doc-first pipeline
-- [Cloud infrastruktura](./04-design/03-cloud-infrastructure/) - K8s, Docker, Coolify
-- [Bezpečnost](./04-design/04-security/) - Threat model, secrets
+- [Distributed System](./04-design/01-distributed-system/) - Cloud orchestration
+- [Autonomous Workflow](./04-design/02-autonomous-workflow/) - Doc-first pipeline
+- [Cloud Infrastructure](./04-design/03-cloud-infrastructure/) - K8s, Docker, Coolify
+- [Security](./04-design/04-security/) - Threat model, secrets
 
 ### API
-- [tRPC procedury](./05-api/01-trpc-procedures/) - API rozhraní
-- [WebSocket eventy](./05-api/02-websocket-events/) - Real-time streaming
-- [Agent adaptéry](./05-api/03-agent-adapter-interface/) - Rozhraní adaptérů
+- [tRPC Procedures](./05-api/01-trpc-procedures/) - API interface
+- [WebSocket Events](./05-api/02-websocket-events/) - Real-time streaming
+- [Agent Adapters](./05-api/03-agent-adapter-interface/) - Adapter interface
 
-### Uživatelská dokumentace
-- [Začínáme](./06-user-guide/01-getting-started/) - Instalace, quick start
-- [Koncepty](./06-user-guide/02-core-concepts/) - Klíčové koncepty
-- [Use cases](./06-user-guide/03-use-cases/) - Praktické příklady
-- [Troubleshooting](./06-user-guide/04-troubleshooting/) - Řešení problémů
+### User Documentation
+- [Getting Started](./06-user-guide/01-getting-started/) - Installation, quick start
+- [Core Concepts](./06-user-guide/02-core-concepts/) - Key concepts
+- [Use Cases](./06-user-guide/03-use-cases/) - Practical examples
+- [Troubleshooting](./06-user-guide/04-troubleshooting/) - Problem resolution
 
-### Provoz
-- [Deployment](./07-operations/01-deployment/) - Nasazení
-- [Monitoring](./07-operations/02-monitoring/) - Sledování
-- [Škálování](./07-operations/03-scaling/) - Kapacitní plánování
+### Operations
+- [Deployment](./07-operations/01-deployment/) - Deployment guides
+- [Monitoring](./07-operations/02-monitoring/) - Observability
+- [Scaling](./07-operations/03-scaling/) - Capacity planning
 
-### Implementace
-- [Milníky](./08-implementation/milestones/) - M7-M9 plány
+### Implementation
+- [Milestones](./08-implementation/milestones/) - M7-M9 plans
+
+### Advanced Features
+- [DEF.md](./DEF.md) - LiteLLM, Temporal.io, Firecracker, PR-Agent integration
+- [CHANGELOG.md](./CHANGELOG.md) - Version history
+- [GLOSSARY.md](./GLOSSARY.md) - Terminology reference
 
 ---
 
-## Rychlý přehled ADO v2
+## ADO v2 Quick Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              LOKÁLNÍ PC                                      │
+│                              LOCAL PC                                        │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
 │  │  ADO CLI                                                                 ││
-│  │  $ ado run "Vytvoř REST API pro todo aplikaci" --workers 5              ││
+│  │  $ ado run "Create REST API for todo app" --workers 5                   ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │                                    │                                         │
 │                              tRPC + WS                                       │
@@ -63,7 +68,7 @@
                                      │
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CLOUD INFRASTRUKTURA                               │
+│                           CLOUD INFRASTRUCTURE                               │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
 │  │  ADO Controller (Kubernetes/Docker/Coolify)                              ││
 │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     ││
@@ -75,29 +80,30 @@
 │                              Git Push                                        │
 │                                    ▼                                         │
 │  ┌─────────────────────────────────────────────────────────────────────────┐│
-│  │  VÝSTUP: Otestovaná, zbuilditelná aplikace s dokumentací                ││
+│  │  OUTPUT: Tested, buildable application with documentation                ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Klíčové inovace v2
+## Key Innovations in v2
 
-| Oblast | v1 | v2 |
-|--------|----|----|
-| **Provoz** | Lokální CLI | Distribuovaná orchestrace |
-| **Komunikace** | REST API | tRPC + WebSocket subscriptions |
-| **Workflow** | Ad-hoc úkoly | Documentation-first pipeline |
-| **Výstup** | Kód | Otestovaná, zbuilditelná aplikace |
-| **Škálování** | Single node | Multi-node paralelizace |
-| **Infrastruktura** | Lokální/K8s | + Coolify, EC2, VPC |
+| Area | v1 | v2 |
+|------|----|----|
+| **Operation** | Local CLI | Distributed orchestration |
+| **Communication** | REST API | tRPC + WebSocket subscriptions |
+| **Workflow** | Ad-hoc tasks | Documentation-first pipeline |
+| **Output** | Code | Tested, buildable application |
+| **Scaling** | Single node | Multi-node parallelization |
+| **Infrastructure** | Local/K8s | + Coolify, EC2, VPC |
 
-## Verze dokumentace
+## Documentation Versions
 
-| Verze | Datum | Změny |
-|-------|-------|-------|
-| 2.0.0 | 2025-01 | Iniciální v2 specifikace |
-| 1.1.0 | 2024-11 | Viz `ado-specification.md` |
+| Version | Date | Changes |
+|---------|------|---------|
+| 2.1.0 | 2025-01 | Advanced features (DEF.1-4), autonomous workflow refinements |
+| 2.0.0 | 2024-12 | Initial v2 specification |
+| 1.1.0 | 2024-11 | See `../ado-specification.md` (archived) |
 
 ---
 
-*Tato specifikace slouží jako kontext pro AI agenty při implementaci ADO v2.*
+*This specification serves as context for AI agents implementing ADO v2.*

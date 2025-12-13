@@ -22,26 +22,36 @@
 		"build:api": "tsc && BUILD_MODE=api vite build",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest watch",
+		"test:ui": "vitest --ui",
+		"test:coverage": "vitest run --coverage",
 		"clean": "rm -rf dist node_modules"
 	},
 	"dependencies": {
 		"@dxheroes/ado-core": "workspace:*",
 		"@dxheroes/ado-shared": "workspace:*",
+		"@tanstack/react-query": "^5.62.0",
+		"date-fns": "^4.1.0",
+		"lucide-react": "^0.462.0",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
 		"react-router-dom": "^6.28.0",
-		"@tanstack/react-query": "^5.62.0",
-		"lucide-react": "^0.462.0",
-		"recharts": "^2.14.1",
-		"date-fns": "^4.1.0"
+		"recharts": "^2.14.1"
 	},
 	"devDependencies": {
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.0",
+		"@testing-library/user-event": "^14.6.1",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
 		"@vitejs/plugin-react": "^4.3.4",
+		"@vitest/ui": "^4.0.15",
 		"autoprefixer": "^10.4.20",
+		"jsdom": "^27.3.0",
 		"postcss": "^8.4.49",
 		"tailwindcss": "^3.4.15",
-		"vite": "^6.0.1"
+		"vite": "^6.0.1",
+		"vitest": "^4.0.15"
 	}
 }

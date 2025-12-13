@@ -93,8 +93,8 @@ export class TaskDecomposer {
 	): TaskNode[] {
 		const { type, complexity } = classification;
 
-		// Simple tasks don't need decomposition
-		if (complexity === 'simple') {
+		// Simple tasks don't need decomposition (except bugs, tests, docs which have structured workflows)
+		if (complexity === 'simple' && type !== 'bug' && type !== 'test' && type !== 'docs') {
 			return [
 				{
 					id: 'task-1',
@@ -105,7 +105,7 @@ export class TaskDecomposer {
 					dependencies: [],
 					parallel: false,
 					metadata: {
-						testRequired: type === 'feature' || type === 'bug',
+						testRequired: type === 'feature',
 						reviewRequired: classification.priority === 'critical',
 					},
 				},
@@ -226,9 +226,31 @@ export class TaskDecomposer {
 	 * Decompose bug fix task
 	 */
 	private decomposeBug(
-		_context: TaskContext,
+		context: TaskContext,
 		classification: ClassificationResult,
 	): TaskNode[] {
+		// For truly simple bugs (typos, cosmetic fixes), don't decompose
+		const trivialBugKeywords = ['typo', 'spelling', 'cosmetic', 'whitespace', 'formatting'];
+		const isTrivial = trivialBugKeywords.some(kw => context.prompt.toLowerCase().includes(kw));
+
+		if (classification.complexity === 'simple' && isTrivial) {
+			return [
+				{
+					id: 'task-1',
+					type: 'bug',
+					description: context.prompt,
+					estimatedDuration: classification.estimatedDuration,
+					priority: classification.priority,
+					dependencies: [],
+					parallel: false,
+					metadata: {
+						testRequired: false,
+						reviewRequired: classification.priority === 'critical',
+					},
+				},
+			];
+		}
+
 		const tasks: TaskNode[] = [];
 		const baseTime = classification.estimatedDuration / 4; // 4 phases
 
@@ -355,9 +377,25 @@ export class TaskDecomposer {
 	 * Decompose test task
 	 */
 	private decomposeTest(
-		_context: TaskContext,
+		context: TaskContext,
 		classification: ClassificationResult,
 	): TaskNode[] {
+		// For simple test tasks, don't decompose
+		if (classification.complexity === 'simple') {
+			return [
+				{
+					id: 'task-1',
+					type: 'test',
+					description: context.prompt,
+					estimatedDuration: classification.estimatedDuration,
+					priority: classification.priority,
+					dependencies: [],
+					parallel: false,
+					metadata: {},
+				},
+			];
+		}
+
 		const tasks: TaskNode[] = [];
 		const baseTime = classification.estimatedDuration / 3;
 
@@ -401,9 +439,28 @@ export class TaskDecomposer {
 	 * Decompose documentation task
 	 */
 	private decomposeDocs(
-		_context: TaskContext,
+		context: TaskContext,
 		classification: ClassificationResult,
 	): TaskNode[] {
+		// For simple docs (typos, small updates), don't decompose
+		const simpleDocsKeywords = ['typo', 'readme', 'comment', 'jsdoc'];
+		const isSimple = simpleDocsKeywords.some(kw => context.prompt.toLowerCase().includes(kw));
+
+		if (classification.complexity === 'simple' && isSimple) {
+			return [
+				{
+					id: 'task-1',
+					type: 'docs',
+					description: context.prompt,
+					estimatedDuration: classification.estimatedDuration,
+					priority: classification.priority,
+					dependencies: [],
+					parallel: false,
+					metadata: {},
+				},
+			];
+		}
+
 		const tasks: TaskNode[] = [];
 		const baseTime = classification.estimatedDuration / 3;
 
